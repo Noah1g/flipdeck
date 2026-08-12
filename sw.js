@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v13";   // v13 (App v5.1.0): Verkauf-Dialog neu, Marktplatz-Dropdown mit Logos, Profil-Marktplatzauswahl, eigene Scrollbar, Login aufpoliert
+const VERSION    = "flipdeck-v14";   // v14 (App v5.2.0): Fixkosten-Ausgaben mit Kategorien (Farbe/Icon) + Aufschlüsselung, EK-USt über Profil-Steuerart (optionaler Ausnahme-Schalter)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

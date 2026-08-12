@@ -470,7 +470,7 @@ const I18N = {
     "track.add":"Neuen Deal hinzufügen","track.recent":"Letzte Deals","track.empty":"Keine Deals im Zeitraum",
     "calc.title":"Gebührenrechner","calc.toInv":"Zu Bestand hinzufügen ↗","calc.toTracker":"In Tracker übernehmen ↗",
     "inv.stock":"Bestand","inv.units":"Artikel","inv.capital":"Kapital gebunden","inv.potential":"Potenzieller Profit","inv.add":"Neues Item hinzufügen","inv.create":"Bestand manuell anlegen","inv.protect":"Preisschutz aktiv","inv.empty":"Bestand ist leer",
-    "fix.title":"Fixkosten","fix.add":"Neue Fixkosten-Position","fix.monthly":"Monatliche Fixkosten","fix.algo":"Zielmarge","fix.revenue":"Monatlicher Umsatz €","fix.packages":"Pakete / Monat","fix.base":"Basis-Gewinnmarge %","fix.empty":"Noch keine Fixkosten erfasst",
+    "fix.title":"Fixkosten","fix.add":"Neue Ausgabe","fix.monthly":"Monatliche Fixkosten","fix.algo":"Zielmarge","fix.revenue":"Monatlicher Umsatz €","fix.packages":"Pakete / Monat","fix.base":"Basis-Gewinnmarge %","fix.empty":"Noch keine Ausgaben erfasst",
     "prof.title":"Profil","prof.pw":"Passwort ändern","prof.appearance":"Darstellung","prof.mode":"Erscheinungsbild","prof.lang":"Sprache","prof.stale":"Ladenhüter-Warnung ab (Tage)","prof.avatar":"Profilbild hochladen",
     "mode.dark":"Dunkel","mode.light":"Hell",
     "btn.save":"Speichern","btn.cancel":"Abbrechen","btn.add":"Hinzufügen","ui.close":"Eingabe schließen",
@@ -484,7 +484,7 @@ const I18N = {
     "track.add":"Add new deal","track.recent":"Recent deals","track.empty":"No deals in range",
     "calc.title":"Fee calculator","calc.toInv":"Send to inventory ↗","calc.toTracker":"Send to tracker ↗",
     "inv.stock":"Inventory","inv.units":"Items","inv.capital":"Capital tied up","inv.potential":"Potential profit","inv.add":"Add new item","inv.create":"Add stock manually","inv.protect":"Price protection active","inv.empty":"Inventory is empty",
-    "fix.title":"Fixed Costs","fix.add":"New fixed-cost item","fix.monthly":"Monthly fixed costs","fix.algo":"Target margin","fix.revenue":"Monthly revenue €","fix.packages":"Parcels / month","fix.base":"Base profit margin %","fix.empty":"No fixed costs yet",
+    "fix.title":"Fixed Costs","fix.add":"New expense","fix.monthly":"Monthly fixed costs","fix.algo":"Target margin","fix.revenue":"Monthly revenue €","fix.packages":"Parcels / month","fix.base":"Base profit margin %","fix.empty":"No expenses yet",
     "prof.title":"Profile","prof.pw":"Change password","prof.appearance":"Appearance","prof.mode":"Theme","prof.lang":"Language","prof.stale":"Slow-mover warning after (days)","prof.avatar":"Upload profile picture",
     "mode.dark":"Dark","mode.light":"Light",
     "btn.save":"Save","btn.cancel":"Cancel","btn.add":"Add","ui.close":"Close",
@@ -1730,7 +1730,7 @@ async function persistImage(src){
     return src;
   }
 }
-function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tracking","iv-tags"].forEach(id=>$("#"+id).value=""); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; $("#iv-carrier").value=""; $("#iv-ekust").checked=false; $("#iv-ekustrate-wrap").classList.add("hidden"); $("#iv-ekustrate").value="19"; resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
+function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tracking","iv-tags"].forEach(id=>$("#"+id).value=""); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; $("#iv-carrier").value=""; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
 function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hidden",!open);
   $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
   $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
@@ -1747,12 +1747,13 @@ $("#iv-img-url-btn").addEventListener("click",e=>{ e.stopPropagation(); const u=
 $("#iv-img-url").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("#iv-img-url-btn").click(); } });
 function resetInvImage(){ pendingInvImg=null; $("#iv-drop").classList.remove("has"); $("#iv-drop-empty").classList.remove("hidden"); $("#iv-drop-preview").classList.add("hidden"); }
 $("#iv-drop-x").addEventListener("click", e=>{ e.stopPropagation(); resetInvImage(); showToast("Bild entfernt"); });
-$("#iv-ekust").addEventListener("change",()=>$("#iv-ekustrate-wrap").classList.toggle("hidden",!$("#iv-ekust").checked));
+/* iv-ekust entfernt: Vorsteuer läuft jetzt automatisch über die Profil-Steuerart (siehe ekVatRate);
+   Ausnahme "kein Vorsteuerabzug" liegt als optionaler Schalter im Workflow-Block (#iv-noinputvat). */
 $("#iv-add").addEventListener("click", async ()=>{
   const req=[["iv-name",v=>v.trim()!==""],["iv-vk",v=>v.trim()!==""],["iv-ek",v=>v.trim()!==""]]; let bad=false;
   req.forEach(([id,ok])=>{ const el=$("#"+id); if(!ok(el.value)){ flashError(el); bad=true; } });
   if(bad){ showToast("Bitte Pflichtfelder ausfüllen"); return; }
-  const data={ name:$("#iv-name").value.trim(), ean:$("#iv-ean").value.trim(), qty:Math.max(1,parseInt($("#iv-qty").value)||1), vk:num($("#iv-vk").value), ek:num($("#iv-ek").value), ship:num($("#iv-ship").value), catPct:num($("#iv-cat").value), adPct:num($("#iv-ad").value), regionPct:num($("#iv-region").value), feeVer:FEE_VER, ekUstRate:$("#iv-ekust").checked?num($("#iv-ekustrate").value):0,
+  const data={ name:$("#iv-name").value.trim(), ean:$("#iv-ean").value.trim(), qty:Math.max(1,parseInt($("#iv-qty").value)||1), vk:num($("#iv-vk").value), ek:num($("#iv-ek").value), ship:num($("#iv-ship").value), catPct:num($("#iv-cat").value), adPct:num($("#iv-ad").value), regionPct:num($("#iv-region").value), feeVer:FEE_VER, noInputVat:!!($("#iv-noinputvat")&&$("#iv-noinputvat").checked),
     status:$("#iv-status").value||"stock", orderDate:$("#iv-orderdate").value||"", returnBy:$("#iv-returnby").value||"", buyCarrier:$("#iv-carrier").value||"", buyTracking:$("#iv-tracking").value.trim(), tags:parseTags($("#iv-tags").value) };
 
   const btn=$("#iv-add"); const label=btn.textContent;
@@ -1813,6 +1814,11 @@ function openAccountSetup(){
     $("#modal-root").innerHTML=""; showToast("✓ Standardwerte gespeichert");
   });
 }
+/* Effektiver Vorsteuer-Satz auf den EK eines Bestandsartikels:
+   - Kleinunternehmer (kuMode): nie (kein Vorsteuerabzug)
+   - Regelbesteuert + Ausnahme "kein Vorsteuerabzug" (it.noInputVat): voller EK
+   - sonst Regelbesteuert: Standard-MwSt-Satz aus dem Profil wird herausgerechnet */
+function ekVatRate(it){ if(kuMode) return 0; if(it && it.noInputVat) return 0; return num(defaultUstRate)||0; }
 function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   const maxQty=Math.max(1,it.qty);
   const opts=Array.from({length:maxQty},(_,i)=>`<option value="${i+1}">${i+1} ${maxQty===1?"Stück":"Stück"}</option>`).join("");
@@ -1874,7 +1880,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
      deshalb hier auf den Gesamt-Verkaufswert (vk*q) rechnen statt den Pro-Stück-Wert mit q zu multiplizieren.
      Ist "Verkaufspreis enthält USt" aktiv, wird die USt vor der Gewinnrechnung herausgerechnet –
      sie ist eine Steuerschuld ans Finanzamt, kein eigener Ertrag. */
-  const ekNet = it.ekUstRate ? it.ek/(1+it.ekUstRate/100) : it.ek;
+  const _ekR = ekVatRate(it); const ekNet = _ekR ? it.ek/(1+_ekR/100) : it.ek;
   const calcSale=(q,vk,shipTot,noFee,pack,adPct,ustRate)=>{
     const combined=it.catPct+adPct+it.regionPct;
     const V=vatF();
@@ -1899,7 +1905,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     const ustRate = kuMode ? 0 : defaultUstRate;
     const {payoutTotal,tot,margin,ustTotal}=calcSale(q,vk,shipTot,noFee,pack,adPct,ustRate);
     $("#sell-profit").textContent=(tot>=0?"+":"")+eur(tot); $("#sell-profit").style.color=tot>=0?"var(--accent)":"var(--danger)";
-    $("#sell-sub").textContent=`${noFee?"Ohne Gebühren · ":""}Auszahlung gesamt ${eur(payoutTotal)} · EK ${eur(it.ek)}/Stk${it.ekUstRate?` (netto ${eur(ekNet)})`:""} · Porto ${eur(shipTot)}${pack?" · +1€ Verpackung":""} · Marge ${pct(margin)}${ustTotal>0?` · davon ${eur(ustTotal)} USt ans Finanzamt`:""}`; };
+    $("#sell-sub").textContent=`${noFee?"Ohne Gebühren · ":""}Auszahlung gesamt ${eur(payoutTotal)} · EK ${eur(it.ek)}/Stk${_ekR?` (netto ${eur(ekNet)})`:""} · Porto ${eur(shipTot)}${pack?" · +1€ Verpackung":""} · Marge ${pct(margin)}${ustTotal>0?` · davon ${eur(ustTotal)} USt ans Finanzamt`:""}`; };
   ["sell-qty","sell-vk","sell-ship","sell-ad"].forEach(x=>$("#"+x).addEventListener("input",recompute));
   if($("#sell-ad-zero")) $("#sell-ad-zero").addEventListener("click",()=>{ $("#sell-ad").value="0"; recompute(); });
   $("#sell-pack").addEventListener("change",recompute);
@@ -1928,7 +1934,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
   });
 }
 function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return; editingInvId=id; $("#iv-name").value=it.name; $("#iv-ean").value=it.ean||""; $("#iv-qty").value=it.qty; $("#iv-vk").value=String(it.vk).replace(".",","); $("#iv-ek").value=String(it.ek).replace(".",","); $("#iv-ship").value=String(it.ship).replace(".",","); $("#iv-cat").value=String(it.catPct); $("#iv-ad").value=String(it.adPct).replace(".",","); $("#iv-region").value=String(it.regionPct);
-  $("#iv-ekust").checked=!!it.ekUstRate; $("#iv-ekustrate").value=String(it.ekUstRate||19); $("#iv-ekustrate-wrap").classList.toggle("hidden",!it.ekUstRate);
+  if($("#iv-noinputvat")) $("#iv-noinputvat").checked=!!it.noInputVat;
   $("#iv-status").value = invStatus(it)==="returned" ? "stock" : invStatus(it);
   $("#iv-orderdate").value = it.orderDate||""; $("#iv-returnby").value = it.returnBy||"";
   $("#iv-carrier").value = it.buyCarrier||""; $("#iv-tracking").value = it.buyTracking||"";
@@ -1936,7 +1942,7 @@ function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   // Der Workflow-Block ist normal zugeklappt. Hat der Artikel dort aber Daten,
   // klappt er beim Bearbeiten auf – sonst uebersieht man sie und loescht sie versehentlich.
   const _more=document.querySelector(".iv-more");
-  if(_more) _more.open = !!(it.orderDate||it.returnBy||it.buyCarrier||it.buyTracking||(it.tags&&it.tags.length)||(invStatus(it)!=="stock"));
+  if(_more) _more.open = !!(it.orderDate||it.returnBy||it.buyCarrier||it.buyTracking||(it.tags&&it.tags.length)||(invStatus(it)!=="stock")||it.noInputVat);
   pendingInvImg=it.img||null;
   if(it.img){ $("#iv-drop").classList.add("has"); $("#iv-drop-empty").classList.add("hidden"); $("#iv-drop-preview").src=it.img; $("#iv-drop-preview").classList.remove("hidden"); } else resetInvImage();
   $("#iv-add").textContent="Änderungen speichern";
@@ -2198,49 +2204,126 @@ if($("#fee-migrate-dismiss")) $("#fee-migrate-dismiss").addEventListener("click"
 
 /* ===== 10b · FIXKOSTEN (v1.5) ===== */
 let fxFormOpen=false, editingFixId=null;
+/* ===== Ausgaben-Kategorien (Name · Farbe · Icon) — gespeichert in fixCfg.cats ===== */
+const FIX_COLORS = ["#34D399","#60A5FA","#F472B6","#FBBF24","#A78BFA","#22D3EE","#FB7185","#4ADE80","#F59E0B","#818CF8","#2DD4BF","#F87171"];
+const FIX_ICONS = {
+  box:'<path d="M21 8 12 3 3 8v8l9 5 9-5V8Z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>',
+  truck:'<path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/>',
+  card:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18"/>',
+  laptop:'<rect x="4" y="5" width="16" height="10" rx="1.5"/><path d="M2 19h20"/>',
+  receipt:'<path d="M6 3h12v18l-2-1.3L14 21l-2-1.3L10 21l-2-1.3L6 21Z"/><path d="M9 8h6M9 12h6"/>',
+  tag:'<path d="M3 12 12 3h6a3 3 0 0 1 3 3v6l-9 9Z"/><circle cx="16.5" cy="7.5" r="1.3"/>',
+  wrench:'<path d="M14 6a4 4 0 0 0 5 5l-8 8a2.8 2.8 0 0 1-4-4Z"/>',
+  printer:'<path d="M6 9V4h12v5"/><rect x="4" y="9" width="16" height="7" rx="1.5"/><path d="M8 16h8v5H8z"/>',
+  phone:'<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
+  cart:'<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.2 11h10l2-8H6"/>',
+  bank:'<path d="M3 10 12 4l9 6"/><path d="M5 10v8M10 10v8M14 10v8M19 10v8M3 20h18"/>',
+  bulb:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.7.7-1 1.2-1 2.5H9c0-1.3-.3-1.8-1-2.5A6 6 0 0 1 12 3Z"/>',
+  cloud:'<path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6 1.3A3.5 3.5 0 0 1 17 18Z"/>',
+  camera:'<rect x="3" y="7" width="18" height="12" rx="2.5"/><circle cx="12" cy="13" r="3"/><path d="M8 7l1.5-2h5L16 7"/>',
+  home:'<path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10"/>',
+  coins:'<ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3"/><path d="M15 11.5c2.4.3 5 1.4 5 3.5 0 1.7-2.7 3-6 3-1.5 0-2.9-.3-4-.7"/>',
+  megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h2l9 5V5L6 10H4a1 1 0 0 0-1 1Z"/><path d="M18 9a4 4 0 0 1 0 6"/>',
+  gift:'<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M2 9h20v3H2zM12 9v11"/>'
+};
+const DEFAULT_EXPENSE_CATS = [
+  {id:"ec_material", name:"Material & Verpackung", color:"#34D399", icon:"box"},
+  {id:"ec_shipping", name:"Versand", color:"#60A5FA", icon:"truck"},
+  {id:"ec_fees",     name:"Gebühren",             color:"#FB7185", icon:"card"},
+  {id:"ec_software", name:"Software & Abos",       color:"#A78BFA", icon:"cloud"},
+  {id:"ec_office",   name:"Büro",                 color:"#FBBF24", icon:"printer"},
+  {id:"ec_other",    name:"Sonstiges",            color:"#94A3B8", icon:"tag"}
+];
+function fixIconSVG(key){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${FIX_ICONS[key]||FIX_ICONS.tag}</svg>`; }
+function getExpenseCats(){ if(!Array.isArray(fixCfg.cats) || !fixCfg.cats.length){ fixCfg.cats = DEFAULT_EXPENSE_CATS.map(c=>({...c})); } return fixCfg.cats; }
+function expenseCatById(id){ return getExpenseCats().find(c=>c.id===id) || null; }
+function resolveFixCat(f){ if(f.catId){ const c=expenseCatById(f.catId); if(c) return c; } if(f.cat) return {id:null,name:f.cat,color:"#94A3B8",icon:"tag"}; return {id:null,name:"Ohne Kategorie",color:"#64748B",icon:"tag"}; }
+function catTint(c){ return `color:${c};background:color-mix(in srgb, ${c} 15%, transparent);border:1px solid color-mix(in srgb, ${c} 32%, transparent)`; }
+function refreshFixCatSelect(){ const sel=$("#fx-cat"); if(!sel) return; const cur=sel.value;
+  sel.innerHTML=getExpenseCats().map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("")+`<option value="__new__">＋ Neue Kategorie …</option>`;
+  if(cur && getExpenseCats().some(c=>c.id===cur)) sel.value=cur; }
+function renderExpenseCats(){ const box=$("#ec-list"); if(!box) return;
+  box.innerHTML=getExpenseCats().map(c=>`<button type="button" class="fx-cat-chip ec-edit" data-id="${c.id}" title="Bearbeiten"><span class="fx-cat-ic" style="${catTint(c.color)}">${fixIconSVG(c.icon)}</span>${escapeHtml(c.name)}</button>`).join("");
+  $$("#ec-list .ec-edit").forEach(b=>b.addEventListener("click",()=>openExpenseCatModal(b.dataset.id))); }
+function openExpenseCatModal(id){
+  const editing = id ? expenseCatById(id) : null;
+  let selColor = editing ? editing.color : FIX_COLORS[Math.floor(Math.random()*FIX_COLORS.length)];
+  let selIcon  = editing ? editing.icon  : "tag";
+  const colorsHTML=FIX_COLORS.map(c=>`<button type="button" class="ec-swatch" data-color="${c}" style="background:${c}" aria-selected="${c===selColor?"true":"false"}"></button>`).join("");
+  const iconsHTML=Object.keys(FIX_ICONS).map(k=>`<button type="button" class="ec-icobtn" data-icon="${k}" aria-selected="${k===selIcon?"true":"false"}">${fixIconSVG(k)}</button>`).join("");
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:440px">
+    <div class="flex items-start justify-between gap-3 mb-1">
+      <div><p class="font-bold text-[18px]">${editing?"Kategorie bearbeiten":"Neue Kategorie"}</p><p class="c-sub text-[12.5px] mt-0.5">Für deine Ausgaben — mit Farbe &amp; Icon.</p></div>
+      <button id="ec-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="my-4"><label class="label" for="ec-name">Name *</label><input id="ec-name" class="field" placeholder="z. B. Verpackung, Software, Versand" value="${editing?attrEsc(editing.name):""}"></div>
+    <div class="mb-4"><p class="label mb-2">Farbe</p><div id="ec-colors" class="ec-swatches">${colorsHTML}</div></div>
+    <div class="mb-4"><p class="label mb-2">Icon</p><div id="ec-icons" class="ec-icons">${iconsHTML}</div></div>
+    <div class="grid grid-cols-2 gap-3">${editing?`<button id="ec-del" class="btn-ghost" style="color:var(--danger)">Löschen</button>`:`<button id="ec-cancel" class="btn-ghost">Abbrechen</button>`}<button id="ec-save" class="btn-accent">${editing?"Speichern":"Anlegen"}</button></div>
+  </div></div>`;
+  const close=()=>{ $("#modal-root").innerHTML=""; };
+  $("#ec-x").addEventListener("click",close);
+  if($("#ec-cancel")) $("#ec-cancel").addEventListener("click",close);
+  $$("#ec-colors .ec-swatch").forEach(b=>b.addEventListener("click",()=>{ selColor=b.dataset.color; $$("#ec-colors .ec-swatch").forEach(x=>x.setAttribute("aria-selected", x.dataset.color===selColor?"true":"false")); }));
+  $$("#ec-icons .ec-icobtn").forEach(b=>b.addEventListener("click",()=>{ selIcon=b.dataset.icon; $$("#ec-icons .ec-icobtn").forEach(x=>x.setAttribute("aria-selected", x.dataset.icon===selIcon?"true":"false")); }));
+  if($("#ec-del")) $("#ec-del").addEventListener("click",()=>{ fixCfg.cats=getExpenseCats().filter(c=>c.id!==id); DB.saveFixCfg(fixCfg); close(); renderFixed(); showToast("Kategorie gelöscht"); });
+  $("#ec-save").addEventListener("click",()=>{ const name=$("#ec-name").value.trim(); if(!name){ flashError($("#ec-name")); return; }
+    getExpenseCats(); let newId=null;
+    if(editing){ Object.assign(editing,{name,color:selColor,icon:selIcon}); }
+    else { newId="ec"+Date.now(); fixCfg.cats.push({id:newId,name,color:selColor,icon:selIcon}); }
+    DB.saveFixCfg(fixCfg); close(); renderFixed();
+    if(newId && $("#fx-cat")){ refreshFixCatSelect(); $("#fx-cat").value=newId; }
+    showToast(editing?"Kategorie gespeichert":"Kategorie angelegt"); });
+}
 function renderFixed(){
-  const total=fixedTotal();
-  const st=recentStats(fixPeriod);
-  $("#fx-total").textContent=eur(total);
+  $("#fx-total").textContent=eur(fixedTotal());
   $("#fx-perpkg").textContent=eur(fixedPerPackage());
   $("#fx-target").textContent=pct(targetMargin()*100);
-  if($("#fx-auto-rev")){ $("#fx-auto-rev").textContent=eur(st.revenue); $("#fx-auto-pkg").textContent=st.packages; }
-  if($("#fx-period")) $("#fx-period").value=String(fixPeriod);
   const af=document.activeElement;
   if(af!==$("#fx-base") && $("#fx-base")) $("#fx-base").value=fixCfg.baseMargin;
-  // Erklärungstext (statisch – keine Dynamik mehr)
-  if($("#fx-explain")){
-    $("#fx-explain").innerHTML=`Jeder Bestandsartikel bekommt zwei feste Preis-Marken: <b style="color:var(--danger)">Break-Even</b> = nach allen Gebühren bleiben noch <b>5 %</b> Marge (nie darunter verkaufen) und <b style="color:var(--accent)">Ziel-VK</b> mit deiner <b>Zielmarge von ${pct(targetMargin()*100)}</b>. Beides hängt nur am Artikel selbst, nicht an Umsatz-Phasen. Deine Fixkosten unten dienen als Überblick und fließen nicht mehr automatisch in die Marge.`;
+  renderExpenseCats(); refreshFixCatSelect();
+  // Aufschlüsselung nach Kategorie
+  const total=fixedTotal(); const groups={};
+  fixed.forEach(f=>{ const cat=resolveFixCat(f); const key=cat.id||("legacy:"+cat.name);
+    if(!groups[key]) groups[key]={cat, sum:0}; groups[key].sum+=num(f.amount); });
+  const arr=Object.values(groups).sort((a,b)=>b.sum-a.sum);
+  const bd=$("#fx-breakdown");
+  if(bd){ bd.classList.toggle("hidden", arr.length===0);
+    const bar=$("#fx-bar"); if(bar) bar.innerHTML = total>0 ? arr.map(g=>`<span style="width:${(g.sum/total*100).toFixed(2)}%;background:${g.cat.color}" title="${escapeHtml(g.cat.name)}"></span>`).join("") : "";
+    const sums=$("#fx-cat-sums"); if(sums) sums.innerHTML = arr.map(g=>`<div class="fx-sum-row"><span class="fx-cat-ic" style="${catTint(g.cat.color)}">${fixIconSVG(g.cat.icon)}</span><span class="fx-sum-name">${escapeHtml(g.cat.name)}</span><span class="c-sub tnum text-[12px]">${total>0?pct(g.sum/total*100):"0 %"}</span><span class="mono font-bold tnum">${eur(g.sum)}</span></div>`).join("");
   }
+  // Liste
   const box=$("#fx-list"); box.innerHTML=""; $("#fx-empty").classList.toggle("hidden",fixed.length>0);
-  fixed.forEach(f=>{ const el=document.createElement("div"); el.className="row"; el.style.cssText="border:1px solid var(--line);background:var(--cell-2)";
-    el.innerHTML=`<div class="flex-1 min-w-0"><p class="font-semibold text-[14.5px] truncate">${escapeHtml(f.name)}</p><p class="c-sub text-[12px] mt-0.5">${escapeHtml(f.cat||"")}</p></div>
+  fixed.forEach(f=>{ const cat=resolveFixCat(f); const el=document.createElement("div"); el.className="row"; el.style.cssText="border:1px solid var(--line);background:var(--cell-2);align-items:center";
+    el.innerHTML=`<span class="fx-cat-ic" style="${catTint(cat.color)}">${fixIconSVG(cat.icon)}</span>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14.5px] truncate">${escapeHtml(f.name)}</p><p class="c-sub text-[12px] mt-0.5">${escapeHtml(cat.name)}</p></div>
       <span class="mono font-bold text-[15px] shrink-0 mr-1">${eur(num(f.amount))}<span class="c-sub text-[11px] font-normal"> /M</span></span>
       <div class="flex flex-col gap-2 shrink-0"><button class="iconbtn fx-edit" data-id="${f.id}" title="Bearbeiten">${icoEdit}</button><button class="iconbtn danger fx-del" data-id="${f.id}" title="Löschen">${icoTrash}</button></div>`;
     box.appendChild(el); });
   $$(".fx-edit").forEach(b=>b.addEventListener("click",()=>openFixEdit(b.dataset.id)));
   $$(".fx-del").forEach(b=>b.addEventListener("click",()=>{ fixed=fixed.filter(x=>x.id!==b.dataset.id); DB.saveFixed(fixed); renderFixed(); renderInventory(); showToast(t("toast.deleted")); }));
 }
-/* Wunsch-Marge live + Zeitraum-Wahl */
+/* Zielmarge live */
 if($("#fx-base")) $("#fx-base").addEventListener("input",()=>{
   fixCfg={ ...fixCfg, baseMargin:num($("#fx-base").value) };
   DB.saveFixCfg(fixCfg); renderFixed(); renderInventory(); });
-if($("#fx-period")) $("#fx-period").addEventListener("change",()=>{
-  fixPeriod=parseInt($("#fx-period").value)||30; Store.set("fg_fixperiod",String(fixPeriod)); renderFixed(); renderInventory(); });
-/* Collapsible Fixkosten-Formular */
+if($("#ec-new")) $("#ec-new").addEventListener("click",()=>openExpenseCatModal());
+if($("#fx-cat")) $("#fx-cat").addEventListener("change",()=>{ if($("#fx-cat").value==="__new__"){ const first=getExpenseCats()[0]; $("#fx-cat").value=first?first.id:""; openExpenseCatModal(); } });
+/* Collapsible Ausgaben-Formular */
 function setFixForm(open){ fxFormOpen=open; $("#fx-form").classList.toggle("hidden",!open);
   $("#fx-toggle-ic").style.transform=open?"rotate(45deg)":"rotate(0deg)";
   $("#fx-toggle").querySelector("span").textContent= open ? (lang==="en"?"Close":"Schließen") : t("fix.add");
-  if(!open){ editingFixId=null; $("#fx-name").value=""; $("#fx-amount").value=""; $("#fx-cat").value=""; $("#fx-add").textContent=t("btn.add"); } }
+  if(!open){ editingFixId=null; $("#fx-name").value=""; $("#fx-amount").value=""; refreshFixCatSelect(); const first=getExpenseCats()[0]; if($("#fx-cat")) $("#fx-cat").value=first?first.id:""; $("#fx-add").textContent=t("btn.add"); } }
 $("#fx-toggle").addEventListener("click",()=>setFixForm(!fxFormOpen));
 $("#fx-cancel").addEventListener("click",()=>setFixForm(false));
-$("#fx-add").addEventListener("click",()=>{ const name=$("#fx-name").value.trim(), amount=num($("#fx-amount").value), cat=$("#fx-cat").value.trim();
+$("#fx-add").addEventListener("click",()=>{ const name=$("#fx-name").value.trim(), amount=num($("#fx-amount").value); const sc=$("#fx-cat"); let catId=sc?sc.value:""; if(catId==="__new__") catId="";
   if(!name){ flashError($("#fx-name")); return; } if(amount<=0){ flashError($("#fx-amount")); return; }
-  if(editingFixId){ const f=fixed.find(x=>x.id===editingFixId); if(f) Object.assign(f,{name,amount,cat}); }
-  else fixed.unshift({id:"fx"+Date.now(),name,amount,cat});
+  if(editingFixId){ const f=fixed.find(x=>x.id===editingFixId); if(f){ Object.assign(f,{name,amount,catId}); delete f.cat; } }
+  else fixed.unshift({id:"fx"+Date.now(),name,amount,catId});
   DB.saveFixed(fixed); setFixForm(false); renderFixed(); renderInventory(); showToast(t("toast.saved")); });
 function openFixEdit(id){ const f=fixed.find(x=>x.id===id); if(!f) return; editingFixId=id;
-  $("#fx-name").value=f.name; $("#fx-amount").value=String(f.amount).replace(".",","); $("#fx-cat").value=f.cat||"";
+  $("#fx-name").value=f.name; $("#fx-amount").value=String(f.amount).replace(".",","); refreshFixCatSelect();
+  const sc=$("#fx-cat"); if(sc){ if(f.catId && getExpenseCats().some(c=>c.id===f.catId)) sc.value=f.catId; else { const first=getExpenseCats()[0]; sc.value=first?first.id:""; } }
   $("#fx-add").textContent=t("btn.save"); fxFormOpen=true; $("#fx-form").classList.remove("hidden"); $("#fx-toggle-ic").style.transform="rotate(45deg)"; $("#fx-toggle").querySelector("span").textContent=(lang==="en"?"Close":"Schließen"); }
 
 /* ===== 10c · MONATS-REPORT + EXPORT ===== */

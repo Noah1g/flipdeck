@@ -651,6 +651,34 @@ html{ scroll-padding-top:96px; }
 .auth-card::after{ content:""; position:absolute; left:-10%; right:-10%; top:-70px; height:150px; z-index:-1;
   background:radial-gradient(60% 100% at 50% 0%, color-mix(in srgb,var(--brand) 26%,transparent), transparent 72%);
   filter:blur(34px); pointer-events:none; }
+
+/* ===== Fixkosten/Ausgaben: Kategorien · Icons · Aufschlüsselung (v5.2) ===== */
+.fx-bar{ display:flex; height:12px; border-radius:999px; overflow:hidden; background:var(--cell-2); }
+.fx-bar span{ display:block; height:100%; }
+.fx-cat-ic{ flex:0 0 auto; width:34px; height:34px; border-radius:11px; display:inline-flex; align-items:center; justify-content:center; }
+.fx-cat-ic svg{ width:18px; height:18px; }
+.fx-sum-row{ display:flex; align-items:center; gap:10px; padding:6px 0; }
+.fx-sum-name{ flex:1 1 auto; min-width:0; font-weight:600; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fx-sum-row .mono{ min-width:78px; text-align:right; }
+.fx-cat-chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 13px 6px 6px; border-radius:999px; border:1px solid var(--line);
+  background:color-mix(in srgb,var(--cell-2) 55%,transparent); color:var(--text); font-size:13px; font-weight:600; cursor:pointer;
+  transition:border-color .15s ease, transform .12s ease; }
+.fx-cat-chip:hover{ border-color:color-mix(in srgb,var(--brand) 40%,transparent); transform:translateY(-1px); }
+.fx-cat-chip .fx-cat-ic{ width:26px; height:26px; border-radius:8px; }
+.fx-cat-chip .fx-cat-ic svg{ width:15px; height:15px; }
+/* Kategorie-Modal: Farb- & Icon-Auswahl */
+.ec-swatches{ display:flex; flex-wrap:wrap; gap:9px; }
+.ec-swatch{ width:30px; height:30px; border-radius:9px; border:2px solid transparent; cursor:pointer; box-shadow:inset 0 1px 0 rgba(255,255,255,.25); transition:transform .12s ease; }
+.ec-swatch:hover{ transform:scale(1.08); }
+.ec-swatch[aria-selected="true"]{ box-shadow:0 0 0 2px var(--cell), 0 0 0 4px var(--text), inset 0 1px 0 rgba(255,255,255,.25); }
+.ec-icons{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+.ec-icobtn{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:11px; border:1px solid var(--line);
+  background:color-mix(in srgb,var(--cell-2) 55%,transparent); color:var(--sub); cursor:pointer; transition:color .14s ease, border-color .14s ease, background .14s ease; }
+.ec-icobtn svg{ width:19px; height:19px; }
+.ec-icobtn:hover{ color:var(--text); border-color:color-mix(in srgb,var(--brand) 40%,transparent); }
+.ec-icobtn[aria-selected="true"]{ color:var(--brand); border-color:color-mix(in srgb,var(--brand) 60%,transparent);
+  background:color-mix(in srgb,var(--brand) 14%,transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand) 40%,transparent); }
+@media (max-width:480px){ .ec-icons{ grid-template-columns:repeat(5,1fr); } }
 </style>
 </head>
 
@@ -669,7 +697,7 @@ html{ scroll-padding-top:96px; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.1.0</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.2.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -713,7 +741,7 @@ html{ scroll-padding-top:96px; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.1.0</span>
+        <span class="nav-ver">v5.2.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1143,15 +1171,6 @@ html{ scroll-padding-top:96px; }
         <div><label class="label" for="iv-vk">Inserierter Preis € *</label><input id="iv-vk" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
         <div><label class="label" for="iv-ek">EK € *</label><input id="iv-ek" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
         <div><label class="label" for="iv-ship">Versand €</label><input id="iv-ship" class="field tnum" inputmode="decimal" value="6.19" /></div>
-        <div class="col-span-2 cell p-3.5" style="border-color:var(--line)">
-          <label style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;cursor:pointer;user-select:none">
-            <span><span class="text-[13.5px] font-semibold">EK enthält Umsatzsteuer</span><span class="c-sub text-[12px]" style="display:block;line-height:1.4">Bei Vorsteuerabzug (Regelbesteuerung) — reduziert den EK für die Gewinnrechnung um die enthaltene MwSt.</span></span>
-            <input id="iv-ekust" type="checkbox" style="width:18px;height:18px;accent-color:var(--brand);flex:0 0 auto;margin-top:1px">
-          </label>
-          <div id="iv-ekustrate-wrap" class="mt-2.5 hidden"><label class="label" for="iv-ekustrate">MwSt.-Satz (%)</label>
-            <select id="iv-ekustrate" class="field"><option value="19">19 % (Regelsteuersatz)</option><option value="7">7 % (Ermäßigt)</option><option value="0">0 % (Steuerbefreit)</option></select>
-          </div>
-        </div>
         <div><label class="label" for="iv-cat">Kategorie</label>
           <select id="iv-cat" class="field">
             <optgroup label="Standard · 12 %">
@@ -1221,6 +1240,10 @@ html{ scroll-padding-top:96px; }
             <div><label class="label" for="iv-carrier">Versanddienst (Einkauf)</label><select id="iv-carrier" class="field"><option value="">— Dienst —</option><option value="dhl">DHL</option><option value="hermes">Hermes</option><option value="gls">GLS</option><option value="dpd">DPD</option><option value="ups">UPS</option><option value="post">Deutsche Post</option><option value="dpd_at">Österr. Post</option></select></div>
             <div><label class="label" for="iv-tracking">Sendungsnummer</label><input id="iv-tracking" class="field" placeholder="optional"></div>
             <div class="col-span-2"><label class="label" for="iv-tags">Tags</label><input id="iv-tags" class="field" placeholder="Komma-getrennt · z. B. Sneaker, Q3, eBay"></div>
+            <label class="col-span-2" style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;cursor:pointer;user-select:none;margin-top:2px">
+              <span><span class="text-[13.5px] font-semibold">Kein Vorsteuerabzug bei diesem Einkauf</span><span class="c-sub text-[12px]" style="display:block;line-height:1.4">Nur bei Regelbesteuerung relevant. Aktivieren, wenn der Einkauf <b>keine abziehbare deutsche USt</b> enthält (z. B. Kauf bei einem ausländischen Shop ohne deutsche USt auf der Rechnung). Dann wird der <b>volle EK</b> gerechnet statt netto. Deine Steuerart stellst du im Profil ein.</span></span>
+              <input id="iv-noinputvat" type="checkbox" style="width:18px;height:18px;accent-color:var(--brand);flex:0 0 auto;margin-top:1px">
+            </label>
           </div>
         </details>
       </div>
@@ -1289,42 +1312,45 @@ html{ scroll-padding-top:96px; }
   <!-- ============ FIXKOSTEN (v1.5) ============ -->
   <section id="fix-view" class="hidden shell px-4 py-6">
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-      <div class="cell p-4"><p class="label mb-2" data-i18n="fix.monthly">Monatliche Fixkosten</p><p id="fx-total" class="tnum font-bold text-[24px]">0,00 €</p></div>
-      <div class="cell p-4"><p class="label mb-2">Fixkosten / Paket</p><p id="fx-perpkg" class="tnum font-bold text-[24px]">0,00 €</p></div>
+      <div class="cell p-4"><p class="label mb-2">Ausgaben / Monat</p><p id="fx-total" class="tnum font-bold text-[24px]">0,00 €</p></div>
+      <div class="cell p-4"><p class="label mb-2">Ausgaben / Paket</p><p id="fx-perpkg" class="tnum font-bold text-[24px]">0,00 €</p></div>
       <div class="cell p-4"><p class="label mb-2" data-i18n="fix.algo">Zielmarge</p><p id="fx-target" class="tnum c-accent font-bold text-[24px]">0,0 %</p></div>
     </div>
 
-    <!-- Dynamische Mindest-Marge: Umsatz & Pakete automatisch aus dem Tracker -->
+    <!-- Aufschlüsselung nach Kategorie -->
+    <div id="fx-breakdown" class="cell p-5 mb-3 hidden">
+      <h3 class="text-[16px] font-semibold tracking-tight mb-3">Ausgaben nach Kategorie</h3>
+      <div id="fx-bar" class="fx-bar mb-4"></div>
+      <div id="fx-cat-sums" class="flex flex-col gap-1.5"></div>
+    </div>
+
+    <!-- Kompakte Zielmarge (füttert den Ziel-Verkaufspreis im Bestand) -->
     <div class="cell p-5 mb-3">
-      <div class="flex items-center justify-between gap-3 flex-wrap mb-1">
-        <h3 class="text-[17px] font-semibold tracking-tight">Dynamische Mindest-Marge</h3>
-        <select id="fx-period" class="field" style="width:auto;min-width:150px;padding-top:8px;padding-bottom:8px">
-          <option value="30" selected>Letzte 30 Tage</option>
-          <option value="60">Letzte 60 Tage</option>
-          <option value="90">Letzte 90 Tage</option>
-        </select>
-      </div>
-      <p class="c-sub text-[12.5px] mb-4 leading-relaxed">Flipdeck liest Umsatz &amp; verkaufte Pakete automatisch aus deinem Tracker – du musst nichts mehr schätzen. Je mehr Umsatz, desto kleiner der Fixkosten-Anteil und desto niedriger die nötige Mindest-Marge. Bei wenigen Verkäufen steigt sie, weil die Fixkosten stärker ins Gewicht fallen.</p>
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-        <div class="rounded-[14px] p-3.5" style="background:var(--cell-2)"><p class="label">Umsatz (Zeitraum)</p><p id="fx-auto-rev" class="tnum font-bold text-[18px] mt-1 leading-none">0,00 €</p><p class="c-sub text-[10.5px] mt-1">automatisch aus Tracker</p></div>
-        <div class="rounded-[14px] p-3.5" style="background:var(--cell-2)"><p class="label">Verkaufte Pakete</p><p id="fx-auto-pkg" class="tnum font-bold text-[18px] mt-1 leading-none">0</p><p class="c-sub text-[10.5px] mt-1">automatisch aus Tracker</p></div>
-        <div class="rounded-[14px] p-3.5 col-span-2 sm:col-span-1"><label class="label" for="fx-base">Zielmarge % <span class="info-i" data-tip="Deine gewünschte Gewinn-Marge je Artikel (Standard 15 %). Daraus berechnet Flipdeck den Ziel-Verkaufspreis. Der Break-Even (5 %) ist fix.">i</span></label><input id="fx-base" class="field tnum" style="margin-top:6px" inputmode="decimal" value="15" /></div>
-      </div>
-      <div class="rounded-[15px] p-4" style="background:var(--accent-soft);border:1px solid var(--line)">
-        <p id="fx-explain" class="text-[12.5px] leading-relaxed">—</p>
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div style="min-width:0;flex:1 1 220px"><h3 class="text-[15px] font-semibold tracking-tight">Zielmarge</h3><p class="c-sub text-[12px] mt-0.5 leading-relaxed">Deine gewünschte Gewinn-Marge je Artikel — bestimmt den Ziel-Verkaufspreis im Bestand. Break-Even (5 %) ist fix.</p></div>
+        <div style="flex:0 0 118px"><div class="pw-wrap"><input id="fx-base" class="field tnum" inputmode="decimal" value="15" style="padding-right:34px" /><span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:15px;pointer-events:none">%</span></div></div>
       </div>
     </div>
 
-    <!-- Collapsible: neue Fixkosten-Position -->
+    <!-- Ausgaben-Kategorien verwalten -->
+    <div class="cell p-5 mb-3">
+      <div class="flex items-center justify-between gap-3 mb-3">
+        <div style="min-width:0"><h3 class="text-[15px] font-semibold tracking-tight">Kategorien</h3><p class="c-sub text-[12px] mt-0.5">Mit Farbe &amp; Icon — jede Ausgabe bekommt eine Kategorie.</p></div>
+        <button id="ec-new" class="btn-ghost" style="padding:8px 13px;font-size:13px;display:flex;align-items:center;gap:7px;flex:0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Neue Kategorie</button>
+      </div>
+      <div id="ec-list" class="flex flex-wrap gap-2"></div>
+    </div>
+
+    <!-- Collapsible: neue Ausgabe -->
     <button id="fx-toggle" class="btn-accent w-full mb-3" style="display:flex;align-items:center;justify-content:center;gap:9px">
       <svg id="fx-toggle-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s ease"><path d="M12 5v14M5 12h14"/></svg>
-      <span data-i18n="fix.add">Neue Fixkosten-Position</span>
+      <span data-i18n="fix.add">Neue Ausgabe</span>
     </button>
     <div id="fx-form" class="cell p-5 mb-3 hidden">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
         <div class="sm:col-span-1"><label class="label" for="fx-name">Bezeichnung *</label><input id="fx-name" class="field" placeholder="z. B. Versandkartons" /></div>
         <div><label class="label" for="fx-amount">Betrag € / Monat *</label><input id="fx-amount" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
-        <div><label class="label" for="fx-cat">Kategorie</label><input id="fx-cat" class="field" placeholder="Material, Abo …" /></div>
+        <div><label class="label" for="fx-cat">Kategorie</label><select id="fx-cat" class="field"></select></div>
       </div>
       <div class="grid grid-cols-2 gap-3"><button id="fx-cancel" class="btn-ghost" data-i18n="btn.cancel">Abbrechen</button><button id="fx-add" class="btn-accent" data-i18n="btn.add">Hinzufügen</button></div>
     </div>
@@ -1332,7 +1358,7 @@ html{ scroll-padding-top:96px; }
     <div id="fx-list" class="flex flex-col gap-2.5"></div>
     <div id="fx-empty" class="cell p-10 text-center hidden">
       <svg class="mx-auto mb-3" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18M8 4v16"/></svg>
-      <p class="c-sub text-sm font-medium" data-i18n="fix.empty">Noch keine Fixkosten erfasst</p>
+      <p class="c-sub text-sm font-medium" data-i18n="fix.empty">Noch keine Ausgaben erfasst</p>
     </div>
   </section>
 
@@ -1605,7 +1631,7 @@ html{ scroll-padding-top:96px; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.1.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.2.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
