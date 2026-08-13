@@ -910,6 +910,16 @@ if($("#dash-reset-kpis")) $("#dash-reset-kpis").addEventListener("click",()=>das
 if($("#dash-reset-detail")) $("#dash-reset-detail").addEventListener("click",()=>dashReset("detail"));
 if($("#dash-customize")) $("#dash-customize").addEventListener("click",()=>{ setTab("profil"); setTimeout(()=>{ const b=$("#dash-cfg-kpis"); const card=b&&b.closest?b.closest(".cell"):null; if(card) card.scrollIntoView({behavior:"smooth",block:"start"}); },140); });
 function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); applyDashCfg(); }
+
+/* ===== Features & Workflow (Konto-Schalter) ===== */
+function getFeatCfg(){ let o=null; try{ o=JSON.parse(Store.get(uKey("featcfg"))||"null"); }catch(e){} if(!o||typeof o!=="object") o={}; return { images:o.images!==false, intake:o.intake===true, sellAvail:o.sellAvail===true }; }
+function saveFeatCfg(o){ Store.set(uKey("featcfg"), JSON.stringify(o)); }
+function applyFeatCfg(){ document.body.classList.toggle("no-images", !getFeatCfg().images); }
+function renderFeatManager(){ const c=getFeatCfg(); const set=(id,on)=>{ const b=$("#"+id); if(b) b.setAttribute("aria-pressed", on?"true":"false"); }; set("feat-images",c.images); set("feat-intake",c.intake); set("feat-sellavail",c.sellAvail); }
+function toggleFeat(key){ const c=getFeatCfg(); const next={images:c.images,intake:c.intake,sellAvail:c.sellAvail}; next[key]=!next[key]; saveFeatCfg(next); renderFeatManager(); applyFeatCfg(); if(typeof renderInventory==="function") renderInventory(); }
+if($("#feat-images")) $("#feat-images").addEventListener("click",()=>toggleFeat("images"));
+if($("#feat-intake")) $("#feat-intake").addEventListener("click",()=>toggleFeat("intake"));
+if($("#feat-sellavail")) $("#feat-sellavail").addEventListener("click",()=>toggleFeat("sellAvail"));
 $("#search").addEventListener("input", ()=>{ const x=$("#search-x"); if(x) x.classList.toggle("hidden", !$("#search").value); renderHistory(); });
 $("#search-x").addEventListener("click", ()=>{ const s=$("#search"); s.value=""; $("#search-x").classList.add("hidden"); s.focus(); renderHistory(); });
 
@@ -1989,7 +1999,7 @@ function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   invFormOpen=true; $("#iv-form").classList.remove("hidden"); $("#iv-toggle-ic").style.transform="rotate(45deg)"; $("#iv-toggle").querySelector("span").textContent=t("ui.close");
   window.scrollTo({top:0,behavior:"smooth"}); }
 
-function renderInventory(){ const list=$("#inv-list");
+function renderInventory(){ const list=$("#inv-list"); applyFeatCfg();
   const goal=targetMargin(), goalPct=goal*100;
 
   /* 1) Kennzahlen nur über AKTIVEN Bestand (Lieferanten-Retouren zählen nicht) */
@@ -2026,6 +2036,7 @@ function renderInventory(){ const list=$("#inv-list");
   let view = rows.filter(r=>{
     const st=r.st;
     if(invFilter==="active"   && st==="returned") return false;
+    if(invFilter==="active"   && getFeatCfg().intake && (st==="ordered"||st==="transit")) return false; // Wareneingang: erst zeigen, wenn angekommen
     if(invFilter==="ordered"  && st!=="ordered")  return false;
     if(invFilter==="transit"  && st!=="transit")  return false;
     if(invFilter==="returned" && st!=="returned") return false;
@@ -2127,7 +2138,7 @@ function renderInventory(){ const list=$("#inv-list");
     if(s==="ordered"||s==="transit"){ it.status=nextStatusOf(s); it.touchedAt=new Date().toISOString(); DB.saveInventory(inventory); renderInventory(); renderDashboard&&renderDashboard(); showToast(`Status: ${INV_STATUS[it.status].de}`); } }));
   $$("#inv-list .inv-del").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); inventory=inventory.filter(x=>x.id!==b.dataset.id); invExpanded.delete(b.dataset.id); bulkSel.delete(b.dataset.id); DB.saveInventory(inventory); renderInventory(); renderDashboard&&renderDashboard(); showToast("Artikel gelöscht"); }));
   $$("#inv-list .inv-edit").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openInvEdit(b.dataset.id); }));
-  $$("#inv-list .inv-sell").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openSellModal(b.dataset.id); }));
+  $$("#inv-list .inv-sell").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); const it=inventory.find(x=>x.id===b.dataset.id); if(getFeatCfg().sellAvail && it && invStatus(it)!=="stock"){ showToast("Noch nicht im Wareneingang — kann noch nicht verkauft werden"); return; } openSellModal(b.dataset.id); }));
   $$("#inv-list .inv-supreturn").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openSupplierReturn(b.dataset.id); }));
   $$("#inv-list .inv-refund").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); toggleRefund(b.dataset.id); }));
   $$("#inv-list .inv-unreturn").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); undoSupplierReturn(b.dataset.id); }));
@@ -2927,7 +2938,7 @@ function renderProfil(){ if(!currentUser) return; renderAvatar();
   $$("#mode-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mode===themeMode));
   $$("#lang-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.lang===lang));
   if(document.activeElement!==$("#stale-input")) $("#stale-input").value=staleDays;
-  renderShipCfg(); renderPlatManager(); renderDashManager(); }
+  renderShipCfg(); renderPlatManager(); renderDashManager(); renderFeatManager(); }
 
 /* Versandkosten-Vorlagen im Profil verwalten */
 function renderShipCfg(){

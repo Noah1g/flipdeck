@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v16";   // v16 (App v5.4.0): Dashboard anpassen komplett — Karten ein/ausblenden + Drag&Drop-Reihenfolge, "Anpassen"-Knopf auf der Übersicht
+const VERSION    = "flipdeck-v17";   // v17 (App v5.5.0): Features & Workflow — Produktbilder an/aus, Wareneingang nutzen, nur verfügbaren Bestand verkaufen
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

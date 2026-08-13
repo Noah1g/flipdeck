@@ -688,6 +688,18 @@ html{ scroll-padding-top:96px; }
 .dash-row .dash-grip{ flex:0 0 auto; display:flex; align-items:center; color:var(--sub); cursor:grab; margin-right:2px; }
 .dash-row .dash-grip:active{ cursor:grabbing; }
 .dash-row.dragging{ opacity:.5; border-color:color-mix(in srgb,var(--brand) 55%,transparent); }
+
+/* Features & Workflow: Produktbilder aus -> Bild-UI überall ausblenden */
+body.no-images .thumb,
+body.no-images .inv-thumb,
+body.no-images .deal-tile-img,
+body.no-images #drop,
+body.no-images #iv-drop,
+body.no-images #img-url,
+body.no-images #img-url-btn,
+body.no-images .chip .ci,
+body.no-images .ms-head .thumb{ display:none !important; }
+.feat-row{ text-align:left; }
 </style>
 </head>
 
@@ -706,7 +718,7 @@ html{ scroll-padding-top:96px; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.4.0</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.5.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -750,7 +762,7 @@ html{ scroll-padding-top:96px; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.4.0</span>
+        <span class="nav-ver">v5.5.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1648,6 +1660,23 @@ html{ scroll-padding-top:96px; }
         <div id="dash-cfg-detail" class="dash-manage"></div>
       </div>
 
+      <!-- Features & Workflow: Konto-Schalter -->
+      <div class="cell p-5 md:col-span-2">
+        <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Features &amp; Workflow</h3>
+        <p class="c-sub text-[12.5px] mb-4">Passe Funktionen an dein Vorgehen an — pro Konto gespeichert.</p>
+        <button id="feat-images" type="button" class="pw-toggle feat-row" aria-pressed="true" style="width:100%;margin-bottom:10px">
+          <span class="pw-toggle-info"><span class="pw-toggle-name">Produktbilder aktivieren</span><span class="pw-toggle-set">Bilder hochladen &amp; anzeigen. Aus = keine Produktbilder.</span></span><span class="pw-sw"></span>
+        </button>
+        <button id="feat-intake" type="button" class="pw-toggle feat-row" aria-pressed="false" style="width:100%">
+          <span class="pw-toggle-info"><span class="pw-toggle-name">Wareneingang nutzen</span><span class="pw-toggle-set">Einkäufe erscheinen im Bestand erst, wenn sie als „angekommen" markiert sind.</span></span><span class="pw-sw"></span>
+        </button>
+        <div style="border-left:2px solid var(--line);margin:10px 0 0 7px;padding-left:13px">
+          <button id="feat-sellavail" type="button" class="pw-toggle feat-row" aria-pressed="false" style="width:100%">
+            <span class="pw-toggle-info"><span class="pw-toggle-name">Nur verfügbaren Bestand verkaufen</span><span class="pw-toggle-set">Verhindert den Verkauf von Artikeln, die noch nicht im Wareneingang eingetroffen sind.</span></span><span class="pw-sw"></span>
+          </button>
+        </div>
+      </div>
+
       <!-- Versandkosten-Vorlagen: Standard + Presets für schnelle Auswahl -->
       <div class="cell p-5 md:col-span-2" id="ship-card">
         <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Versandkosten-Vorlagen</h3>
@@ -1662,7 +1691,7 @@ html{ scroll-padding-top:96px; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.4.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.5.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
