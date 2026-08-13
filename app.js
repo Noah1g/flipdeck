@@ -547,7 +547,7 @@ async function enterApp(){
   maybeAutoBackup();   // Ebene 1: lokale Tagessicherung
   maybeCloudBackup();  // Ebene 2: Cloud-Sicherung in Supabase (fire-and-forget)
   setTimeout(()=>{ try{ maybeAutoMigrate(); }catch(e){} }, 6000);  // Bilder automatisch im Hintergrund in den Storage sichern
-  mountFilters(); buildMonthChains(); renderAvatar(); renderAdmin(); renderProfil(); renderFixed();
+  mountFilters(); buildMonthChains(); renderAvatar(); renderAdmin(); renderProfil(); renderFixed(); refreshBuyPlatSelect();
   // Deep-Link respektieren: kommt die App über #calc/#inventory/... rein, dort starten
   var _tabs=["dashboard","tracker","calc","inventory","fix","report","pwgen","admin","profil"];
   var _want=(location.hash||"").replace(/^#/,"");
@@ -927,6 +927,56 @@ function toggleFeat(key){ const c=getFeatCfg(); const next={images:c.images,inta
 if($("#feat-images")) $("#feat-images").addEventListener("click",()=>toggleFeat("images"));
 if($("#feat-intake")) $("#feat-intake").addEventListener("click",()=>toggleFeat("intake"));
 if($("#feat-sellavail")) $("#feat-sellavail").addEventListener("click",()=>toggleFeat("sellAvail"));
+
+/* ===== Einkaufsplattformen mit Retourenzeit → automatische Rückgabefrist (Risk-Management) =====
+   Jeder Einkauf kann einer Plattform zugeordnet werden. Aus Bestelldatum + Retourenzeit
+   berechnet Flipdeck die Rückgabefrist automatisch; sie erscheint im Aufmerksamkeiten-Banner
+   und als Frist-Pill im Bestand. Gespeichert in fixCfg (synct über die Cloud). */
+const DEFAULT_BUY_PLATFORMS = [
+  {id:"bp_amazon", name:"Amazon", returnDays:30},
+  {id:"bp_ebay", name:"eBay", returnDays:30},
+  {id:"bp_zalando", name:"Zalando", returnDays:100},
+  {id:"bp_nike", name:"Nike", returnDays:30},
+  {id:"bp_kleinanzeigen", name:"Kleinanzeigen", returnDays:0}
+];
+function getBuyPlatforms(){ if(!Array.isArray(fixCfg.buyPlatforms)){ fixCfg.buyPlatforms = DEFAULT_BUY_PLATFORMS.map(p=>({...p})); } return fixCfg.buyPlatforms; }
+function buyPlatformById(id){ return getBuyPlatforms().find(p=>p.id===id)||null; }
+function addDaysISO(baseISO, days){ const d = baseISO ? new Date(baseISO+"T12:00:00") : new Date(); if(isNaN(d)) return ""; d.setDate(d.getDate()+(parseInt(days)||0)); return d.toISOString().slice(0,10); }
+function refreshBuyPlatSelect(){ const sel=$("#iv-buyplatform"); if(!sel) return; const cur=sel.value;
+  sel.innerHTML=`<option value="">— keine —</option>`+getBuyPlatforms().map(p=>`<option value="${p.id}">${escapeHtml(p.name)}${p.returnDays>0?` · ${p.returnDays} T Rückgabe`:""}</option>`).join("")+`<option value="__new__">＋ Neue Einkaufsplattform …</option>`;
+  if(cur && (buyPlatformById(cur)||cur==="")) sel.value=cur; }
+function applyBuyPlatToForm(){ const sel=$("#iv-buyplatform"); if(!sel) return; const p=buyPlatformById(sel.value); if(!p) return;
+  if(p.returnDays>0 && $("#iv-returnby")){ $("#iv-returnby").value = addDaysISO($("#iv-orderdate")?$("#iv-orderdate").value:"", p.returnDays); } }
+function renderBuyPlatManager(){ const box=$("#buyplat-list"); if(!box) return; const list=getBuyPlatforms();
+  box.innerHTML = list.length ? list.map(p=>`<button type="button" class="fx-cat-chip buyplat-edit" data-id="${p.id}" title="Bearbeiten"><span class="fx-cat-ic" style="color:var(--brand);background:color-mix(in srgb,var(--brand) 15%,transparent);border:1px solid color-mix(in srgb,var(--brand) 32%,transparent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 6v13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg></span>${escapeHtml(p.name)} · ${p.returnDays>0?p.returnDays+" T":"keine Frist"}</button>`).join("") : `<p class="c-sub text-[12.5px]">Noch keine Einkaufsplattform angelegt.</p>`;
+  $$("#buyplat-list .buyplat-edit").forEach(b=>b.addEventListener("click",()=>openBuyPlatModal(b.dataset.id))); }
+function openBuyPlatModal(id){
+  const editing = id ? buyPlatformById(id) : null;
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:420px">
+    <div class="flex items-start justify-between gap-3 mb-1">
+      <div><p class="font-bold text-[18px]">${editing?"Einkaufsplattform bearbeiten":"Neue Einkaufsplattform"}</p><p class="c-sub text-[12.5px] mt-0.5">Shop/Händler mit Rückgabefrist — daraus wird die Frist automatisch berechnet.</p></div>
+      <button id="bp-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="my-4"><label class="label" for="bp-name">Name *</label><input id="bp-name" class="field" placeholder="z. B. Amazon, Nike, eBay" value="${editing?attrEsc(editing.name):""}"></div>
+    <div class="mb-4"><label class="label" for="bp-days">Retourenzeit (Tage)</label><input id="bp-days" class="field tnum" inputmode="numeric" placeholder="z. B. 30" value="${editing?editing.returnDays:""}"><p class="c-sub text-[11.5px] mt-1.5">0 = keine Rückgabe (z. B. Privatkauf/Kleinanzeigen). Ändern aktualisiert alle verknüpften Einkäufe automatisch.</p></div>
+    <div class="grid grid-cols-2 gap-3">${editing?`<button id="bp-del" class="btn-ghost" style="color:var(--danger)">Löschen</button>`:`<button id="bp-cancel" class="btn-ghost">Abbrechen</button>`}<button id="bp-save" class="btn-accent">${editing?"Speichern":"Anlegen"}</button></div>
+  </div></div>`;
+  const close=()=>{ $("#modal-root").innerHTML=""; };
+  $("#bp-x").addEventListener("click",close); if($("#bp-cancel")) $("#bp-cancel").addEventListener("click",close);
+  if($("#bp-del")) $("#bp-del").addEventListener("click",()=>{ inventory.forEach(it=>{ if(it.buyPlatformId===id) delete it.buyPlatformId; }); DB.saveInventory(inventory);
+    fixCfg.buyPlatforms=getBuyPlatforms().filter(p=>p.id!==id); DB.saveFixCfg(fixCfg); close(); renderBuyPlatManager(); renderInventory(); showToast("Einkaufsplattform gelöscht"); });
+  $("#bp-save").addEventListener("click",()=>{ const name=$("#bp-name").value.trim(); if(!name){ flashError($("#bp-name")); return; }
+    const days=Math.max(0,parseInt($("#bp-days").value)||0); getBuyPlatforms(); let pid=id;
+    if(editing){ const oldDays=editing.returnDays; Object.assign(editing,{name,returnDays:days});
+      if(oldDays!==days){ inventory.forEach(it=>{ if(it.buyPlatformId===id){ it.returnBy = days>0 ? addDaysISO(it.orderDate, days) : ""; } }); DB.saveInventory(inventory); }
+    } else { pid="bp"+Date.now(); fixCfg.buyPlatforms.push({id:pid,name,returnDays:days}); }
+    DB.saveFixCfg(fixCfg); close(); renderBuyPlatManager(); renderInventory();
+    if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=pid; applyBuyPlatToForm(); }
+    showToast(editing?"Gespeichert":"Angelegt"); });
+}
+if($("#buyplat-new")) $("#buyplat-new").addEventListener("click",()=>openBuyPlatModal());
+if($("#iv-buyplatform")) $("#iv-buyplatform").addEventListener("change",()=>{ const sel=$("#iv-buyplatform"); if(sel.value==="__new__"){ sel.value=""; openBuyPlatModal(); return; } applyBuyPlatToForm(); });
+if($("#iv-orderdate")) $("#iv-orderdate").addEventListener("change",()=>{ const sel=$("#iv-buyplatform"); if(sel && sel.value && sel.value!=="__new__") applyBuyPlatToForm(); });
 $("#search").addEventListener("input", ()=>{ const x=$("#search-x"); if(x) x.classList.toggle("hidden", !$("#search").value); renderHistory(); });
 $("#search-x").addEventListener("click", ()=>{ const s=$("#search"); s.value=""; $("#search-x").classList.add("hidden"); s.focus(); renderHistory(); });
 
@@ -1787,7 +1837,7 @@ async function persistImage(src){
     return src;
   }
 }
-function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tracking","iv-tags"].forEach(id=>$("#"+id).value=""); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; $("#iv-carrier").value=""; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
+function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tracking","iv-tags"].forEach(id=>$("#"+id).value=""); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; $("#iv-carrier").value=""; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=""; } resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
 function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hidden",!open);
   $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
   $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
@@ -1811,7 +1861,7 @@ $("#iv-add").addEventListener("click", async ()=>{
   req.forEach(([id,ok])=>{ const el=$("#"+id); if(!ok(el.value)){ flashError(el); bad=true; } });
   if(bad){ showToast("Bitte Pflichtfelder ausfüllen"); return; }
   const data={ name:$("#iv-name").value.trim(), ean:$("#iv-ean").value.trim(), qty:Math.max(1,parseInt($("#iv-qty").value)||1), vk:num($("#iv-vk").value), ek:num($("#iv-ek").value), ship:num($("#iv-ship").value), catPct:num($("#iv-cat").value), adPct:num($("#iv-ad").value), regionPct:num($("#iv-region").value), feeVer:FEE_VER, noInputVat:!!($("#iv-noinputvat")&&$("#iv-noinputvat").checked),
-    status:$("#iv-status").value||"stock", orderDate:$("#iv-orderdate").value||"", returnBy:$("#iv-returnby").value||"", buyCarrier:$("#iv-carrier").value||"", buyTracking:$("#iv-tracking").value.trim(), tags:parseTags($("#iv-tags").value) };
+    status:$("#iv-status").value||"stock", orderDate:$("#iv-orderdate").value||"", returnBy:$("#iv-returnby").value||"", buyPlatformId:(($("#iv-buyplatform")&&$("#iv-buyplatform").value!=="__new__")?$("#iv-buyplatform").value:""), buyCarrier:$("#iv-carrier").value||"", buyTracking:$("#iv-tracking").value.trim(), tags:parseTags($("#iv-tags").value) };
 
   const btn=$("#iv-add"); const label=btn.textContent;
   if(isDataUrl(pendingInvImg)){ btn.disabled=true; btn.textContent="Bild wird hochgeladen…"; }
@@ -1994,6 +2044,7 @@ function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   if($("#iv-noinputvat")) $("#iv-noinputvat").checked=!!it.noInputVat;
   $("#iv-status").value = invStatus(it)==="returned" ? "stock" : invStatus(it);
   $("#iv-orderdate").value = it.orderDate||""; $("#iv-returnby").value = it.returnBy||"";
+  refreshBuyPlatSelect(); if($("#iv-buyplatform")) $("#iv-buyplatform").value = (it.buyPlatformId && buyPlatformById(it.buyPlatformId)) ? it.buyPlatformId : "";
   $("#iv-carrier").value = it.buyCarrier||""; $("#iv-tracking").value = it.buyTracking||"";
   $("#iv-tags").value = (it.tags||[]).join(", ");
   // Der Workflow-Block ist normal zugeklappt. Hat der Artikel dort aber Daten,
@@ -2982,7 +3033,7 @@ function renderProfil(){ if(!currentUser) return; renderAvatar();
   $$("#mode-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mode===themeMode));
   $$("#lang-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.lang===lang));
   if(document.activeElement!==$("#stale-input")) $("#stale-input").value=staleDays;
-  renderShipCfg(); renderPlatManager(); renderDashManager(); renderFeatManager();
+  renderShipCfg(); renderPlatManager(); renderDashManager(); renderFeatManager(); renderBuyPlatManager();
   if(typeof setSettingsCat==="function") setSettingsCat(Store.get(uKey("setcat"))||"profil"); }
 
 /* Versandkosten-Vorlagen im Profil verwalten */
