@@ -680,8 +680,14 @@ html{ scroll-padding-top:96px; }
   background:color-mix(in srgb,var(--brand) 14%,transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand) 40%,transparent); }
 @media (max-width:480px){ .ec-icons{ grid-template-columns:repeat(5,1fr); } }
 
-/* Dashboard anpassen: ausgeblendete Karten */
+/* Dashboard anpassen: ausgeblendete Karten + Konfig-Liste (Drag & Drop) */
 .dash-off{ display:none !important; }
+.dash-manage{ display:flex; flex-direction:column; gap:9px; }
+.dash-row{ justify-content:flex-start; user-select:none; }
+.dash-row .pw-toggle-info{ flex:1 1 auto; min-width:0; }
+.dash-row .dash-grip{ flex:0 0 auto; display:flex; align-items:center; color:var(--sub); cursor:grab; margin-right:2px; }
+.dash-row .dash-grip:active{ cursor:grabbing; }
+.dash-row.dragging{ opacity:.5; border-color:color-mix(in srgb,var(--brand) 55%,transparent); }
 </style>
 </head>
 
@@ -700,7 +706,7 @@ html{ scroll-padding-top:96px; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.3.0</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.4.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -744,7 +750,7 @@ html{ scroll-padding-top:96px; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.3.0</span>
+        <span class="nav-ver">v5.4.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -804,9 +810,15 @@ html{ scroll-padding-top:96px; }
 
   <!-- ============ DASHBOARD ============ -->
   <section id="dashboard-view" class="shell px-4 py-6">
-    <div class="mb-4">
-      <h1 id="dash-greeting" class="font-bold" style="font-size:clamp(22px,5vw,28px); letter-spacing:-.02em">Willkommen</h1>
-      <p id="dash-date" class="c-sub text-[13.5px] mt-1">—</p>
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <h1 id="dash-greeting" class="font-bold" style="font-size:clamp(22px,5vw,28px); letter-spacing:-.02em">Willkommen</h1>
+        <p id="dash-date" class="c-sub text-[13.5px] mt-1">—</p>
+      </div>
+      <button id="dash-customize" class="btn-ghost" style="padding:8px 13px;font-size:13px;display:flex;align-items:center;gap:7px;flex:0 0 auto;white-space:nowrap" title="Dashboard anpassen">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Anpassen</span>
+      </button>
     </div>
     <!-- Owner-Hinweis: nur sichtbar, wenn Registrierungsanfragen offen sind -->
     <button id="admin-alert" class="hidden w-full mb-3 rounded-[16px] p-4 text-left" style="background:color-mix(in srgb,var(--brand) 12%,transparent);border:1px solid color-mix(in srgb,var(--brand) 40%,transparent);cursor:pointer">
@@ -1628,12 +1640,12 @@ html{ scroll-padding-top:96px; }
           <p class="label" style="margin:0">Übersichtskarten</p>
           <button id="dash-reset-kpis" class="btn-ghost" style="padding:6px 12px;font-size:12.5px;display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6M3 8a9 9 0 1 0 3-5.7L3 8"/></svg>Zurücksetzen</button>
         </div>
-        <div id="dash-cfg-kpis" class="plat-manage mb-5"></div>
+        <div id="dash-cfg-kpis" class="dash-manage mb-5"></div>
         <div class="flex items-center justify-between mb-2.5">
           <p class="label" style="margin:0">Detail-Bereiche</p>
           <button id="dash-reset-detail" class="btn-ghost" style="padding:6px 12px;font-size:12.5px;display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6M3 8a9 9 0 1 0 3-5.7L3 8"/></svg>Zurücksetzen</button>
         </div>
-        <div id="dash-cfg-detail" class="plat-manage"></div>
+        <div id="dash-cfg-detail" class="dash-manage"></div>
       </div>
 
       <!-- Versandkosten-Vorlagen: Standard + Presets für schnelle Auswahl -->
@@ -1650,7 +1662,7 @@ html{ scroll-padding-top:96px; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.3.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.4.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 

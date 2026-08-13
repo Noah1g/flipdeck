@@ -880,19 +880,35 @@ const DASH_CARDS = [
   {key:"attention",     label:"Aufmerksamkeiten",  sub:"Warnungen & Hinweise", group:"detail"},
   {key:"history",       label:"Historie",          sub:"letzte Verkäufe",      group:"detail"}
 ];
-function getDashCfg(){ let o=null; try{ o=JSON.parse(Store.get(uKey("dashcfg"))||"null"); }catch(e){} if(!o||typeof o!=="object") o={hidden:[]}; if(!Array.isArray(o.hidden)) o.hidden=[]; return o; }
+function getDashCfg(){ let o=null; try{ o=JSON.parse(Store.get(uKey("dashcfg"))||"null"); }catch(e){} if(!o||typeof o!=="object") o={}; if(!Array.isArray(o.hidden)) o.hidden=[]; if(!Array.isArray(o.order)) o.order=[]; return o; }
 function saveDashCfg(o){ Store.set(uKey("dashcfg"), JSON.stringify(o)); }
-function applyDashCfg(){ const hidden=getDashCfg().hidden; DASH_CARDS.forEach(c=>{ const el=document.querySelector('[data-dash="'+c.key+'"]'); if(el) el.classList.toggle("dash-off", hidden.indexOf(c.key)>-1); }); }
+function dashOrderFor(group){ const cfg=getDashCfg(); const def=DASH_CARDS.filter(c=>c.group===group).map(c=>c.key); const seq=cfg.order.filter(k=>def.indexOf(k)>-1); def.forEach(k=>{ if(seq.indexOf(k)===-1) seq.push(k); }); return seq; }
+function applyDashCfg(){ const cfg=getDashCfg();
+  ["kpi","detail"].forEach(g=>{ dashOrderFor(g).forEach(key=>{ const el=document.querySelector('[data-dash="'+key+'"]'); if(el && el.parentNode) el.parentNode.appendChild(el); }); });
+  DASH_CARDS.forEach(c=>{ const el=document.querySelector('[data-dash="'+c.key+'"]'); if(el) el.classList.toggle("dash-off", cfg.hidden.indexOf(c.key)>-1); }); }
+const DASH_GRIP='<span class="dash-grip" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg></span>';
+function dashAfter(box,y){ const els=Array.prototype.slice.call(box.querySelectorAll(".dash-row:not(.dragging)")); let closest=null, closestOff=-Infinity; els.forEach(child=>{ const b=child.getBoundingClientRect(); const off=y-b.top-b.height/2; if(off<0 && off>closestOff){ closestOff=off; closest=child; } }); return closest; }
+function saveDashOrder(){ const cfg=getDashCfg(); const seq=id=>{ const box=$("#"+id); return box?Array.prototype.slice.call(box.querySelectorAll(".dash-row")).map(r=>r.dataset.key):[]; };
+  cfg.order=seq("dash-cfg-kpis").concat(seq("dash-cfg-detail")); saveDashCfg(cfg); applyDashCfg(); }
+function enableDashDrag(box){
+  box.querySelectorAll(".dash-row").forEach(row=>{
+    row.addEventListener("dragstart",()=>row.classList.add("dragging"));
+    row.addEventListener("dragend",()=>{ row.classList.remove("dragging"); row._dragged=true; setTimeout(()=>{ row._dragged=false; },60); saveDashOrder(); });
+  });
+  box.addEventListener("dragover",e=>{ e.preventDefault(); const d=box.querySelector(".dragging"); if(!d) return; const after=dashAfter(box,e.clientY); if(after==null) box.appendChild(d); else box.insertBefore(d,after); });
+}
 function renderDashManager(){ const hidden=getDashCfg().hidden;
   const build=(group,boxId)=>{ const box=$("#"+boxId); if(!box) return;
-    box.innerHTML=DASH_CARDS.filter(c=>c.group===group).map(c=>`<button type="button" class="pw-toggle dash-row" data-key="${c.key}" aria-pressed="${hidden.indexOf(c.key)>-1?"false":"true"}"><span class="pw-toggle-info"><span class="pw-toggle-name">${escapeHtml(c.label)}</span><span class="pw-toggle-set">${escapeHtml(c.sub)}</span></span><span class="pw-sw"></span></button>`).join(""); };
+    box.innerHTML=dashOrderFor(group).map(key=>{ const c=DASH_CARDS.find(x=>x.key===key); return c?`<div class="pw-toggle dash-row" data-key="${c.key}" aria-pressed="${hidden.indexOf(c.key)>-1?"false":"true"}" draggable="true">${DASH_GRIP}<span class="pw-toggle-info"><span class="pw-toggle-name">${escapeHtml(c.label)}</span><span class="pw-toggle-set">${escapeHtml(c.sub)}</span></span><span class="pw-sw"></span></div>`:""; }).join("");
+    enableDashDrag(box); };
   build("kpi","dash-cfg-kpis"); build("detail","dash-cfg-detail");
-  $$(".dash-row").forEach(b=>b.addEventListener("click",()=>{ const key=b.dataset.key; const cfg=getDashCfg(); const idx=cfg.hidden.indexOf(key);
+  $$(".dash-row").forEach(b=>b.addEventListener("click",()=>{ if(b._dragged) return; const key=b.dataset.key; const cfg=getDashCfg(); const idx=cfg.hidden.indexOf(key);
     if(idx>-1) cfg.hidden.splice(idx,1); else cfg.hidden.push(key);
     saveDashCfg(cfg); b.setAttribute("aria-pressed", cfg.hidden.indexOf(key)>-1?"false":"true"); applyDashCfg(); })); }
-function dashReset(group){ const cfg=getDashCfg(); const keys=DASH_CARDS.filter(c=>c.group===group).map(c=>c.key); cfg.hidden=cfg.hidden.filter(k=>keys.indexOf(k)===-1); saveDashCfg(cfg); renderDashManager(); applyDashCfg(); showToast("Zurückgesetzt"); }
+function dashReset(group){ const cfg=getDashCfg(); const keys=DASH_CARDS.filter(c=>c.group===group).map(c=>c.key); cfg.hidden=cfg.hidden.filter(k=>keys.indexOf(k)===-1); cfg.order=cfg.order.filter(k=>keys.indexOf(k)===-1); saveDashCfg(cfg); renderDashManager(); applyDashCfg(); showToast("Zurückgesetzt"); }
 if($("#dash-reset-kpis")) $("#dash-reset-kpis").addEventListener("click",()=>dashReset("kpi"));
 if($("#dash-reset-detail")) $("#dash-reset-detail").addEventListener("click",()=>dashReset("detail"));
+if($("#dash-customize")) $("#dash-customize").addEventListener("click",()=>{ setTab("profil"); setTimeout(()=>{ const b=$("#dash-cfg-kpis"); const card=b&&b.closest?b.closest(".cell"):null; if(card) card.scrollIntoView({behavior:"smooth",block:"start"}); },140); });
 function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); applyDashCfg(); }
 $("#search").addEventListener("input", ()=>{ const x=$("#search-x"); if(x) x.classList.toggle("hidden", !$("#search").value); renderHistory(); });
 $("#search-x").addEventListener("click", ()=>{ const s=$("#search"); s.value=""; $("#search-x").classList.add("hidden"); s.focus(); renderHistory(); });
