@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v14";   // v14 (App v5.2.0): Fixkosten-Ausgaben mit Kategorien (Farbe/Icon) + Aufschlüsselung, EK-USt über Profil-Steuerart (optionaler Ausnahme-Schalter)
+const VERSION    = "flipdeck-v15";   // v15 (App v5.3.0): Dashboard anpassen — Karten (Übersicht/Detail) pro Konto ein-/ausblenden
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

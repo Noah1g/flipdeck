@@ -869,7 +869,31 @@ function renderQuicklinks(){
     <span class="text-[13px] font-semibold">${q.label}</span></button>`).join("");
   $$("#dash-quicklinks button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.qtab)));
 }
-function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); }
+/* ===== Dashboard anpassen: Karten ein-/ausblenden (pro Konto gespeichert) ===== */
+const DASH_CARDS = [
+  {key:"profit",        label:"Nettogewinn",       sub:"Große Karte oben",     group:"kpi"},
+  {key:"revenue",       label:"Gesamtumsatz",      sub:"eBay netto",           group:"kpi"},
+  {key:"margin",        label:"Ø Marge",           sub:"Gewinn / Umsatz",      group:"kpi"},
+  {key:"chart-profit",  label:"Profit-Verlauf",    sub:"6-Monats-Chart",       group:"detail"},
+  {key:"chart-revcost", label:"Umsatz & Gewinn",   sub:"Balken je Monat",      group:"detail"},
+  {key:"chart-split",   label:"Umsatz-Aufteilung", sub:"nach Plattform",       group:"detail"},
+  {key:"attention",     label:"Aufmerksamkeiten",  sub:"Warnungen & Hinweise", group:"detail"},
+  {key:"history",       label:"Historie",          sub:"letzte Verkäufe",      group:"detail"}
+];
+function getDashCfg(){ let o=null; try{ o=JSON.parse(Store.get(uKey("dashcfg"))||"null"); }catch(e){} if(!o||typeof o!=="object") o={hidden:[]}; if(!Array.isArray(o.hidden)) o.hidden=[]; return o; }
+function saveDashCfg(o){ Store.set(uKey("dashcfg"), JSON.stringify(o)); }
+function applyDashCfg(){ const hidden=getDashCfg().hidden; DASH_CARDS.forEach(c=>{ const el=document.querySelector('[data-dash="'+c.key+'"]'); if(el) el.classList.toggle("dash-off", hidden.indexOf(c.key)>-1); }); }
+function renderDashManager(){ const hidden=getDashCfg().hidden;
+  const build=(group,boxId)=>{ const box=$("#"+boxId); if(!box) return;
+    box.innerHTML=DASH_CARDS.filter(c=>c.group===group).map(c=>`<button type="button" class="pw-toggle dash-row" data-key="${c.key}" aria-pressed="${hidden.indexOf(c.key)>-1?"false":"true"}"><span class="pw-toggle-info"><span class="pw-toggle-name">${escapeHtml(c.label)}</span><span class="pw-toggle-set">${escapeHtml(c.sub)}</span></span><span class="pw-sw"></span></button>`).join(""); };
+  build("kpi","dash-cfg-kpis"); build("detail","dash-cfg-detail");
+  $$(".dash-row").forEach(b=>b.addEventListener("click",()=>{ const key=b.dataset.key; const cfg=getDashCfg(); const idx=cfg.hidden.indexOf(key);
+    if(idx>-1) cfg.hidden.splice(idx,1); else cfg.hidden.push(key);
+    saveDashCfg(cfg); b.setAttribute("aria-pressed", cfg.hidden.indexOf(key)>-1?"false":"true"); applyDashCfg(); })); }
+function dashReset(group){ const cfg=getDashCfg(); const keys=DASH_CARDS.filter(c=>c.group===group).map(c=>c.key); cfg.hidden=cfg.hidden.filter(k=>keys.indexOf(k)===-1); saveDashCfg(cfg); renderDashManager(); applyDashCfg(); showToast("Zurückgesetzt"); }
+if($("#dash-reset-kpis")) $("#dash-reset-kpis").addEventListener("click",()=>dashReset("kpi"));
+if($("#dash-reset-detail")) $("#dash-reset-detail").addEventListener("click",()=>dashReset("detail"));
+function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); applyDashCfg(); }
 $("#search").addEventListener("input", ()=>{ const x=$("#search-x"); if(x) x.classList.toggle("hidden", !$("#search").value); renderHistory(); });
 $("#search-x").addEventListener("click", ()=>{ const s=$("#search"); s.value=""; $("#search-x").classList.add("hidden"); s.focus(); renderHistory(); });
 
@@ -2887,7 +2911,7 @@ function renderProfil(){ if(!currentUser) return; renderAvatar();
   $$("#mode-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mode===themeMode));
   $$("#lang-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.lang===lang));
   if(document.activeElement!==$("#stale-input")) $("#stale-input").value=staleDays;
-  renderShipCfg(); renderPlatManager(); }
+  renderShipCfg(); renderPlatManager(); renderDashManager(); }
 
 /* Versandkosten-Vorlagen im Profil verwalten */
 function renderShipCfg(){
