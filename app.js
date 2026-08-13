@@ -908,7 +908,13 @@ function renderDashManager(){ const hidden=getDashCfg().hidden;
 function dashReset(group){ const cfg=getDashCfg(); const keys=DASH_CARDS.filter(c=>c.group===group).map(c=>c.key); cfg.hidden=cfg.hidden.filter(k=>keys.indexOf(k)===-1); cfg.order=cfg.order.filter(k=>keys.indexOf(k)===-1); saveDashCfg(cfg); renderDashManager(); applyDashCfg(); showToast("Zurückgesetzt"); }
 if($("#dash-reset-kpis")) $("#dash-reset-kpis").addEventListener("click",()=>dashReset("kpi"));
 if($("#dash-reset-detail")) $("#dash-reset-detail").addEventListener("click",()=>dashReset("detail"));
-if($("#dash-customize")) $("#dash-customize").addEventListener("click",()=>{ setTab("profil"); setTimeout(()=>{ const b=$("#dash-cfg-kpis"); const card=b&&b.closest?b.closest(".cell"):null; if(card) card.scrollIntoView({behavior:"smooth",block:"start"}); },140); });
+if($("#dash-customize")) $("#dash-customize").addEventListener("click",()=>{ setTab("profil"); setSettingsCat("dashboard"); });
+/* ===== Einstellungs-Hub: Kategorie-Wechsel (Seitenleiste) ===== */
+function setSettingsCat(cat){ if(!document.querySelector('[data-spanel="'+cat+'"]')) cat="profil";
+  $$("#settings-nav .settings-navi").forEach(b=>b.classList.toggle("is-active", b.dataset.scat===cat));
+  $$(".settings-panel").forEach(p=>p.classList.toggle("hidden", p.dataset.spanel!==cat));
+  try{ Store.set(uKey("setcat"), cat); }catch(e){} }
+$$("#settings-nav .settings-navi").forEach(b=>b.addEventListener("click",()=>setSettingsCat(b.dataset.scat)));
 function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); applyDashCfg(); }
 
 /* ===== Features & Workflow (Konto-Schalter) ===== */
@@ -2938,7 +2944,8 @@ function renderProfil(){ if(!currentUser) return; renderAvatar();
   $$("#mode-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mode===themeMode));
   $$("#lang-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.lang===lang));
   if(document.activeElement!==$("#stale-input")) $("#stale-input").value=staleDays;
-  renderShipCfg(); renderPlatManager(); renderDashManager(); renderFeatManager(); }
+  renderShipCfg(); renderPlatManager(); renderDashManager(); renderFeatManager();
+  if(typeof setSettingsCat==="function") setSettingsCat(Store.get(uKey("setcat"))||"profil"); }
 
 /* Versandkosten-Vorlagen im Profil verwalten */
 function renderShipCfg(){

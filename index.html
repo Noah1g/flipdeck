@@ -700,6 +700,31 @@ body.no-images #img-url-btn,
 body.no-images .chip .ci,
 body.no-images .ms-head .thumb{ display:none !important; }
 .feat-row{ text-align:left; }
+
+/* ===== Einstellungs-Hub: Seitenleiste + Panels (v5.6) ===== */
+.settings-hub{ display:grid; grid-template-columns:248px 1fr; gap:18px; align-items:start; }
+.settings-nav{ display:flex; flex-direction:column; gap:4px; position:sticky; top:calc(var(--nav-h) + env(safe-area-inset-top,0px) + 22px); }
+.settings-navi{ display:flex; align-items:center; gap:12px; text-align:left; width:100%; padding:10px 12px; border-radius:14px;
+  border:1px solid transparent; background:transparent; color:var(--sub); cursor:pointer; transition:background .15s ease, border-color .15s ease, color .15s ease; }
+.settings-navi:hover{ background:color-mix(in srgb,var(--cell-2) 60%,transparent); color:var(--text); }
+.settings-navi.is-active{ background:color-mix(in srgb,var(--brand) 12%,transparent); border-color:color-mix(in srgb,var(--brand) 28%,transparent); color:var(--text); }
+.settings-navi .sn-ic{ flex:0 0 auto; width:36px; height:36px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  background:color-mix(in srgb,var(--cell-2) 70%,transparent); border:1px solid var(--line); color:var(--sub); transition:all .15s ease; }
+.settings-navi .sn-ic svg{ width:18px; height:18px; }
+.settings-navi.is-active .sn-ic{ color:var(--brand); border-color:color-mix(in srgb,var(--brand) 35%,transparent); background:color-mix(in srgb,var(--brand) 14%,transparent); }
+.settings-navi .sn-txt{ display:flex; flex-direction:column; min-width:0; line-height:1.25; }
+.settings-navi .sn-t{ font-size:14px; font-weight:650; }
+.settings-navi .sn-s{ font-size:11.5px; color:var(--sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.settings-navi.is-active .sn-s{ color:color-mix(in srgb,var(--text) 60%,var(--sub)); }
+.settings-panel{ display:flex; flex-direction:column; gap:12px; animation:fade .28s ease both; }
+.settings-panel .cell{ margin:0 !important; }
+@media (max-width:860px){
+  .settings-hub{ grid-template-columns:1fr; gap:12px; }
+  .settings-nav{ position:static; flex-direction:row; overflow-x:auto; gap:8px; padding-bottom:4px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .settings-nav::-webkit-scrollbar{ display:none; }
+  .settings-navi{ flex:0 0 auto; padding:8px 12px; }
+  .settings-navi .sn-s{ display:none; }
+}
 </style>
 </head>
 
@@ -718,7 +743,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.5.0</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.6.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -762,7 +787,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.5.0</span>
+        <span class="nav-ver">v5.6.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1583,7 +1608,16 @@ body.no-images .ms-head .thumb{ display:none !important; }
 
   <!-- ============ PROFIL ============ -->
   <section id="profil-view" class="hidden shell px-4 py-6">
-    <div class="grid md:grid-cols-2 gap-3">
+    <div class="settings-hub">
+      <nav class="settings-nav" id="settings-nav">
+        <button type="button" class="settings-navi is-active" data-scat="profil"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span><span class="sn-txt"><span class="sn-t">Profil</span><span class="sn-s">Name &amp; Profilbild</span></span></button>
+        <button type="button" class="settings-navi" data-scat="geschaeft"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01"/></svg></span><span class="sn-txt"><span class="sn-t">Geschäft</span><span class="sn-s">Steuern &amp; Marktplätze</span></span></button>
+        <button type="button" class="settings-navi" data-scat="features"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4Z"/><path d="M18 15l.9 2.1L21 18l-2.1.9L18 21l-.9-2.1L15 18l2.1-.9Z"/></svg></span><span class="sn-txt"><span class="sn-t">Features</span><span class="sn-s">Funktionen &amp; Workflow</span></span></button>
+        <button type="button" class="settings-navi" data-scat="dashboard"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span class="sn-txt"><span class="sn-t">Dashboard</span><span class="sn-s">Karten &amp; Anzeige</span></span></button>
+        <button type="button" class="settings-navi" data-scat="versand"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg></span><span class="sn-txt"><span class="sn-t">Versand</span><span class="sn-s">Kosten-Vorlagen</span></span></button>
+      </nav>
+      <div class="settings-body">
+        <div class="settings-panel" data-spanel="profil">
       <div class="cell p-5">
         <h3 class="text-[17px] font-semibold mb-4 tracking-tight" data-i18n="prof.title">Profil</h3>
         <div class="flex items-center gap-4 mb-5">
@@ -1629,7 +1663,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
           </div>
         </div>
       </div>
-
+        </div>
+        <div class="settings-panel hidden" data-spanel="geschaeft">
       <!-- Steuerstatus, Standard-MwSt-Satz und Standard-Verkaufsplattform -->
       <div class="cell p-5 md:col-span-2">
         <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Steuer &amp; Verkauf</h3>
@@ -1643,7 +1678,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <p class="c-sub text-[12.5px] mb-4">Wähle, welche Marktplätze im Verkauf-Dialog zur Auswahl stehen. Ausgeschaltete werden ausgeblendet — mindestens einer bleibt immer aktiv.</p>
         <div id="plat-manage-list" class="plat-manage"></div>
       </div>
-
+        </div>
+        <div class="settings-panel hidden" data-spanel="dashboard">
       <!-- Dashboard anpassen: Karten ein-/ausblenden -->
       <div class="cell p-5 md:col-span-2">
         <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Dashboard anpassen</h3>
@@ -1659,7 +1695,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
         </div>
         <div id="dash-cfg-detail" class="dash-manage"></div>
       </div>
-
+        </div>
+        <div class="settings-panel hidden" data-spanel="features">
       <!-- Features & Workflow: Konto-Schalter -->
       <div class="cell p-5 md:col-span-2">
         <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Features &amp; Workflow</h3>
@@ -1676,7 +1713,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
           </button>
         </div>
       </div>
-
+        </div>
+        <div class="settings-panel hidden" data-spanel="versand">
       <!-- Versandkosten-Vorlagen: Standard + Presets für schnelle Auswahl -->
       <div class="cell p-5 md:col-span-2" id="ship-card">
         <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Versandkosten-Vorlagen</h3>
@@ -1688,10 +1726,12 @@ body.no-images .ms-head .thumb{ display:none !important; }
           <button id="ship-add" class="btn-accent" style="flex:0 0 auto;padding:12px 16px">Hinzufügen</button>
         </div>
       </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.5.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.6.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 

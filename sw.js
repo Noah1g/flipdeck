@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v17";   // v17 (App v5.5.0): Features & Workflow — Produktbilder an/aus, Wareneingang nutzen, nur verfügbaren Bestand verkaufen
+const VERSION    = "flipdeck-v18";   // v18 (App v5.6.0): Profil zu kategorisiertem Einstellungs-Hub mit Seitenleiste (Profil/Geschäft/Features/Dashboard/Versand)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
