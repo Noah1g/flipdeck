@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v22";   // v22 (App v5.10.0): Zahlungsmethoden (optional) bei Einkäufen, Ausgaben & Verkäufen
+const VERSION    = "flipdeck-v23";   // v23 (App v5.10.1): Automatische Datei-Backups in selbst gewählten (Cloud-)Ordner — wöchentlich, still, außerhalb Supabase
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
