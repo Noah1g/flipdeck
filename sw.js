@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v18";   // v18 (App v5.6.0): Profil zu kategorisiertem Einstellungs-Hub mit Seitenleiste (Profil/Geschäft/Features/Dashboard/Versand)
+const VERSION    = "flipdeck-v19";   // v19 (App v5.7.0): Daten-Kategorie (Backup/Import/Bilder-Wartung aus Report umgezogen & sortiert), Features-Texte klarer
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

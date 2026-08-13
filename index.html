@@ -743,7 +743,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.6.0</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.7.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -787,7 +787,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.6.0</span>
+        <span class="nav-ver">v5.7.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1480,48 +1480,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <div id="rp-list"></div>
     </div>
 
-    <button id="rp-backup" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6H4a1 1 0 0 0-1 1v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a1 1 0 0 0-1-1zM3 6l1.5-3h15L21 6M9 12h6"/></svg>Voll-Backup herunterladen</button>
-
-    <!-- Backup zurückspielen -->
-    <div class="cell p-5 mt-4">
-      <h3 class="text-[15px] font-semibold tracking-tight mb-1.5">Backup einspielen</h3>
-      <p class="c-sub text-[12.5px] leading-relaxed mb-3">Stellt eine zuvor exportierte JSON-Datei wieder her. Du kannst wählen, ob die Daten <b>ergänzt</b> oder komplett <b>ersetzt</b> werden.</p>
-      <input id="rp-import-input" type="file" accept="application/json,.json" class="hidden" />
-      <button id="rp-import" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 8l5-5 5 5M12 3v12"/></svg>JSON-Backup auswählen</button>
-    </div>
-
-    <!-- Bilder auslagern -->
-    <div class="cell p-5 mt-4">
-      <h3 class="text-[15px] font-semibold tracking-tight mb-1.5">Bilder auslagern</h3>
-      <p class="c-sub text-[12.5px] leading-relaxed mb-3">Verschiebt Produktbilder aus der Datenbank in den Supabase-Storage. Das macht Speichern spürbar schneller und verhindert Größenlimits. <span id="img-mig-stat"></span></p>
-      <div class="goalbar mb-3 hidden" id="img-mig-bar"><div id="img-mig-fill" class="goalbar-fill" style="background:var(--brand)"></div></div>
-      <button id="img-migrate" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Bilder in den Storage verschieben</button>
-      <p class="c-sub text-[11.5px] leading-relaxed mt-2">Voraussetzung: In Supabase muss ein <b>öffentlicher Bucket „product-images"</b> existieren. Das SQL dafür liegt der Lieferung bei.</p>
-    </div>
-
-    <!-- Verlinkte Bilder sichern -->
-    <div class="cell p-5 mt-4">
-      <h3 class="text-[15px] font-semibold tracking-tight mb-1.5">Verlinkte Bilder sichern</h3>
-      <p class="c-sub text-[12.5px] leading-relaxed mb-3">Manche Produktbilder hängen nur als Link an fremden Servern (z.&nbsp;B. eBay). Wird das Listing gelöscht, verschwinden sie — auch rückwirkend in der Historie. Diese Funktion kopiert sie in deinen eigenen Storage. <span id="link-mig-stat"></span></p>
-      <div class="goalbar mb-3 hidden" id="link-mig-bar"><div id="link-mig-fill" class="goalbar-fill" style="background:var(--brand)"></div></div>
-      <button id="link-migrate" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15V4a2 2 0 0 1 2-2h9l5 5v8a2 2 0 0 1-2 2H10"/><path d="M9 22l-4-4 4-4M5 18h8"/></svg>Verlinkte Bilder in den Storage kopieren</button>
-      <p class="c-sub text-[11.5px] leading-relaxed mt-2">Manche Quell-Server verbieten das Kopieren (CORS). Solche Bilder bleiben unverändert als Link bestehen und werden übersprungen.</p>
-    </div>
-
-    <!-- Automatische Backups -->
-    <div class="cell p-5 mt-4">
-      <h3 class="text-[15px] font-semibold tracking-tight mb-1.5">Automatische Backups</h3>
-      <p class="c-sub text-[12.5px] leading-relaxed mb-3">Flipdeck sichert pro Tag automatisch: <b>☁ Cloud</b> in Supabase (überlebt Browser-Reset &amp; ist auf jedem Gerät da) und <b>Gerät</b> lokal (auch offline). Jeweils die letzten 7. Für den Notfall zusätzlich ab und zu ein <b>Datei-Backup</b> herunterladen – die einzige Sicherung außerhalb von Supabase.</p>
-      <div id="backup-list" class="flex flex-col gap-2"></div>
-    </div>
-
-    <!-- PWA: Homescreen -->
-    <div class="cell p-5 mt-4">
-      <h3 class="text-[15px] font-semibold tracking-tight mb-1.5">Als App installieren</h3>
-      <p class="c-sub text-[12.5px] leading-relaxed mb-3">Flipdeck lässt sich auf dem Homescreen ablegen und startet dann im Vollbild ohne Browser-Leiste.</p>
-      <button id="pwa-install" class="btn-accent hidden" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Auf Homescreen hinzufügen</button>
-      <p class="c-sub text-[11.5px] leading-relaxed mt-2">Auf dem iPhone: in Safari auf <b>Teilen</b> → <b>Zum Home-Bildschirm</b>.</p>
-    </div>
+    <!-- Backup, Import & Bilder-Wartung sind nach Profil → Daten umgezogen (v5.7) -->
   </section>
 
   <!-- ============ PASSWORT-GENERATOR ============ -->
@@ -1615,6 +1574,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <button type="button" class="settings-navi" data-scat="features"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4Z"/><path d="M18 15l.9 2.1L21 18l-2.1.9L18 21l-.9-2.1L15 18l2.1-.9Z"/></svg></span><span class="sn-txt"><span class="sn-t">Features</span><span class="sn-s">Funktionen &amp; Workflow</span></span></button>
         <button type="button" class="settings-navi" data-scat="dashboard"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><span class="sn-txt"><span class="sn-t">Dashboard</span><span class="sn-s">Karten &amp; Anzeige</span></span></button>
         <button type="button" class="settings-navi" data-scat="versand"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17.5" cy="18" r="1.6"/></svg></span><span class="sn-txt"><span class="sn-t">Versand</span><span class="sn-s">Kosten-Vorlagen</span></span></button>
+        <button type="button" class="settings-navi" data-scat="daten"><span class="sn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></span><span class="sn-txt"><span class="sn-t">Daten</span><span class="sn-s">Backup &amp; Import</span></span></button>
       </nav>
       <div class="settings-body">
         <div class="settings-panel" data-spanel="profil">
@@ -1700,16 +1660,16 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- Features & Workflow: Konto-Schalter -->
       <div class="cell p-5 md:col-span-2">
         <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Features &amp; Workflow</h3>
-        <p class="c-sub text-[12.5px] mb-4">Passe Funktionen an dein Vorgehen an — pro Konto gespeichert.</p>
+        <p class="c-sub text-[12.5px] mb-4">Passe Funktionen an dein Vorgehen an.</p>
         <button id="feat-images" type="button" class="pw-toggle feat-row" aria-pressed="true" style="width:100%;margin-bottom:10px">
-          <span class="pw-toggle-info"><span class="pw-toggle-name">Produktbilder aktivieren</span><span class="pw-toggle-set">Bilder hochladen &amp; anzeigen. Aus = keine Produktbilder.</span></span><span class="pw-sw"></span>
+          <span class="pw-toggle-info"><span class="pw-toggle-name">Produktbilder</span><span class="pw-toggle-set">An: Du kannst zu jedem Artikel ein Bild hochladen, und Bilder erscheinen in Bestand, Historie &amp; Verkauf. Aus: alles ohne Bilder — schlanker, schneller und übersichtlicher, falls du rein mit Zahlen arbeitest.</span></span><span class="pw-sw"></span>
         </button>
         <button id="feat-intake" type="button" class="pw-toggle feat-row" aria-pressed="false" style="width:100%">
-          <span class="pw-toggle-info"><span class="pw-toggle-name">Wareneingang nutzen</span><span class="pw-toggle-set">Einkäufe erscheinen im Bestand erst, wenn sie als „angekommen" markiert sind.</span></span><span class="pw-sw"></span>
+          <span class="pw-toggle-info"><span class="pw-toggle-name">Wareneingang nutzen</span><span class="pw-toggle-set">Trennt „bestellt / unterwegs" von „im Lager": Einkäufe tauchen im Bestand erst auf, wenn du sie auf „angekommen" setzt (bis dahin liegen sie unter den Status-Filtern). <b>Lohnt sich vor allem ab höherem Volumen und mehreren Marktplätzen</b> — wenn du sonst den Überblick über deinen Bestand verlierst. Bei wenigen Artikeln eher unnötig.</span></span><span class="pw-sw"></span>
         </button>
         <div style="border-left:2px solid var(--line);margin:10px 0 0 7px;padding-left:13px">
           <button id="feat-sellavail" type="button" class="pw-toggle feat-row" aria-pressed="false" style="width:100%">
-            <span class="pw-toggle-info"><span class="pw-toggle-name">Nur verfügbaren Bestand verkaufen</span><span class="pw-toggle-set">Verhindert den Verkauf von Artikeln, die noch nicht im Wareneingang eingetroffen sind.</span></span><span class="pw-sw"></span>
+            <span class="pw-toggle-info"><span class="pw-toggle-name">Nur verfügbaren Bestand verkaufen</span><span class="pw-toggle-set">Ergänzung zum Wareneingang: Artikel, die noch nicht eingetroffen sind, lassen sich nicht als Verkauf eintragen — verhindert versehentliche Vorverkäufe. Nur sinnvoll, wenn „Wareneingang nutzen" an ist.</span></span><span class="pw-sw"></span>
           </button>
         </div>
       </div>
@@ -1727,11 +1687,56 @@ body.no-images .ms-head .thumb{ display:none !important; }
         </div>
       </div>
         </div>
+        <div class="settings-panel hidden" data-spanel="daten">
+          <!-- Sicherung & Backup: alles gebündelt -->
+          <div class="cell p-5">
+            <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Sicherung &amp; Backup</h3>
+            <p class="c-sub text-[12.5px] leading-relaxed mb-4">Flipdeck sichert deine Daten <b>automatisch jeden Tag</b> — ☁ in der Cloud (auf jedem Gerät verfügbar) und 📱 lokal auf dem Gerät (auch offline), jeweils die letzten 7. Für den Notfall lädst du zusätzlich ab und zu ein <b>Datei-Backup</b> herunter — die einzige Sicherung außerhalb der Cloud.</p>
+            <div id="backup-list" class="flex flex-col gap-2 mb-4"></div>
+            <input id="rp-import-input" type="file" accept="application/json,.json" class="hidden" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button id="rp-backup" class="btn-accent" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Backup herunterladen</button>
+              <button id="rp-import" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 8l5-5 5 5M12 3v12"/></svg>Backup einspielen</button>
+            </div>
+            <p class="c-sub text-[11.5px] leading-relaxed mt-2.5">Beim Einspielen einer JSON-Datei kannst du wählen, ob die Daten <b>ergänzt</b> oder komplett <b>ersetzt</b> werden.</p>
+          </div>
+
+          <!-- Erweitert: technische Bild-Wartung, standardmäßig zugeklappt -->
+          <div class="cell p-5">
+            <details class="iv-more">
+              <summary>Erweitert · Bilder-Wartung <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional, nur bei Bedarf)</span></summary>
+              <div style="margin-top:16px;display:flex;flex-direction:column;gap:18px">
+                <div>
+                  <h4 class="text-[14px] font-semibold tracking-tight mb-1.5">Bilder auslagern</h4>
+                  <p class="c-sub text-[12.5px] leading-relaxed mb-3">Verschiebt Produktbilder aus der Datenbank in den Supabase-Storage. Das macht Speichern spürbar schneller und verhindert Größenlimits. <span id="img-mig-stat"></span></p>
+                  <div class="goalbar mb-3 hidden" id="img-mig-bar"><div id="img-mig-fill" class="goalbar-fill" style="background:var(--brand)"></div></div>
+                  <button id="img-migrate" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Bilder in den Storage verschieben</button>
+                  <p class="c-sub text-[11.5px] leading-relaxed mt-2">Voraussetzung: In Supabase muss ein <b>öffentlicher Bucket „product-images"</b> existieren. Das SQL dafür liegt der Lieferung bei.</p>
+                </div>
+                <div>
+                  <h4 class="text-[14px] font-semibold tracking-tight mb-1.5">Verlinkte Bilder sichern</h4>
+                  <p class="c-sub text-[12.5px] leading-relaxed mb-3">Manche Produktbilder hängen nur als Link an fremden Servern (z.&nbsp;B. eBay). Wird das Listing gelöscht, verschwinden sie — auch rückwirkend in der Historie. Diese Funktion kopiert sie in deinen eigenen Storage. <span id="link-mig-stat"></span></p>
+                  <div class="goalbar mb-3 hidden" id="link-mig-bar"><div id="link-mig-fill" class="goalbar-fill" style="background:var(--brand)"></div></div>
+                  <button id="link-migrate" class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15V4a2 2 0 0 1 2-2h9l5 5v8a2 2 0 0 1-2 2H10"/><path d="M9 22l-4-4 4-4M5 18h8"/></svg>Verlinkte Bilder in den Storage kopieren</button>
+                  <p class="c-sub text-[11.5px] leading-relaxed mt-2">Manche Quell-Server verbieten das Kopieren (CORS). Solche Bilder bleiben unverändert als Link bestehen und werden übersprungen.</p>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- Als App installieren -->
+          <div class="cell p-5">
+            <h3 class="text-[15px] font-semibold tracking-tight mb-1.5">Als App installieren</h3>
+            <p class="c-sub text-[12.5px] leading-relaxed mb-3">Flipdeck lässt sich auf dem Homescreen ablegen und startet dann im Vollbild ohne Browser-Leiste.</p>
+            <button id="pwa-install" class="btn-accent hidden" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Auf Homescreen hinzufügen</button>
+            <p class="c-sub text-[11.5px] leading-relaxed mt-2">Auf dem iPhone: in Safari auf <b>Teilen</b> → <b>Zum Home-Bildschirm</b>.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.6.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.7.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
