@@ -547,7 +547,7 @@ async function enterApp(){
   maybeAutoBackup();   // Ebene 1: lokale Tagessicherung
   maybeCloudBackup();  // Ebene 2: Cloud-Sicherung in Supabase (fire-and-forget)
   setTimeout(()=>{ try{ maybeAutoMigrate(); }catch(e){} }, 6000);  // Bilder automatisch im Hintergrund in den Storage sichern
-  mountFilters(); buildMonthChains(); renderAvatar(); renderAdmin(); renderProfil(); renderFixed(); refreshBuyPlatSelect();
+  mountFilters(); buildMonthChains(); renderAvatar(); renderAdmin(); renderProfil(); renderFixed(); refreshBuyPlatSelect(); refreshPaySelects();
   // Deep-Link respektieren: kommt die App über #calc/#inventory/... rein, dort starten
   var _tabs=["dashboard","tracker","calc","inventory","fix","report","pwgen","admin","profil"];
   var _want=(location.hash||"").replace(/^#/,"");
@@ -977,6 +977,56 @@ function openBuyPlatModal(id){
 if($("#buyplat-new")) $("#buyplat-new").addEventListener("click",()=>openBuyPlatModal());
 if($("#iv-buyplatform")) $("#iv-buyplatform").addEventListener("change",()=>{ const sel=$("#iv-buyplatform"); if(sel.value==="__new__"){ sel.value=""; openBuyPlatModal(); return; } applyBuyPlatToForm(); });
 if($("#iv-orderdate")) $("#iv-orderdate").addEventListener("change",()=>{ const sel=$("#iv-buyplatform"); if(sel && sel.value && sel.value!=="__new__") applyBuyPlatToForm(); });
+
+/* ===== Zahlungsmethoden (optional) — bei Einkäufen, Ausgaben & Verkäufen wählbar =====
+   Reines Tracking: „womit habe ich bezahlt / wie wurde ich bezahlt". Gespeichert in fixCfg. */
+const DEFAULT_PAY_METHODS = [
+  {id:"pm_paypal", name:"PayPal",       color:"#60A5FA", icon:"card"},
+  {id:"pm_card",   name:"Kreditkarte",  color:"#A78BFA", icon:"card"},
+  {id:"pm_bank",   name:"Überweisung",  color:"#34D399", icon:"bank"},
+  {id:"pm_cash",   name:"Bar",          color:"#FBBF24", icon:"coins"}
+];
+function getPayMethods(){ if(!Array.isArray(fixCfg.payMethods)){ fixCfg.payMethods = DEFAULT_PAY_METHODS.map(p=>({...p})); } return fixCfg.payMethods; }
+function payMethodById(id){ return getPayMethods().find(p=>p.id===id)||null; }
+function payOptions(sel, noNew){ return `<option value="">— keine —</option>`+getPayMethods().map(p=>`<option value="${p.id}"${sel===p.id?" selected":""}>${escapeHtml(p.name)}</option>`).join("")+(noNew?"":`<option value="__new__">＋ Neue Zahlungsmethode …</option>`); }
+function refreshPaySelects(){ ["iv-paymethod","fx-paymethod","sell-paymethod"].forEach(id=>{ const sel=$("#"+id); if(!sel) return; const cur=sel.value; sel.innerHTML=payOptions(""); if(cur && (payMethodById(cur)||cur==="")) sel.value=cur; }); }
+function payLinkedCount(id){ let n=0; inventory.forEach(it=>{ if(it.payMethodId===id) n++; }); if(typeof fixed!=="undefined") fixed.forEach(f=>{ if(f.payMethodId===id) n++; }); flips.forEach(f=>{ if(f.payMethodId===id) n++; }); return n; }
+function renderPayMethodManager(){ const box=$("#paymethod-list"); if(!box) return; const list=getPayMethods();
+  box.innerHTML = list.length ? list.map(p=>`<button type="button" class="fx-cat-chip paymethod-edit" data-id="${p.id}" title="Bearbeiten"><span class="fx-cat-ic" style="${catTint(p.color)}">${fixIconSVG(p.icon)}</span>${escapeHtml(p.name)}</button>`).join("") : `<p class="c-sub text-[12.5px]">Noch keine Zahlungsmethode angelegt.</p>`;
+  $$("#paymethod-list .paymethod-edit").forEach(b=>b.addEventListener("click",()=>openPayMethodModal(b.dataset.id))); }
+function openPayMethodModal(id, targetSel){
+  const editing = id ? payMethodById(id) : null;
+  let selColor = editing ? editing.color : FIX_COLORS[Math.floor(Math.random()*FIX_COLORS.length)];
+  let selIcon  = editing ? editing.icon  : "card";
+  const colorsHTML=FIX_COLORS.map(c=>`<button type="button" class="ec-swatch" data-color="${c}" style="background:${c}" aria-selected="${c===selColor?"true":"false"}"></button>`).join("");
+  const iconsHTML=Object.keys(FIX_ICONS).map(k=>`<button type="button" class="ec-icobtn" data-icon="${k}" aria-selected="${k===selIcon?"true":"false"}">${fixIconSVG(k)}</button>`).join("");
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:440px">
+    <div class="flex items-start justify-between gap-3 mb-1">
+      <div><p class="font-bold text-[18px]">${editing?"Zahlungsmethode bearbeiten":"Neue Zahlungsmethode"}</p><p class="c-sub text-[12.5px] mt-0.5">Optional — nur zum Nachvollziehen, womit bezahlt wurde.</p></div>
+      <button id="pm-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="my-4"><label class="label" for="pm-name">Name *</label><input id="pm-name" class="field" placeholder="z. B. PayPal, Kreditkarte, Bar" value="${editing?attrEsc(editing.name):""}"></div>
+    <div class="mb-4"><p class="label mb-2">Farbe</p><div id="pm-colors" class="ec-swatches">${colorsHTML}</div></div>
+    <div class="mb-4"><p class="label mb-2">Icon</p><div id="pm-icons" class="ec-icons">${iconsHTML}</div></div>
+    <div class="grid grid-cols-2 gap-3">${editing?`<button id="pm-del" class="btn-ghost" style="color:var(--danger)">Löschen</button>`:`<button id="pm-cancel" class="btn-ghost">Abbrechen</button>`}<button id="pm-save" class="btn-accent">${editing?"Speichern":"Anlegen"}</button></div>
+  </div></div>`;
+  const close=()=>{ $("#modal-root").innerHTML=""; };
+  $("#pm-x").addEventListener("click",close); if($("#pm-cancel")) $("#pm-cancel").addEventListener("click",close);
+  $$("#pm-colors .ec-swatch").forEach(b=>b.addEventListener("click",()=>{ selColor=b.dataset.color; $$("#pm-colors .ec-swatch").forEach(x=>x.setAttribute("aria-selected", x.dataset.color===selColor?"true":"false")); }));
+  $$("#pm-icons .ec-icobtn").forEach(b=>b.addEventListener("click",()=>{ selIcon=b.dataset.icon; $$("#pm-icons .ec-icobtn").forEach(x=>x.setAttribute("aria-selected", x.dataset.icon===selIcon?"true":"false")); }));
+  if($("#pm-del")) $("#pm-del").addEventListener("click",()=>{ if(payLinkedCount(id)>0){ showToast("Erst verknüpfte Buchungen umziehen — dann löschbar"); return; }
+    fixCfg.payMethods=getPayMethods().filter(p=>p.id!==id); DB.saveFixCfg(fixCfg); close(); renderPayMethodManager(); refreshPaySelects(); showToast("Zahlungsmethode gelöscht"); });
+  $("#pm-save").addEventListener("click",()=>{ const name=$("#pm-name").value.trim(); if(!name){ flashError($("#pm-name")); return; }
+    getPayMethods(); let pid=id;
+    if(editing){ Object.assign(editing,{name,color:selColor,icon:selIcon}); } else { pid="pm"+Date.now(); fixCfg.payMethods.push({id:pid,name,color:selColor,icon:selIcon}); }
+    DB.saveFixCfg(fixCfg); close(); renderPayMethodManager(); refreshPaySelects();
+    if(!editing && targetSel && $("#"+targetSel)) $("#"+targetSel).value=pid;
+    showToast(editing?"Gespeichert":"Angelegt"); });
+}
+function onPaySelectNew(id){ const sel=$("#"+id); if(sel && sel.value==="__new__"){ sel.value=""; openPayMethodModal(null, id); } }
+if($("#iv-paymethod")) $("#iv-paymethod").addEventListener("change",()=>onPaySelectNew("iv-paymethod"));
+if($("#fx-paymethod")) $("#fx-paymethod").addEventListener("change",()=>onPaySelectNew("fx-paymethod"));
+if($("#paymethod-new")) $("#paymethod-new").addEventListener("click",()=>openPayMethodModal());
 $("#search").addEventListener("input", ()=>{ const x=$("#search-x"); if(x) x.classList.toggle("hidden", !$("#search").value); renderHistory(); });
 $("#search-x").addEventListener("click", ()=>{ const s=$("#search"); s.value=""; $("#search-x").classList.add("hidden"); s.focus(); renderHistory(); });
 
@@ -1837,7 +1887,7 @@ async function persistImage(src){
     return src;
   }
 }
-function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tracking","iv-tags"].forEach(id=>$("#"+id).value=""); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; $("#iv-carrier").value=""; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=""; } resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
+function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tracking","iv-tags"].forEach(id=>$("#"+id).value=""); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; $("#iv-carrier").value=""; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=""; } if($("#iv-paymethod")){ refreshPaySelects(); $("#iv-paymethod").value=""; } resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
 function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hidden",!open);
   $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
   $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
@@ -1861,7 +1911,7 @@ $("#iv-add").addEventListener("click", async ()=>{
   req.forEach(([id,ok])=>{ const el=$("#"+id); if(!ok(el.value)){ flashError(el); bad=true; } });
   if(bad){ showToast("Bitte Pflichtfelder ausfüllen"); return; }
   const data={ name:$("#iv-name").value.trim(), ean:$("#iv-ean").value.trim(), qty:Math.max(1,parseInt($("#iv-qty").value)||1), vk:num($("#iv-vk").value), ek:num($("#iv-ek").value), ship:num($("#iv-ship").value), catPct:num($("#iv-cat").value), adPct:num($("#iv-ad").value), regionPct:num($("#iv-region").value), feeVer:FEE_VER, noInputVat:!!($("#iv-noinputvat")&&$("#iv-noinputvat").checked),
-    status:$("#iv-status").value||"stock", orderDate:$("#iv-orderdate").value||"", returnBy:$("#iv-returnby").value||"", buyPlatformId:(($("#iv-buyplatform")&&$("#iv-buyplatform").value!=="__new__")?$("#iv-buyplatform").value:""), buyCarrier:$("#iv-carrier").value||"", buyTracking:$("#iv-tracking").value.trim(), tags:parseTags($("#iv-tags").value) };
+    status:$("#iv-status").value||"stock", orderDate:$("#iv-orderdate").value||"", returnBy:$("#iv-returnby").value||"", buyPlatformId:(($("#iv-buyplatform")&&$("#iv-buyplatform").value!=="__new__")?$("#iv-buyplatform").value:""), payMethodId:(($("#iv-paymethod")&&$("#iv-paymethod").value!=="__new__")?$("#iv-paymethod").value:""), buyCarrier:$("#iv-carrier").value||"", buyTracking:$("#iv-tracking").value.trim(), tags:parseTags($("#iv-tags").value) };
 
   const btn=$("#iv-add"); const label=btn.textContent;
   if(isDataUrl(pendingInvImg)){ btn.disabled=true; btn.textContent="Bild wird hochgeladen…"; }
@@ -1968,6 +2018,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
         <div><label class="label" for="sell-carrier">Versand (Verkauf)</label><select id="sell-carrier" class="field">${carrierOptions("")}</select></div>
         <div><label class="label" for="sell-tracking">Sendungsnr.</label><input id="sell-tracking" class="field" placeholder="optional"></div>
       </div>
+      <div class="mt-3"><label class="label" for="sell-paymethod">Erhalten auf <span class="c-sub" style="font-weight:400">(Zahlungsmethode, optional)</span></label><select id="sell-paymethod" class="field">${payOptions("",true)}</select></div>
 
       <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Preis-Recherche</span><span class="ms-sec-line"></span></div>
       ${researchHTML(it.name,it.ean)}
@@ -2032,7 +2083,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     const shipPer = (shipTot + (pack?1:0))/q;
     const dateVal=$("#sell-date").value||todayISOInput();
     const platform=$("#sell-platform").value||"ebay";
-    flips.unshift({ id:"f"+Date.now(), invId:it.id, name:it.name, ean:it.ean||"", qty:q, ek:it.ek, payout:payoutPer, ship:shipPer, date:new Date(dateVal+"T12:00:00").toISOString(), img:it.img||null, carrier:($("#sell-carrier")?$("#sell-carrier").value:"")||"", tracking:($("#sell-tracking")?$("#sell-tracking").value.trim():""), platform, ustRate });
+    flips.unshift({ id:"f"+Date.now(), invId:it.id, name:it.name, ean:it.ean||"", qty:q, ek:it.ek, payout:payoutPer, ship:shipPer, date:new Date(dateVal+"T12:00:00").toISOString(), img:it.img||null, carrier:($("#sell-carrier")?$("#sell-carrier").value:"")||"", tracking:($("#sell-tracking")?$("#sell-tracking").value.trim():""), payMethodId:($("#sell-paymethod")?$("#sell-paymethod").value:""), platform, ustRate });
     DB.saveFlips(flips);
     it.qty-=q; it.touchedAt=new Date().toISOString(); if(it.qty<=0) inventory=inventory.filter(x=>x.id!==it.id);
     DB.saveInventory(inventory);
@@ -2045,6 +2096,7 @@ function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   $("#iv-status").value = invStatus(it)==="returned" ? "stock" : invStatus(it);
   $("#iv-orderdate").value = it.orderDate||""; $("#iv-returnby").value = it.returnBy||"";
   refreshBuyPlatSelect(); if($("#iv-buyplatform")) $("#iv-buyplatform").value = (it.buyPlatformId && buyPlatformById(it.buyPlatformId)) ? it.buyPlatformId : "";
+  refreshPaySelects(); if($("#iv-paymethod")) $("#iv-paymethod").value = (it.payMethodId && payMethodById(it.payMethodId)) ? it.payMethodId : "";
   $("#iv-carrier").value = it.buyCarrier||""; $("#iv-tracking").value = it.buyTracking||"";
   $("#iv-tags").value = (it.tags||[]).join(", ");
   // Der Workflow-Block ist normal zugeklappt. Hat der Artikel dort aber Daten,
@@ -2422,16 +2474,18 @@ if($("#fx-cat")) $("#fx-cat").addEventListener("change",()=>{ if($("#fx-cat").va
 function setFixForm(open){ fxFormOpen=open; $("#fx-form").classList.toggle("hidden",!open);
   $("#fx-toggle-ic").style.transform=open?"rotate(45deg)":"rotate(0deg)";
   $("#fx-toggle").querySelector("span").textContent= open ? (lang==="en"?"Close":"Schließen") : t("fix.add");
-  if(!open){ editingFixId=null; $("#fx-name").value=""; $("#fx-amount").value=""; refreshFixCatSelect(); const first=getExpenseCats()[0]; if($("#fx-cat")) $("#fx-cat").value=first?first.id:""; $("#fx-add").textContent=t("btn.add"); } }
+  if(!open){ editingFixId=null; $("#fx-name").value=""; $("#fx-amount").value=""; refreshFixCatSelect(); const first=getExpenseCats()[0]; if($("#fx-cat")) $("#fx-cat").value=first?first.id:""; refreshPaySelects(); if($("#fx-paymethod")) $("#fx-paymethod").value=""; $("#fx-add").textContent=t("btn.add"); } }
 $("#fx-toggle").addEventListener("click",()=>setFixForm(!fxFormOpen));
 $("#fx-cancel").addEventListener("click",()=>setFixForm(false));
 $("#fx-add").addEventListener("click",()=>{ const name=$("#fx-name").value.trim(), amount=num($("#fx-amount").value); const sc=$("#fx-cat"); let catId=sc?sc.value:""; if(catId==="__new__") catId="";
+  const ps=$("#fx-paymethod"); let payMethodId=ps?ps.value:""; if(payMethodId==="__new__") payMethodId="";
   if(!name){ flashError($("#fx-name")); return; } if(amount<=0){ flashError($("#fx-amount")); return; }
-  if(editingFixId){ const f=fixed.find(x=>x.id===editingFixId); if(f){ Object.assign(f,{name,amount,catId}); delete f.cat; } }
-  else fixed.unshift({id:"fx"+Date.now(),name,amount,catId});
+  if(editingFixId){ const f=fixed.find(x=>x.id===editingFixId); if(f){ Object.assign(f,{name,amount,catId,payMethodId}); delete f.cat; } }
+  else fixed.unshift({id:"fx"+Date.now(),name,amount,catId,payMethodId});
   DB.saveFixed(fixed); setFixForm(false); renderFixed(); renderInventory(); showToast(t("toast.saved")); });
 function openFixEdit(id){ const f=fixed.find(x=>x.id===id); if(!f) return; editingFixId=id;
   $("#fx-name").value=f.name; $("#fx-amount").value=String(f.amount).replace(".",","); refreshFixCatSelect();
+  refreshPaySelects(); if($("#fx-paymethod")) $("#fx-paymethod").value=(f.payMethodId && payMethodById(f.payMethodId))?f.payMethodId:"";
   const sc=$("#fx-cat"); if(sc){ if(f.catId && getExpenseCats().some(c=>c.id===f.catId)) sc.value=f.catId; else { const first=getExpenseCats()[0]; sc.value=first?first.id:""; } }
   $("#fx-add").textContent=t("btn.save"); fxFormOpen=true; $("#fx-form").classList.remove("hidden"); $("#fx-toggle-ic").style.transform="rotate(45deg)"; $("#fx-toggle").querySelector("span").textContent=(lang==="en"?"Close":"Schließen"); }
 
@@ -3033,7 +3087,7 @@ function renderProfil(){ if(!currentUser) return; renderAvatar();
   $$("#mode-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mode===themeMode));
   $$("#lang-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.lang===lang));
   if(document.activeElement!==$("#stale-input")) $("#stale-input").value=staleDays;
-  renderShipCfg(); renderPlatManager(); renderDashManager(); renderFeatManager(); renderBuyPlatManager();
+  renderShipCfg(); renderPlatManager(); renderDashManager(); renderFeatManager(); renderBuyPlatManager(); renderPayMethodManager();
   if(typeof setSettingsCat==="function") setSettingsCat(Store.get(uKey("setcat"))||"profil"); }
 
 /* Versandkosten-Vorlagen im Profil verwalten */

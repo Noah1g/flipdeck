@@ -743,7 +743,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.9.0</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -787,7 +787,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.9.0</span>
+        <span class="nav-ver">v5.10.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1290,6 +1290,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
             <div><label class="label" for="iv-orderdate">Bestelldatum</label><input id="iv-orderdate" class="field" type="date"></div>
             <div class="col-span-2"><label class="label" for="iv-buyplatform">Einkaufsplattform <span class="info-i" data-tip="Shop/Händler des Einkaufs. Mit hinterlegter Retourenzeit berechnet Flipdeck die Rückgabefrist automatisch — sie erscheint dann im Aufmerksamkeiten-Banner.">i</span></label><select id="iv-buyplatform" class="field"></select></div>
             <div class="col-span-2"><label class="label" for="iv-returnby">Rückgabefrist <span class="c-sub" style="font-weight:400">(auto aus Plattform · jederzeit änderbar)</span></label><input id="iv-returnby" class="field" type="date"></div>
+            <div class="col-span-2"><label class="label" for="iv-paymethod">Bezahlt mit <span class="c-sub" style="font-weight:400">(optional)</span></label><select id="iv-paymethod" class="field"></select></div>
             <div><label class="label" for="iv-carrier">Versanddienst (Einkauf)</label><select id="iv-carrier" class="field"><option value="">— Dienst —</option><option value="dhl">DHL</option><option value="hermes">Hermes</option><option value="gls">GLS</option><option value="dpd">DPD</option><option value="ups">UPS</option><option value="post">Deutsche Post</option><option value="dpd_at">Österr. Post</option></select></div>
             <div><label class="label" for="iv-tracking">Sendungsnummer</label><input id="iv-tracking" class="field" placeholder="optional"></div>
             <div class="col-span-2"><label class="label" for="iv-tags">Tags</label><input id="iv-tags" class="field" placeholder="Komma-getrennt · z. B. Sneaker, Q3, eBay"></div>
@@ -1404,6 +1405,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <div class="sm:col-span-1"><label class="label" for="fx-name">Bezeichnung *</label><input id="fx-name" class="field" placeholder="z. B. Versandkartons" /></div>
         <div><label class="label" for="fx-amount">Betrag € / Monat *</label><input id="fx-amount" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
         <div><label class="label" for="fx-cat">Kategorie</label><select id="fx-cat" class="field"></select></div>
+        <div><label class="label" for="fx-paymethod">Bezahlt mit <span class="c-sub" style="font-weight:400">(optional)</span></label><select id="fx-paymethod" class="field"></select></div>
       </div>
       <div class="grid grid-cols-2 gap-3"><button id="fx-cancel" class="btn-ghost" data-i18n="btn.cancel">Abbrechen</button><button id="fx-add" class="btn-accent" data-i18n="btn.add">Hinzufügen</button></div>
     </div>
@@ -1648,6 +1650,15 @@ body.no-images .ms-head .thumb{ display:none !important; }
         </div>
         <div id="buyplat-list" class="flex flex-wrap gap-2"></div>
       </div>
+
+      <!-- Zahlungsmethoden: optional bei Einkäufen, Ausgaben & Verkäufen -->
+      <div class="cell p-5">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <div style="min-width:0"><h3 class="text-[17px] font-semibold tracking-tight">Zahlungsmethoden</h3><p class="c-sub text-[12px] mt-0.5 leading-relaxed">Optional. Gib bei Einkäufen, Ausgaben &amp; Verkäufen an, <b>womit</b> bezahlt wurde — nur zum Nachvollziehen.</p></div>
+          <button id="paymethod-new" class="btn-ghost" style="padding:8px 13px;font-size:13px;display:flex;align-items:center;gap:7px;flex:0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Neue Methode</button>
+        </div>
+        <div id="paymethod-list" class="flex flex-wrap gap-2"></div>
+      </div>
         </div>
         <div class="settings-panel hidden" data-spanel="dashboard">
       <!-- Dashboard anpassen: Karten ein-/ausblenden -->
@@ -1749,7 +1760,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.9.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
