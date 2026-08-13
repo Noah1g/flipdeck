@@ -556,7 +556,7 @@ async function enterApp(){
   renderCalcHistory(); calc();
   refreshPendingBadge(true);   // Owner: offene Registrierungsanfragen melden (Toast + Badge + Dashboard-Hinweis)
   initHistory();               // Undo/Redo-Ausgangspunkt setzen
-  if((!taxCfg || !taxCfg.onboarded) && Store.get(uKey("onboarded"))!=="1") setTimeout(openAccountSetup, 300);   // Ersteinrichtung nur beim allerersten Login dieses KONTOS (kontoweit, nicht pro Gerät)
+  if((!taxCfg || !taxCfg.onboarded) && Store.get(uKey("onboarded"))!=="1") setTimeout(openAccountSetup, 300); else startTourIfNew();   // Ersteinrichtung nur beim allerersten Login dieses KONTOS (kontoweit, nicht pro Gerät); sonst ggf. Erst-Login-Tour
 }
 function hideSplash(){ const s=$("#boot-splash"); if(s) s.classList.add("hidden"); }
 function showLogin(){ hideSplash(); $("#app-view").classList.add("hidden"); $("#login-view").classList.remove("hidden"); }
@@ -1958,7 +1958,7 @@ function openAccountSetup(){
   const syncKuButtons=on=>{ $("#as-ku").setAttribute("aria-selected",on?"true":"false"); $("#as-reg").setAttribute("aria-selected",on?"false":"true"); $("#as-rate-wrap").classList.toggle("hidden",on); };
   $("#as-ku").addEventListener("click",()=>syncKuButtons(true));
   $("#as-reg").addEventListener("click",()=>syncKuButtons(false));
-  $("#as-skip").addEventListener("click",()=>{ DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, onboarded:true }); Store.set(uKey("onboarded"),"1"); $("#modal-root").innerHTML=""; });
+  $("#as-skip").addEventListener("click",()=>{ DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, onboarded:true }); Store.set(uKey("onboarded"),"1"); $("#modal-root").innerHTML=""; startTourIfNew(); });
   $("#as-save").addEventListener("click",()=>{
     kuMode = $("#as-ku").getAttribute("aria-selected")==="true";
     defaultUstRate = num($("#as-rate").value);
@@ -1969,7 +1969,7 @@ function openAccountSetup(){
     Store.set(uKey("onboarded"),"1");
     DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, onboarded:true });
     calc(); renderInventory(); renderBreakEven();
-    $("#modal-root").innerHTML=""; showToast("✓ Standardwerte gespeichert");
+    $("#modal-root").innerHTML=""; showToast("✓ Standardwerte gespeichert"); startTourIfNew();
   });
 }
 /* Effektiver Vorsteuer-Satz auf den EK eines Bestandsartikels:
@@ -2757,6 +2757,50 @@ async function renderAutoFileStatus(){
     const s=$("#autofile-setup"); if(s) s.addEventListener("click",setupAutoFileBackup);
   }
 }
+
+/* ===== Erst-Login-Tour: kurze, überspringbare Führung durch die essenziellen Funktionen ===== */
+const TOUR_STEPS = [
+  { title:"Willkommen bei Flipdeck 👋", body:"Eine 30-Sekunden-Tour durch das Wichtigste. Du kannst jederzeit überspringen — und die Tour später über das Profil-Menü erneut starten." },
+  { sel:'#tabs', title:"Deine Navigation", body:"Oben wechselst du zwischen Übersicht, Tracker, Bestand, Fixkosten, Auswertung und dem Passwort-Generator." },
+  { tab:"inventory", sel:'#tabs button[data-tab="inventory"]', title:"Bestand — dein Herzstück", body:"Hier legst du Einkäufe an und trägst später Verkäufe ein. Optional pro Artikel: Einkaufsplattform (mit Retourenfrist) und Zahlungsmethode." },
+  { tab:"dashboard", sel:'#dash-customize', title:"Dashboard anpassen", body:"Über den Anpassen-Knopf blendest du Karten ein/aus und ordnest sie per Drag & Drop — dein Cockpit, wie du es brauchst." },
+  { sel:'#profile-btn', title:"Alle Einstellungen", body:"Oben rechts (Profil) sitzt der Einstellungs-Hub: Steuerart, Marktplätze, Zahlungsmethoden, Dashboard und Daten/Backup." },
+  { tab:"profil", scat:"geschaeft", sel:'.settings-navi[data-scat="geschaeft"]', title:"Steuerart festlegen", body:"Unter Geschäft stellst du Privat/Gewerblich & MwSt. ein — wichtig für korrekte Gewinne. Einmal einstellen, fertig." },
+  { tab:"profil", scat:"daten", sel:'#autofile-status', title:"Backup einrichten (wichtig!)", body:"Richte hier die automatische Datei-Sicherung ein: einmal einen Cloud-Ordner (OneDrive/iCloud) wählen — dann sichert Flipdeck wöchentlich von allein. Die einzige Sicherung, falls die Cloud mal ausfällt." }
+];
+let _tourActive=false, _tourIdx=0, _tourHole=null, _tourTip=null, _tourReposition=null;
+function startTour(){ if(_tourActive) return; _tourActive=true; _tourIdx=0;
+  _tourHole=document.createElement("div"); _tourHole.className="tour-hole"; document.body.appendChild(_tourHole);
+  _tourTip=document.createElement("div"); _tourTip.className="tour-tip"; document.body.appendChild(_tourTip);
+  _tourReposition=()=>positionTour(); window.addEventListener("resize",_tourReposition); window.addEventListener("scroll",_tourReposition,true);
+  showTourStep(); }
+function endTour(){ _tourActive=false; try{ Store.set(uKey("tourdone"),"1"); }catch(e){}
+  if(_tourHole&&_tourHole.parentNode) _tourHole.remove(); if(_tourTip&&_tourTip.parentNode) _tourTip.remove();
+  if(_tourReposition){ window.removeEventListener("resize",_tourReposition); window.removeEventListener("scroll",_tourReposition,true); _tourReposition=null; } }
+function showTourStep(){ const step=TOUR_STEPS[_tourIdx]; if(!step){ endTour(); return; }
+  if(step.tab && typeof setTab==="function"){ try{ setTab(step.tab); }catch(e){} }
+  if(step.scat && typeof setSettingsCat==="function"){ try{ setSettingsCat(step.scat); }catch(e){} }
+  const delay=(step.tab||step.scat)?300:40;
+  setTimeout(()=>{ renderTourTip(step); const el=step.sel?document.querySelector(step.sel):null; if(el){ try{ el.scrollIntoView({behavior:"smooth",block:"center"}); }catch(e){} } setTimeout(positionTour,70); setTimeout(positionTour,430); }, delay); }
+function renderTourTip(step){ if(!_tourTip) return; const last=_tourIdx===TOUR_STEPS.length-1;
+  const dots=TOUR_STEPS.map((_,i)=>`<span class="tour-dot${i===_tourIdx?" on":""}"></span>`).join("");
+  _tourTip.innerHTML=`<h4 class="tour-h">${escapeHtml(step.title)}</h4><p class="tour-p">${step.body}</p>
+    <div class="tour-actions"><div class="tour-dots">${dots}</div>
+    <div style="display:flex;gap:8px;flex:0 0 auto">${_tourIdx>0?`<button class="btn-ghost" data-tour="back" style="padding:7px 12px;font-size:13px">Zurück</button>`:`<button class="btn-ghost" data-tour="skip" style="padding:7px 12px;font-size:13px">Überspringen</button>`}<button class="btn-accent" data-tour="next" style="padding:7px 15px;font-size:13px">${last?"Fertig ✓":"Weiter"}</button></div></div>`;
+  _tourTip.querySelectorAll("[data-tour]").forEach(b=>b.addEventListener("click",()=>{ const a=b.getAttribute("data-tour");
+    if(a==="skip") endTour(); else if(a==="back"){ _tourIdx=Math.max(0,_tourIdx-1); showTourStep(); } else { if(last) endTour(); else { _tourIdx++; showTourStep(); } } })); }
+function positionTour(){ if(!_tourActive||!_tourTip) return; const step=TOUR_STEPS[_tourIdx]; const el=step&&step.sel?document.querySelector(step.sel):null;
+  const r=el?el.getBoundingClientRect():null;
+  if(r && (r.width>0||r.height>0)){ const pad=8; _tourHole.style.display="block";
+    _tourHole.style.left=(r.left-pad)+"px"; _tourHole.style.top=(r.top-pad)+"px"; _tourHole.style.width=(r.width+pad*2)+"px"; _tourHole.style.height=(r.height+pad*2)+"px";
+    const tipW=_tourTip.offsetWidth||320, tipH=_tourTip.offsetHeight||170;
+    let top=r.bottom+12; if(top+tipH>innerHeight-12) top=Math.max(12, r.top-tipH-12);
+    let left=Math.min(Math.max(12, r.left+r.width/2-tipW/2), innerWidth-tipW-12);
+    _tourTip.style.transform=""; _tourTip.style.left=left+"px"; _tourTip.style.top=top+"px";
+  } else { _tourHole.style.display="none"; _tourTip.style.left="50%"; _tourTip.style.top="50%"; _tourTip.style.transform="translate(-50%,-50%)"; } }
+function startTourIfNew(){ if(_tourActive) return; try{ if(Store.get(uKey("tourdone"))==="1") return; }catch(e){ return; }
+  setTimeout(()=>{ if(_tourActive) return; const mr=$("#modal-root"); if(mr && mr.firstChild) return; startTour(); }, 800); }
+if($("#menu-tour")) $("#menu-tour").addEventListener("click",()=>{ if($("#profile-menu")) $("#profile-menu").classList.add("hidden"); if($("#profile-btn")) $("#profile-btn").setAttribute("aria-expanded","false"); startTour(); });
 
 function renderBackupList(){
   if(typeof renderAutoFileStatus==="function") renderAutoFileStatus();

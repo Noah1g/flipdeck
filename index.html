@@ -725,6 +725,20 @@ body.no-images .ms-head .thumb{ display:none !important; }
   .settings-navi{ flex:0 0 auto; padding:8px 12px; }
   .settings-navi .sn-s{ display:none; }
 }
+
+/* ===== Erst-Login-Tour: Spotlight + Tooltip ===== */
+.tour-hole{ position:fixed; z-index:9998; border-radius:14px; pointer-events:none;
+  box-shadow:0 0 0 9999px rgba(3,7,18,.72), 0 0 0 2px color-mix(in srgb,var(--brand) 75%,transparent), 0 0 30px 4px color-mix(in srgb,var(--brand) 40%,transparent);
+  transition:left .3s cubic-bezier(.4,0,.2,1), top .3s cubic-bezier(.4,0,.2,1), width .3s ease, height .3s ease; }
+.tour-tip{ position:fixed; z-index:9999; width:min(340px, calc(100vw - 32px));
+  background:color-mix(in srgb,var(--cell) 92%,transparent); -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%);
+  border:1px solid rgba(255,255,255,.1); border-radius:18px; padding:17px 18px; box-shadow:0 30px 70px -20px rgba(0,0,0,.85); animation:pop .2s ease; }
+.tour-tip .tour-h{ font-size:16px; font-weight:700; letter-spacing:-.01em; margin-bottom:6px; }
+.tour-tip .tour-p{ font-size:13px; color:var(--sub); line-height:1.5; }
+.tour-actions{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:15px; }
+.tour-dots{ display:flex; gap:5px; align-items:center; }
+.tour-dot{ width:6px; height:6px; border-radius:999px; background:var(--line); transition:all .2s ease; }
+.tour-dot.on{ background:var(--brand); width:17px; }
 </style>
 </head>
 
@@ -743,7 +757,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.1</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.2</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -787,7 +801,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.10.1</span>
+        <span class="nav-ver">v5.10.2</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -821,6 +835,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
           <div id="profile-menu" class="menu hidden">
             <button class="menu-item" data-tab="profil"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg><span data-i18n="tab.profil">Profil</span></button>
             <button class="menu-item" id="menu-admin" data-tab="admin" style="display:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="tab.admin">Admin</span><span id="admin-badge" class="pill pill-warn hidden" style="margin-left:auto;padding:2px 8px;font-size:11px">0</span></button>
+            <button class="menu-item" id="menu-tour"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span>App-Tour</span></button>
             <div class="menu-sep"></div>
             <button class="menu-item menu-item-danger" id="logout-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span data-i18n="nav.logout">Abmelden</span></button>
           </div>
@@ -1762,7 +1777,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.1 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.2 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
