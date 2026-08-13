@@ -546,6 +546,7 @@ async function enterApp(){
   }
   maybeAutoBackup();   // Ebene 1: lokale Tagessicherung
   maybeCloudBackup();  // Ebene 2: Cloud-Sicherung in Supabase (fire-and-forget)
+  setTimeout(()=>{ try{ maybeAutoMigrate(); }catch(e){} }, 6000);  // Bilder automatisch im Hintergrund in den Storage sichern
   mountFilters(); buildMonthChains(); renderAvatar(); renderAdmin(); renderProfil(); renderFixed();
   // Deep-Link respektieren: kommt die App über #calc/#inventory/... rein, dort starten
   var _tabs=["dashboard","tracker","calc","inventory","fix","report","pwgen","admin","profil"];
@@ -2744,6 +2745,43 @@ $("#link-migrate").addEventListener("click", async ()=>{
   else if(failed)         showToast(`✓ ${map.size} kopiert · ${failed} übersprungen (CORS/Netz)`);
   else                    showToast(`✓ ${map.size} Bild(er) in den Storage kopiert`);
 });
+
+/* ===== Bild-Sicherung automatisch im Hintergrund (kein Menü-Klick nötig) =====
+   Läuft gedrosselt beim Start: verschiebt Datenbank-Bilder in den Storage und
+   sichert verlinkte Fremd-Bilder. Pro Lauf gedeckelt, damit nichts ruckelt.
+   Fehlt der Bucket (alles scheitert), wird 7 Tage pausiert – kein Spam. */
+async function autoMigrateImages(){
+  const set=(typeof countBase64Images==="function")?countBase64Images():new Set(); if(!set.size) return {moved:0,failed:0};
+  const list=[...set].slice(0,40), map=new Map(); let moved=0, failed=0;
+  for(const src of list){ try{ map.set(src, await uploadImage(src)); moved++; }catch(e){ failed++; } }
+  if(map.size){ inventory.forEach(it=>{ if(map.has(it.img)) it.img=map.get(it.img); }); flips.forEach(f=>{ if(map.has(f.img)) f.img=map.get(f.img); }); await Promise.all([DB.saveInventory(inventory), DB.saveFlips(flips)]); }
+  if(typeof refreshImgMigStat==="function") refreshImgMigStat();
+  return {moved, failed};
+}
+async function autoMigrateLinked(){
+  const set=(typeof countLinkedImages==="function")?countLinkedImages():new Set(); if(!set.size) return {moved:0,failed:0};
+  const list=[...set].slice(0,25), map=new Map(); let moved=0, failed=0;
+  for(const src of list){ try{ const d=await fetchImageAsDataUrl(src); map.set(src, await uploadImage(d)); moved++; }catch(e){ failed++; } }
+  if(map.size){ inventory.forEach(it=>{ if(map.has(it.img)) it.img=map.get(it.img); }); flips.forEach(f=>{ if(map.has(f.img)) f.img=map.get(f.img); }); await Promise.all([DB.saveInventory(inventory), DB.saveFlips(flips)]); }
+  if(typeof refreshLinkMigStat==="function") refreshLinkMigStat();
+  return {moved, failed};
+}
+function maybeAutoMigrate(){
+  try{
+    const now=Date.now(); const gi=k=>parseInt(Store.get(uKey(k))||"0")||0;
+    if(now>gi("automig_img_backoff") && now-gi("automig_img")>20*3600*1000 && typeof countBase64Images==="function" && countBase64Images().size){
+      autoMigrateImages().then(r=>{ Store.set(uKey("automig_img"), String(Date.now()));
+        if(r.moved){ renderInventory(); renderDashboard(); showToast(`✓ ${r.moved} Bild(er) automatisch gesichert`); }
+        else if(r.failed){ Store.set(uKey("automig_img_backoff"), String(Date.now()+7*86400000)); }
+      }).catch(()=>{});
+    }
+    if(now-gi("automig_link")>3*86400*1000 && typeof countLinkedImages==="function" && countLinkedImages().size){
+      autoMigrateLinked().then(r=>{ Store.set(uKey("automig_link"), String(Date.now()));
+        if(r.moved){ renderInventory(); renderDashboard(); showToast(`✓ ${r.moved} verlinkte Bild(er) gesichert`); }
+      }).catch(()=>{});
+    }
+  }catch(e){ console.warn("[automig]", e); }
+}
 
 /* ===== Backup einspielen ===== */
 $("#rp-import").addEventListener("click", ()=> $("#rp-import-input").click());

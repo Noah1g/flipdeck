@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v19";   // v19 (App v5.7.0): Daten-Kategorie (Backup/Import/Bilder-Wartung aus Report umgezogen & sortiert), Features-Texte klarer
+const VERSION    = "flipdeck-v20";   // v20 (App v5.8.0): Bild-Sicherung läuft automatisch im Hintergrund; Passwort-Generator als Tab in der oberen Leiste
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
