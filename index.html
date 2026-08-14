@@ -793,7 +793,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.12.1</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.13.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -837,7 +837,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.12.1</span>
+        <span class="nav-ver">v5.13.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -908,10 +908,16 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <h1 id="dash-greeting" class="font-bold" style="font-size:clamp(22px,5vw,28px); letter-spacing:-.02em">Willkommen</h1>
         <p id="dash-date" class="c-sub text-[13.5px] mt-1">—</p>
       </div>
+      <div class="flex items-center gap-2" style="flex:0 0 auto">
+      <button id="dash-feedback" class="btn-ghost" style="padding:8px 13px;font-size:13px;display:flex;align-items:center;gap:7px;white-space:nowrap" title="Feedback geben oder Bug melden">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Feedback</span>
+      </button>
       <button id="dash-customize" class="btn-ghost" style="padding:8px 13px;font-size:13px;display:flex;align-items:center;gap:7px;flex:0 0 auto;white-space:nowrap" title="Dashboard anpassen">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         <span>Anpassen</span>
       </button>
+      </div>
     </div>
     <!-- Owner-Hinweis: nur sichtbar, wenn Registrierungsanfragen offen sind -->
     <button id="admin-alert" class="hidden w-full mb-3 rounded-[16px] p-4 text-left" style="background:color-mix(in srgb,var(--brand) 12%,transparent);border:1px solid color-mix(in srgb,var(--brand) 40%,transparent);cursor:pointer">
@@ -1710,6 +1716,16 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <div id="a-setup" class="hidden"></div>
       </div>
     </div>
+
+    <!-- Feedback & Bug-Meldungen aller Nutzer -->
+    <div class="cell p-5 mt-3">
+      <div class="flex items-center justify-between mb-4 gap-3">
+        <div class="min-w-0"><h3 class="text-[16px] font-semibold tracking-tight">Feedback &amp; Bug-Meldungen</h3><p class="c-sub text-[12px] mt-0.5">Von allen Nutzern über den Feedback-Button gesendet.</p></div>
+        <div class="flex items-center gap-2" style="flex:0 0 auto"><span id="fb-count" class="pill pill-mut">0</span><button id="fb-refresh" class="btn-ghost" style="padding:7px 11px;font-size:12.5px">Aktualisieren</button></div>
+      </div>
+      <div id="fb-list" class="flex flex-col gap-2"></div>
+      <div id="fb-setup" class="hidden"></div>
+    </div>
   </section>
 
   <!-- ============ PROFIL ============ -->
@@ -1908,7 +1924,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.12.1 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.13.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 

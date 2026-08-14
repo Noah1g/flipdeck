@@ -196,11 +196,14 @@ async function refreshPendingBadge(showNote){
   let count=0;
   try{ const { data, error } = await sb.from('profiles').select('id').eq('status','pending'); if(!error) count=(data||[]).length; }
   catch(e){ return 0; }
-  if(badge){ badge.textContent=String(count); badge.classList.toggle("hidden", count===0); }
-  if(alert){ alert.classList.toggle("hidden", count===0);
-    const t=$("#admin-alert-txt"); if(t) t.textContent = `${count} neue Registrierungsanfrage${count===1?"":"n"}`; }
-  if(showNote && count>0) showToast(`🔔 ${count} neue Registrierungsanfrage${count===1?"":"n"}`);
-  return count;
+  let fb=0; try{ fb=await feedbackUnread(); }catch(e){}
+  const total=count+fb;
+  const parts=[]; if(count>0) parts.push(`${count} neue Registrierungsanfrage${count===1?"":"n"}`); if(fb>0) parts.push(`${fb} neues Feedback`);
+  if(badge){ badge.textContent=String(total); badge.classList.toggle("hidden", total===0); }
+  if(alert){ alert.classList.toggle("hidden", total===0);
+    const t=$("#admin-alert-txt"); if(t) t.textContent = parts.join(" · ")||"Neue Hinweise"; }
+  if(showNote && total>0) showToast(`🔔 ${parts.join(" · ")}`);
+  return total;
 }
 
 const DB = {
@@ -687,6 +690,7 @@ function setTab(name, instant){
   if(name==="fix") renderFixed();
   if(name==="report") renderReport();
   if(name==="profil") renderProfil();
+  if(name==="admin"){ renderAdmin(); renderFeedbackAdmin(); }
 }
 $$("#tabs button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
 window.addEventListener("resize", moveThumb);
@@ -2214,13 +2218,16 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
       </div>
       <div class="plat-note${PLATFORMS[initPlat].hasFees?"":" free"}" id="plat-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg><span class="plat-note-t"></span></div>
 
-      <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Gebühren &amp; Werbung</span><span class="ms-sec-line"></span></div>
-      <div class="flex items-center justify-between mb-1.5">
-        <label class="label" for="sell-ad" style="margin:0">Bewerben % <span class="info-i" data-tip="Tatsächlich angefallene Werbe-Gebühr für DIESEN Verkauf. Eine geschaltete Promo wird nicht immer fällig – hier auf den real fälligen Wert anpassen oder auf 0 setzen.">i</span></label>
-        <span class="c-sub text-[11px]">geplant: ${String(it.adPct).replace('.',',')} %${it.adPct>0?` · <button type="button" id="sell-ad-zero" style="background:none;border:0;cursor:pointer;color:var(--brand);font-weight:600;font-size:11px;padding:0">auf 0 setzen</button>`:""}</span>
+      <div id="sell-ad-section">
+        <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Gebühren &amp; Werbung</span><span class="ms-sec-line"></span></div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="label" for="sell-ad" style="margin:0">Bewerben % <span class="info-i" data-tip="Tatsächlich angefallene Werbe-Gebühr für DIESEN Verkauf. Eine geschaltete Promo wird nicht immer fällig – hier auf den real fälligen Wert anpassen oder auf 0 setzen.">i</span></label>
+          <span class="c-sub text-[11px]">geplant: ${String(it.adPct).replace('.',',')} %${it.adPct>0?` · <button type="button" id="sell-ad-zero" style="background:none;border:0;cursor:pointer;color:var(--brand);font-weight:600;font-size:11px;padding:0">auf 0 setzen</button>`:""}</span>
+        </div>
+        <input id="sell-ad" class="field tnum" inputmode="decimal" value="${String(it.adPct).replace('.',',')}">
       </div>
-      <input id="sell-ad" class="field tnum" inputmode="decimal" value="${String(it.adPct).replace('.',',')}">
-      <div id="sell-kaufland" class="hidden" style="margin-top:12px">
+      <div id="sell-kaufland" class="hidden">
+        <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Kaufland-Gebühren</span><span class="ms-sec-line"></span></div>
         <label class="label" for="sell-k-cat">Kaufland-Kategorie &amp; Zielland</label>
         <select id="sell-k-cat" class="field" style="margin-bottom:8px"></select>
         <div class="calc-switch" id="sell-k-region" role="tablist" style="grid-template-columns:1fr 1fr">
@@ -2268,8 +2275,8 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     if(noFee){ feesTotal=0; }
     else if(plat==="kaufland"){
       const kc=$("#sell-k-cat"); const cat=KAUFLAND_CATS[(kc?parseInt(kc.value):0)||0]||KAUFLAND_CATS[0];
-      const p=kauflandPct(cat, sellKRegion==="pl")+adPct;   // Provision + Bewerben on top
-      feesTotal = (vkNet*q*p/100 + (cat.fixed||0)*q) * V;   // Medien-Zuschlag je Artikel
+      const p=kauflandPct(cat, sellKRegion==="pl");   // Kaufland kennt kein eBay-artiges „Bewerben %"
+      feesTotal = (vkNet*q*p/100 + (cat.fixed||0)*q) * V;   // Provision + Medien-Zuschlag je Artikel
     } else {
       const combined=it.catPct+adPct+it.regionPct;
       feesTotal = transFee(vkNet) + vkNet*q*combined/100*V;
@@ -2299,7 +2306,8 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     sel.innerHTML=KAUFLAND_CATS.map((c,i)=>`<option value="${i}">${escapeHtml(c.label)} · ${kauflandPct(c,isPL)} %${c.fixed?" + "+eur(c.fixed):""}</option>`).join(""); sel.value=cur; };
   const updateSellFields=()=>{ const plat=$("#sell-platform").value; const v=PLATFORMS[plat]||PLATFORMS.ebay;
     const pf=$("#sell-private-fields"); if(pf) pf.classList.toggle("hidden", !!v.hasFees);
-    const kp=$("#sell-kaufland"); if(kp) kp.classList.toggle("hidden", plat!=="kaufland"); };
+    const kp=$("#sell-kaufland"); if(kp) kp.classList.toggle("hidden", plat!=="kaufland");
+    const ads=$("#sell-ad-section"); if(ads) ads.classList.toggle("hidden", plat==="kaufland"); };
   fillSellKCat();
   $$("#sell-k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===sellKRegion));
   if($("#sell-k-cat")) $("#sell-k-cat").addEventListener("change",recompute);
@@ -3425,6 +3433,112 @@ async function renderAdmin(){
   refreshPendingBadge();
 }
 const aRef=$("#a-refresh"); if(aRef) aRef.addEventListener("click",()=>renderAdmin());
+
+/* ===== Feedback & Bug-Meldungen · Nutzer -> Supabase 'feedback' -> Admin-Tab ===== */
+const FB_KINDS = {
+  bug:   { label:"Bug",          icon:"🐞", col:"#f87171" },
+  idea:  { label:"Idee / Wunsch", icon:"💡", col:"#fbbf24" },
+  other: { label:"Sonstiges",     icon:"💬", col:"#60a5fa" }
+};
+function feedbackSetupSQL(){ return `-- In Supabase: SQL Editor -> New query -> einfügen -> RUN
+create table if not exists public.feedback (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  username text,
+  kind text not null default 'bug',
+  message text not null,
+  image_url text,
+  status text not null default 'new',
+  created_at timestamptz not null default now()
+);
+alter table public.feedback enable row level security;
+-- jeder eingeloggte Nutzer darf eigenes Feedback senden + sehen
+create policy "fb_self_ins" on public.feedback for insert with check (auth.uid() = user_id);
+create policy "fb_self_sel" on public.feedback for select using (auth.uid() = user_id);
+-- Owner darf alles lesen + Status ändern (nutzt vorhandene is_owner())
+create policy "fb_owner_sel" on public.feedback for select using (public.is_owner());
+create policy "fb_owner_upd" on public.feedback for update using (public.is_owner());`; }
+function fbFileToDataUrl(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+async function submitFeedback(kind,message,image_url){
+  return sb.from('feedback').insert({ user_id: currentUser.id, username: currentUser.username||null, kind, message, image_url: image_url||null }); }
+async function feedbackListAll(){ const { data, error } = await sb.from('feedback').select('*').order('created_at',{ascending:false}); if(error) throw error; return data||[]; }
+async function feedbackSetStatus(id,status){ return sb.from('feedback').update({status}).eq('id',id); }
+async function feedbackUnread(){ if(!currentUser||currentUser.role!=="owner") return 0;
+  try{ const { count, error } = await sb.from('feedback').select('id',{count:'exact',head:true}).eq('status','new'); if(error) return 0; return count||0; }catch(e){ return 0; } }
+
+function openFeedbackModal(){
+  let kind="bug", imgUrl="", busy=false;
+  const kindsHTML=Object.entries(FB_KINDS).map(([k,v])=>`<button type="button" class="fb-kind" data-kind="${k}" aria-selected="${k===kind}" style="display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:12px;border:1px solid var(--line);background:var(--cell-2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer">${v.icon} ${v.label}</button>`).join("");
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:460px">
+    <div class="flex items-start justify-between gap-3 mb-1">
+      <div><p class="font-bold text-[18px]">Feedback &amp; Bugs</p><p class="c-sub text-[12.5px] mt-0.5">Was können wir besser machen? Bild anhängen ist optional.</p></div>
+      <button id="fb-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="my-3"><p class="label mb-2">Art</p><div class="flex gap-2 flex-wrap" id="fb-kinds">${kindsHTML}</div></div>
+    <div class="mb-3"><label class="label" for="fb-msg">Deine Nachricht *</label><textarea id="fb-msg" class="field" rows="5" placeholder="Beschreibe den Bug oder deinen Wunsch möglichst genau…" style="resize:vertical"></textarea></div>
+    <div class="mb-4"><p class="label mb-2">Bild / Screenshot <span class="c-sub" style="font-weight:400">(optional)</span></p>
+      <input id="fb-file" type="file" accept="image/*" style="display:none">
+      <button id="fb-attach" type="button" class="btn-ghost w-full" style="display:flex;align-items:center;justify-content:center;gap:8px">📎 Bild anhängen</button>
+      <div id="fb-preview" class="hidden mt-2"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3"><button id="fb-cancel" class="btn-ghost">Abbrechen</button><button id="fb-send" class="btn-accent">Senden ↗</button></div>
+  </div></div>`;
+  const close=()=>{ $("#modal-root").innerHTML=""; };
+  $("#fb-x").addEventListener("click",close); $("#fb-cancel").addEventListener("click",close);
+  $$("#fb-kinds .fb-kind").forEach(b=>b.addEventListener("click",()=>{ kind=b.dataset.kind; $$("#fb-kinds .fb-kind").forEach(x=>x.setAttribute("aria-selected",x.dataset.kind===kind)); }));
+  $("#fb-attach").addEventListener("click",()=>$("#fb-file").click());
+  $("#fb-file").addEventListener("change",async()=>{ const f=$("#fb-file").files[0]; if(!f) return;
+    $("#fb-attach").textContent="Lade Bild…"; $("#fb-attach").disabled=true;
+    try{ const dataUrl=await fbFileToDataUrl(f); imgUrl=await uploadImage(dataUrl);
+      $("#fb-preview").classList.remove("hidden"); $("#fb-preview").innerHTML=`<img src="${attrEsc(imgUrl)}" style="max-height:150px;border-radius:10px;border:1px solid var(--line)">`;
+      $("#fb-attach").textContent="✓ Bild angehängt — anderes wählen"; }
+    catch(e){ console.warn("[feedback] img",e&&e.message); showToast("Bild-Upload fehlgeschlagen"); $("#fb-attach").textContent="📎 Bild anhängen"; }
+    $("#fb-attach").disabled=false; });
+  $("#fb-send").addEventListener("click",async()=>{ if(busy) return; const msg=$("#fb-msg").value.trim(); if(!msg){ flashError($("#fb-msg")); return; }
+    busy=true; $("#fb-send").textContent="Sende…"; $("#fb-send").disabled=true;
+    try{ const { error }=await submitFeedback(kind,msg,imgUrl); if(error) throw error;
+      close(); showToast("✓ Danke! Dein Feedback ist angekommen."); }
+    catch(e){ console.warn("[feedback] send",e&&e.message); const miss=/relation .*feedback.* does not exist|schema cache/i.test(e&&e.message||""); showToast(miss?"Feedback-Tabelle fehlt noch (Admin muss sie anlegen).":"Konnte nicht senden — bitte später erneut."); $("#fb-send").textContent="Senden ↗"; $("#fb-send").disabled=false; busy=false; } });
+}
+if($("#dash-feedback")) $("#dash-feedback").addEventListener("click",openFeedbackModal);
+
+function feedbackSetupHint(){ const box=$("#fb-setup"); if(!box) return; const sql=feedbackSetupSQL();
+  box.classList.remove("hidden");
+  box.innerHTML=`<div class="rounded-[14px] p-3.5 mt-2" style="background:var(--cell-2);border:1px solid var(--line)">
+    <p class="text-[13px] font-semibold mb-1">Einrichtung nötig</p>
+    <p class="c-sub text-[12px] leading-relaxed mb-2">Damit Feedback hier erscheint, lege einmalig die <span class="mono">feedback</span>-Tabelle in Supabase an. SQL kopieren, im <span class="mono">SQL Editor</span> ausführen, dann „Aktualisieren".</p>
+    <button id="fb-sql-copy" class="btn-ghost w-full" style="margin-bottom:8px">SQL kopieren</button>
+    <pre class="mono" style="font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:150px;overflow:auto;color:var(--sub);background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:10px">${escapeHtml(sql)}</pre></div>`;
+  const cp=$("#fb-sql-copy"); if(cp) cp.addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(sql); showToast("✓ SQL kopiert"); }catch(e){ showToast("Kopieren nicht möglich"); } }); }
+async function renderFeedbackAdmin(){
+  const box=$("#fb-list"); if(!box) return;
+  if(!currentUser||currentUser.role!=="owner"){ box.innerHTML=""; return; }
+  box.innerHTML=`<p class="c-sub text-[13px]">Lade Feedback…</p>`;
+  let list;
+  try{ list=await feedbackListAll(); }
+  catch(e){ console.warn("[feedback] list",e&&e.message); box.innerHTML=`<p class="c-sub text-[13px]">Feedback-Tabelle noch nicht angelegt.</p>`; feedbackSetupHint(); const c=$("#fb-count"); if(c) c.textContent="0"; return; }
+  const setup=$("#fb-setup"); if(setup){ setup.classList.add("hidden"); setup.innerHTML=""; }
+  const cnt=$("#fb-count"); if(cnt) cnt.textContent=String(list.length);
+  if(!list.length){ box.innerHTML=`<p class="c-sub text-[13px]">Noch kein Feedback eingegangen.</p>`; return; }
+  box.innerHTML="";
+  list.forEach(f=>{ const k=FB_KINDS[f.kind]||FB_KINDS.other; const isNew=f.status==="new", isDone=f.status==="done";
+    const d=new Date(f.created_at).toLocaleString("de-DE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+    const el=document.createElement("div"); el.className="rounded-[14px] p-3"; el.style.cssText="background:var(--cell-2);border:1px solid "+(isNew?"color-mix(in srgb,var(--brand) 45%,var(--line))":"var(--line)");
+    el.innerHTML=`<div class="flex items-center gap-2 mb-1.5 flex-wrap">
+        <span class="pill" style="background:color-mix(in srgb,${k.col} 16%,transparent);color:${k.col}">${k.icon} ${k.label}</span>
+        ${isNew?`<span class="pill pill-warn">neu</span>`:isDone?`<span class="pill pill-accent">erledigt</span>`:`<span class="pill pill-mut">gesehen</span>`}
+        <span class="c-sub text-[11.5px]">${escapeHtml((f.username||"—").split("@")[0])} · ${d}</span></div>
+      <p class="text-[13.5px] leading-relaxed" style="white-space:pre-wrap;word-break:break-word">${escapeHtml(f.message)}</p>
+      ${f.image_url?`<a href="${attrEsc(f.image_url)}" target="_blank" rel="noopener noreferrer"><img src="${attrEsc(f.image_url)}" style="max-height:150px;border-radius:10px;border:1px solid var(--line);margin-top:8px"></a>`:""}
+      <div class="flex gap-2 mt-2.5">
+        ${isNew?`<button class="btn-ghost fb-seen" data-id="${f.id}" style="padding:6px 11px;font-size:12px">Als gesehen</button>`:""}
+        ${isDone?"":`<button class="btn-ghost fb-done" data-id="${f.id}" style="padding:6px 11px;font-size:12px;color:var(--accent)">Erledigt</button>`}
+      </div>`;
+    box.appendChild(el); });
+  $$("#fb-list .fb-seen").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await feedbackSetStatus(b.dataset.id,"seen"); await renderFeedbackAdmin(); refreshPendingBadge(); }catch(e){ showToast("Fehler beim Speichern"); b.disabled=false; } }));
+  $$("#fb-list .fb-done").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await feedbackSetStatus(b.dataset.id,"done"); await renderFeedbackAdmin(); refreshPendingBadge(); }catch(e){ showToast("Fehler beim Speichern"); b.disabled=false; } }));
+}
+if($("#fb-refresh")) $("#fb-refresh").addEventListener("click",()=>renderFeedbackAdmin());
 
 
 /* ===== 12 · PROFIL ===== */

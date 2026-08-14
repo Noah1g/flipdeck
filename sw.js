@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v40";   // v40 (App v5.12.1): Kaufland PL-Provisionen; Verkaufs-Dialog: Kaufland-Fees korrekt + Versand/Zahlung nur bei Privatverkauf
+const VERSION    = "flipdeck-v41";   // v41 (App v5.13.0): Feedback-&-Bug-System (Dashboard-Button, Bild-Upload, Admin-Inbox, Badge); Kaufland ohne eBay-Bewerben
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
