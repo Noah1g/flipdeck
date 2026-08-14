@@ -1768,6 +1768,14 @@ function dynTargetMargin(){ return targetMargin(); } /* fix statt dynamisch */
 const BREAK_EVEN_MARGIN = 0.05;
 
 function evalVK(vk,ek,ship,combinedPct){ const V=vatF(); const fees=transFee(vk)+vk*combinedPct/100*V,payout=vk-fees,profit=payout-ek-ship; return {fees,payout,profit,margin:vk>0?profit/vk*100:0}; }
+/* Deal-Score: kompakte Note A–E aus dem ROI (Gewinn/Einsatz) — gute Deals auf einen Blick */
+function dealGrade(profit, ek){ const roi = ek>0 ? profit/ek*100 : (profit>0?200:-1);
+  if(profit<0) return {g:"E", col:"var(--danger)", roi};
+  if(roi>=50) return {g:"A", col:"var(--accent)", roi};
+  if(roi>=30) return {g:"B", col:"var(--accent)", roi};
+  if(roi>=15) return {g:"C", col:"#f5a524", roi};
+  if(roi>=5)  return {g:"D", col:"#f5a524", roi};
+  return {g:"E", col:"var(--danger)", roi}; }
 function targetVK(ek,ship,combinedPct,goal,fpp){ fpp=fpp||0; const V=vatF(), k=1-V*combinedPct/100, denom=k-goal; if(denom<=0) return Infinity; let vk=((kuMode?0.54:0.42)+ek+ship+fpp)/denom; if(vk<=10) vk=((kuMode?0.45:0.35)+ek+ship+fpp)/denom; return vk; }
 function minProtectVK(ek,ship,combinedPct){ return targetVK(ek,ship,combinedPct, BREAK_EVEN_MARGIN, 0); }
 
@@ -2178,6 +2186,8 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg();
     const stMeta=INV_STATUS[st], canAdv=(st==="ordered"||st==="transit");
     const wfBadge=`<button type="button" class="pill inv-status" data-id="${it.id}" ${canAdv?'title="Klick: nächster Status"':''} style="border:1px solid ${stMeta.ring};color:${stMeta.col};background:color-mix(in srgb,${stMeta.col} 13%,transparent);${canAdv?'cursor:pointer':'cursor:default'}">${lang==="en"?stMeta.en:stMeta.de}${canAdv?' →':''}</button>`;
     const healthPill = st==="returned" ? "" : (loss?`<span class="pill pill-warn">⚠ ${lang==="en"?"Loss":"Verlust"}</span>`:(!healthy?`<span class="pill pill-warn">⚠ ${lang==="en"?"Below target":"Unter Ziel"}</span>`:`<span class="pill pill-accent">${lang==="en"?"Healthy":"Gesund"}</span>`));
+    const _ds = st==="returned" ? null : dealGrade(ev.profit, it.ek);
+    const scorePill = _ds ? `<span class="pill" style="border:1px solid color-mix(in srgb,${_ds.col} 45%,var(--line));color:${_ds.col};background:color-mix(in srgb,${_ds.col} 12%,transparent);font-weight:800" title="Deal-Score ${_ds.g} · ROI ${pct(_ds.roi)} — A = top, E = schwach">◆ Deal ${_ds.g}</span>` : "";
     const stalePill = st==="returned" ? "" : (ageDays>=staleDays*2 ? `<span class="pill pill-stale-red">⏳ ${ageDays} T</span>` : (ageDays>=staleDays ? `<span class="pill pill-stale">⏳ ${ageDays} T</span>` : ""));
     const floorPill = st==="returned" ? "" : `<span class="pill pill-floor" title="${lang==="en"?"Floor price – never sell below":"Mindest-VK – niemals darunter verkaufen"}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="pf-label">${lang==="en"?"Floor":"Min-VK"}</span> ${minVK===Infinity?"—":eur(minVK)}</span>`;
     const dlPill = dl ? `<span class="pill" style="border:1px solid color-mix(in srgb,${dl.col} 40%,var(--line));color:${dl.col};background:color-mix(in srgb,${dl.col} 12%,transparent)">${dl.urgent?'⏰ ':''}${dl.txt}</span>` : "";
@@ -2202,7 +2212,7 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg();
       <div class="inv-head" role="button" tabindex="0" data-toggle="${it.id}" aria-expanded="${open}" ${bulkMode?'style="padding-left:46px"':''}>
         <span class="inv-thumb">${ it.img?`<img src="${attrEsc(it.img)}" alt="">`:placeholder }</span>
         <span class="inv-main">
-          <span class="inv-pills">${wfBadge}${healthPill}${floorPill}${dlPill}${refundPill}${stalePill}</span>
+          <span class="inv-pills">${wfBadge}${scorePill}${healthPill}${floorPill}${dlPill}${refundPill}${stalePill}</span>
           <span class="inv-title">${escapeHtml(it.name)}</span>
           <span class="inv-meta">${it.qty} ${lang==="en"?"pcs":"Stk"} · VK ${eur(it.vk)} · EK ${eur(it.ek)}${it.ean?` · ${escapeHtml(it.ean)}`:""}</span>
           ${tagsChipsHTML(it.tags)}
