@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v28";   // v28 (App v5.10.6): Sicherheit — escapeHtml attribut-sicher (Quotes), Kategorie-Titel via attrEsc
+const VERSION    = "flipdeck-v29";   // v29 (App v5.10.7): Tour kontoweit gemerkt, Reauth-Hinweis entschärft, Backup-Liste einklappbar
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

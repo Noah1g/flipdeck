@@ -540,6 +540,7 @@ async function enterApp(){
     kuMode = !!taxCfg.kuMode; $("#c-ku").checked = kuMode;
     defaultUstRate = taxCfg.defaultUstRate || 19;
     defaultPlatform = PLATFORMS[taxCfg.defaultPlatform] ? taxCfg.defaultPlatform : "ebay";
+    if(taxCfg.tourDone){ try{ Store.set(uKey("tourdone"),"1"); }catch(e){} }   // kontoweit: Tour nie wieder zeigen
   } else {
     // Kein Konto-Datensatz vorhanden (erster Login überhaupt) -> lokale Fallbacks behalten
     defaultUstRate = parseInt(Store.get(uKey("ustrate"))||"19")||19;
@@ -2761,10 +2762,13 @@ async function renderAutoFileStatus(){
         </div></div>`;
       const o=$("#autofile-off"); if(o) o.addEventListener("click",disableAutoFileBackup);
     } else {
-      box.innerHTML=`<div class="rounded-[12px] px-3 py-3" style="background:color-mix(in srgb,#f5a524 12%,transparent);border:1px solid color-mix(in srgb,#f5a524 40%,var(--line))">
-        <p class="text-[12.5px] font-semibold" style="color:#f5a524">Auto-Backup eingerichtet — Zugriff bestätigen</p><p class="c-sub text-[11.5px] mt-0.5">Ein Klick, dann sichert Flipdeck wieder automatisch in „${escapeHtml(dir.name||"Backup")}".</p>
-        <button id="autofile-reauth" class="btn-accent" style="margin-top:9px;padding:8px 13px;font-size:12.5px">Zugriff erneut freigeben</button></div>`;
+      box.innerHTML=`<div class="rounded-[12px] px-3 py-3" style="background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 26%,var(--line))">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div style="min-width:0"><p class="text-[12.5px] font-semibold c-accent">✓ Automatische Datei-Backups aktiv</p><p class="c-sub text-[11.5px] mt-0.5">Ordner „${escapeHtml(dir.name||"Backup")}" — nach einem Neustart einmal kurz den Zugriff freigeben (Browser-Sicherheit).</p></div>
+          <div style="display:flex;gap:8px;flex:0 0 auto"><button id="autofile-reauth" class="btn-accent" style="padding:6px 12px;font-size:12px">Freigeben &amp; sichern</button><button id="autofile-off" class="btn-ghost" style="padding:6px 11px;font-size:12px">Aus</button></div>
+        </div></div>`;
       const r=$("#autofile-reauth"); if(r) r.addEventListener("click",reauthAutoFileBackup);
+      const o2=$("#autofile-off"); if(o2) o2.addEventListener("click",disableAutoFileBackup);
     }
   } else {
     box.innerHTML=`<div class="rounded-[12px] px-3 py-3" style="background:color-mix(in srgb,var(--brand) 10%,transparent);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent)">
@@ -2792,6 +2796,7 @@ function startTour(){ if(_tourActive) return; _tourActive=true; _tourIdx=0;
   _tourReposition=()=>positionTour(); window.addEventListener("resize",_tourReposition); window.addEventListener("scroll",_tourReposition,true);
   showTourStep(); }
 function endTour(){ _tourActive=false; try{ Store.set(uKey("tourdone"),"1"); }catch(e){}
+  try{ if(typeof DB!=="undefined" && DB.saveTaxCfg) DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, onboarded:true, tourDone:true }); }catch(e){}  // kontoweit merken -> nie wieder auf irgendeinem Gerät
   if(_tourHole&&_tourHole.parentNode) _tourHole.remove(); if(_tourTip&&_tourTip.parentNode) _tourTip.remove();
   if(_tourReposition){ window.removeEventListener("resize",_tourReposition); window.removeEventListener("scroll",_tourReposition,true); _tourReposition=null; } }
 function showTourStep(){ const step=TOUR_STEPS[_tourIdx]; if(!step){ endTour(); return; }
