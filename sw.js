@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v39";   // v39 (App v5.12.0): Kaufland-Gebührenrechner im Gebühren-Tab + Marktplatz-Umschalter (öffnet Standard-Marktplatz)
+const VERSION    = "flipdeck-v40";   // v40 (App v5.12.1): Kaufland PL-Provisionen; Verkaufs-Dialog: Kaufland-Fees korrekt + Versand/Zahlung nur bei Privatverkauf
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

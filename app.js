@@ -1717,36 +1717,39 @@ $$("#calc-mode button").forEach(b=>b.addEventListener("click",()=>setCalcMode(b.
    monatlich — gehört in die Fixkosten, nicht in die Stück-Rechnung.
    MwSt. auf Gebühren folgt dem konto-weiten Kleinunternehmer-Modus (vatF). */
 const KAUFLAND_CATS = [
-  {pct:13, label:"Standard / Sonstiges"},
-  {pct:7,  label:"Elektronik, Computer-Zubehör, Reifen"},
-  {pct:7,  label:"Großgeräte"},
-  {pct:10, label:"Werkzeug & Gartengeräte"},
-  {pct:10, label:"Parfüm"},
-  {pct:13, label:"Kleingeräte, Fahrräder"},
-  {pct:13, label:"Gesundheit & Beauty, Auto"},
-  {pct:13, label:"Baubedarf"},
-  {pct:13, label:"Möbel, Sport, Spielzeug, Lebensmittel"},
-  {pct:13, label:"Medien", fixed:0.70},
-  {pct:14, label:"Gartenprodukte"},
-  {pct:14, label:"Kleidung, Schuhe, Fitness"},
-  {pct:16, label:"Schmuck"}
+  {pct:13, pctPL:10, label:"Standard / alle anderen"},
+  {pct:7,  pctPL:4,  label:"Computer, Elektronik, Reifen, Felgen"},
+  {pct:7,  pctPL:7,  label:"Haushaltselektronik (Großgeräte)"},
+  {pct:10, pctPL:7,  label:"Werkzeug & Gartengeräte"},
+  {pct:10, pctPL:8,  label:"Parfüm"},
+  {pct:13, pctPL:7,  label:"Kleingeräte, Fahrräder & E-Bikes, Elektronik-Zubehör"},
+  {pct:13, pctPL:8,  label:"Körperpflege & Gesundheit, Auto & Motorrad"},
+  {pct:13, pctPL:9,  label:"Baumarkt"},
+  {pct:13, pctPL:10, label:"Möbel, Sport, Spielzeug, Lebensmittel"},
+  {pct:13, pctPL:9,  label:"Medien", fixed:0.70},
+  {pct:14, pctPL:9,  label:"Garten"},
+  {pct:14, pctPL:10, label:"Matratzen, Küche, Kleidung, Schuhe, Fitness"},
+  {pct:16, pctPL:12, label:"Schmuck"}
 ];
+function kauflandPct(cat, isPL){ return isPL ? cat.pctPL : cat.pct; }
 let klPackMode = Store.get("fg_kpack")==="1";
+let klRegion = Store.get("fg_kregion")==="pl" ? "pl" : "de";
 let kLast = {};
-function fillKauflandCats(){ const sel=$("#k-cat"); if(!sel || sel.dataset.filled) return;
-  sel.innerHTML=KAUFLAND_CATS.map((c,i)=>`<option value="${i}">${escapeHtml(c.label)} · ${c.pct} %${c.fixed?" + "+eur(c.fixed):""}</option>`).join("");
-  sel.dataset.filled="1"; }
+function fillKauflandCats(){ const sel=$("#k-cat"); if(!sel) return; const cur=sel.value; const isPL=klRegion==="pl";
+  sel.innerHTML=KAUFLAND_CATS.map((c,i)=>`<option value="${i}">${escapeHtml(c.label)} · ${kauflandPct(c,isPL)} %${c.fixed?" + "+eur(c.fixed):""}</option>`).join("");
+  if(cur) sel.value=cur; }
 function kauflandCalc(){ if(!$("#k-vk")) return;
   const vk=num($("#k-vk").value), ek=num($("#k-ek").value), ship=num($("#k-ship").value);
   const cat=KAUFLAND_CATS[parseInt($("#k-cat").value)||0]||KAUFLAND_CATS[0];
+  const isPL=klRegion==="pl", pctUsed=kauflandPct(cat,isPL);
   const V=vatF(), pack=klPackMode?1:0;
-  const comm=vk*cat.pct/100*V, media=(cat.fixed||0)*V, fees=comm+media;
+  const comm=vk*pctUsed/100*V, media=(cat.fixed||0)*V, fees=comm+media;
   const payout=vk-fees, profit=payout-ek-ship-pack, margin=vk>0?profit/vk*100:0;
-  kLast={vk,ek,ship,pack,catPct:cat.pct,fees,payout,profit,margin};
+  kLast={vk,ek,ship,pack,catPct:pctUsed,fees,payout,profit,margin};
   const rp=$("#k-profit"); rp.textContent=(profit>=0?"+":"")+eur(profit); rp.style.color=profit>=0?"var(--accent)":"var(--danger)";
   $("#k-payout").textContent=eur(payout); $("#k-fees").textContent=eur(fees); $("#k-margin").textContent=pct(margin);
   $("#kb-vk").textContent="+ "+eur(vk);
-  $("#kb-comm-l").textContent=`Verkaufsprovision (${cat.pct.toLocaleString("de-DE")} %)`;
+  $("#kb-comm-l").textContent=`Verkaufsprovision (${pctUsed.toLocaleString("de-DE")} %${isPL?" · PL":""})`;
   $("#kb-comm").textContent="- "+eur(comm);
   $("#kb-media-row").style.display=(cat.fixed>0)?"":"none"; $("#kb-media").textContent="- "+eur(media);
   $("#kb-ship").textContent="- "+eur(ship);
@@ -1755,6 +1758,7 @@ function kauflandCalc(){ if(!$("#k-vk")) return;
   $("#kb-ku-note").textContent = kuMode ? "inkl. 19 % MwSt." : "netto"; }
 if($("#k-cat")){ ["k-vk","k-ek","k-ship"].forEach(id=>$("#"+id).addEventListener("input",kauflandCalc)); $("#k-cat").addEventListener("change",kauflandCalc); }
 if($("#k-pack")) $("#k-pack").addEventListener("change",()=>{ klPackMode=$("#k-pack").checked; Store.set("fg_kpack",klPackMode?"1":"0"); kauflandCalc(); });
+$$("#k-region button").forEach(b=>b.addEventListener("click",()=>{ klRegion=b.dataset.region==="pl"?"pl":"de"; Store.set("fg_kregion",klRegion); $$("#k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===klRegion)); fillKauflandCats(); kauflandCalc(); }));
 if($("#k-inv")) $("#k-inv").addEventListener("click",()=>{ kauflandCalc(); setTab("inventory"); setInvForm(true);
   $("#iv-name").value="Kaufland Deal"; $("#iv-ean").value=""; $("#iv-qty").value="1";
   $("#iv-vk").value=(kLast.vk||0).toFixed(2).replace(".",","); $("#iv-ek").value=(kLast.ek||0).toFixed(2).replace(".",",");
@@ -1770,7 +1774,7 @@ function setCalcMarket(mkt, persist){
   const isK = calcMarket==="kaufland";
   if($("#calc-mode")) $("#calc-mode").classList.toggle("hidden", isK);
   if($("#calc-kaufland")) $("#calc-kaufland").classList.toggle("hidden", !isK);
-  if(isK){ if($("#be-card")) $("#be-card").classList.add("hidden"); if($("#calc-standard")) $("#calc-standard").classList.add("hidden"); fillKauflandCats(); if($("#k-pack")) $("#k-pack").checked=klPackMode; kauflandCalc(); }
+  if(isK){ if($("#be-card")) $("#be-card").classList.add("hidden"); if($("#calc-standard")) $("#calc-standard").classList.add("hidden"); fillKauflandCats(); if($("#k-pack")) $("#k-pack").checked=klPackMode; $$("#k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===klRegion)); kauflandCalc(); }
   else { setCalcMode(calcMode, false); }
   if(persist!==false) Store.set(uKey("calcmarket"), calcMarket); }
 $$("#calc-market button").forEach(b=>b.addEventListener("click",()=>setCalcMarket(b.dataset.market)));
@@ -2216,13 +2220,24 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
         <span class="c-sub text-[11px]">geplant: ${String(it.adPct).replace('.',',')} %${it.adPct>0?` · <button type="button" id="sell-ad-zero" style="background:none;border:0;cursor:pointer;color:var(--brand);font-weight:600;font-size:11px;padding:0">auf 0 setzen</button>`:""}</span>
       </div>
       <input id="sell-ad" class="field tnum" inputmode="decimal" value="${String(it.adPct).replace('.',',')}">
-
-      <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Versand</span><span class="ms-sec-line"></span></div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="label" for="sell-carrier">Versand (Verkauf)</label><select id="sell-carrier" class="field">${carrierOptions("")}</select></div>
-        <div><label class="label" for="sell-tracking">Sendungsnr.</label><input id="sell-tracking" class="field" placeholder="optional"></div>
+      <div id="sell-kaufland" class="hidden" style="margin-top:12px">
+        <label class="label" for="sell-k-cat">Kaufland-Kategorie &amp; Zielland</label>
+        <select id="sell-k-cat" class="field" style="margin-bottom:8px"></select>
+        <div class="calc-switch" id="sell-k-region" role="tablist" style="grid-template-columns:1fr 1fr">
+          <button type="button" data-region="de" role="tab" aria-selected="true">DE &amp; West-EU</button>
+          <button type="button" data-region="pl" role="tab" aria-selected="false">Polen (PL)</button>
+        </div>
+        <p class="c-sub text-[11px] mt-1.5">Bestimmt die Verkaufsprovision für diesen Verkauf. „Bewerben %" kommt on top.</p>
       </div>
-      <div class="mt-3"><label class="label" for="sell-paymethod">Erhalten auf <span class="c-sub" style="font-weight:400">(Zahlungsmethode, optional)</span></label><select id="sell-paymethod" class="field">${payOptions("",true)}</select></div>
+
+      <div id="sell-private-fields">
+        <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Versand &amp; Zahlung</span><span class="ms-sec-line"></span></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="label" for="sell-carrier">Versand (Verkauf)</label><select id="sell-carrier" class="field">${carrierOptions("")}</select></div>
+          <div><label class="label" for="sell-tracking">Sendungsnr.</label><input id="sell-tracking" class="field" placeholder="optional"></div>
+        </div>
+        <div class="mt-3"><label class="label" for="sell-paymethod">Erhalten auf <span class="c-sub" style="font-weight:400">(Zahlungsmethode, optional)</span></label><select id="sell-paymethod" class="field">${payOptions("",true)}</select></div>
+      </div>
 
       <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Preis-Recherche</span><span class="ms-sec-line"></span></div>
       ${researchHTML(it.name,it.ean)}
@@ -2243,12 +2258,22 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
      Ist "Verkaufspreis enthält USt" aktiv, wird die USt vor der Gewinnrechnung herausgerechnet –
      sie ist eine Steuerschuld ans Finanzamt, kein eigener Ertrag. */
   const _ekR = ekVatRate(it); const ekNet = _ekR ? it.ek/(1+_ekR/100) : it.ek;
+  let sellKRegion = klRegion;   // DE-Zone / PL für Kaufland-Verkäufe in diesem Dialog
   const calcSale=(q,vk,shipTot,noFee,pack,adPct,ustRate)=>{
-    const combined=it.catPct+adPct+it.regionPct;
+    const plat=$("#sell-platform").value;
     const V=vatF();
     const vkNet = ustRate ? vk/(1+ustRate/100) : vk;
     const ustPerUnit = vk - vkNet;
-    const feesTotal = noFee ? 0 : transFee(vkNet) + vkNet*q*combined/100*V;
+    let feesTotal;
+    if(noFee){ feesTotal=0; }
+    else if(plat==="kaufland"){
+      const kc=$("#sell-k-cat"); const cat=KAUFLAND_CATS[(kc?parseInt(kc.value):0)||0]||KAUFLAND_CATS[0];
+      const p=kauflandPct(cat, sellKRegion==="pl")+adPct;   // Provision + Bewerben on top
+      feesTotal = (vkNet*q*p/100 + (cat.fixed||0)*q) * V;   // Medien-Zuschlag je Artikel
+    } else {
+      const combined=it.catPct+adPct+it.regionPct;
+      feesTotal = transFee(vkNet) + vkNet*q*combined/100*V;
+    }
     const payoutTotal = vkNet*q - feesTotal;
     const payoutPer = q>0 ? payoutTotal/q : payoutTotal;
     const ustTotal = ustPerUnit*q;
@@ -2268,12 +2293,23 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     const {payoutTotal,tot,margin,ustTotal}=calcSale(q,vk,shipTot,noFee,pack,adPct,ustRate);
     $("#sell-profit").textContent=(tot>=0?"+":"")+eur(tot); $("#sell-profit").style.color=tot>=0?"var(--accent)":"var(--danger)";
     $("#sell-sub").textContent=`${noFee?"Ohne Gebühren · ":""}Auszahlung gesamt ${eur(payoutTotal)} · EK ${eur(it.ek)}/Stk${_ekR?` (netto ${eur(ekNet)})`:""} · Porto ${eur(shipTot)}${pack?" · +1€ Verpackung":""} · Marge ${pct(margin)}${ustTotal>0?` · davon ${eur(ustTotal)} USt ans Finanzamt`:""}`; };
+  /* Felder je Marktplatz: Versand/Sendungsnr./Zahlungsmethode nur bei gebührenfreien
+     (privaten) Verkäufen; Kaufland-Kategorie nur bei Kaufland. */
+  const fillSellKCat=()=>{ const sel=$("#sell-k-cat"); if(!sel) return; const cur=sel.value||"0"; const isPL=sellKRegion==="pl";
+    sel.innerHTML=KAUFLAND_CATS.map((c,i)=>`<option value="${i}">${escapeHtml(c.label)} · ${kauflandPct(c,isPL)} %${c.fixed?" + "+eur(c.fixed):""}</option>`).join(""); sel.value=cur; };
+  const updateSellFields=()=>{ const plat=$("#sell-platform").value; const v=PLATFORMS[plat]||PLATFORMS.ebay;
+    const pf=$("#sell-private-fields"); if(pf) pf.classList.toggle("hidden", !!v.hasFees);
+    const kp=$("#sell-kaufland"); if(kp) kp.classList.toggle("hidden", plat!=="kaufland"); };
+  fillSellKCat();
+  $$("#sell-k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===sellKRegion));
+  if($("#sell-k-cat")) $("#sell-k-cat").addEventListener("change",recompute);
+  $$("#sell-k-region button").forEach(b=>b.addEventListener("click",()=>{ sellKRegion=b.dataset.region==="pl"?"pl":"de"; $$("#sell-k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===sellKRegion)); fillSellKCat(); recompute(); }));
   ["sell-qty","sell-vk","sell-ship","sell-ad"].forEach(x=>$("#"+x).addEventListener("input",recompute));
   if($("#sell-ad-zero")) $("#sell-ad-zero").addEventListener("click",()=>{ $("#sell-ad").value="0"; recompute(); });
   $("#sell-pack").addEventListener("change",recompute);
-  $("#sell-platform").addEventListener("change",()=>{ updatePlatNote(); recompute(); });
+  $("#sell-platform").addEventListener("change",()=>{ updatePlatNote(); updateSellFields(); recompute(); });
   attachPlatformDropdown();
-  updatePlatNote(); recompute();
+  updatePlatNote(); updateSellFields(); recompute();
   attachShipDropdown($("#sell-ship"));   // Versand-Vorlagen auch im Verkauf-Dialog
   /* Kein Schließen bei Klick außerhalb: verhindert versehentliches Zuklappen beim Markieren von Zahlen. Nur „Abbrechen“ / „X“ schließt. */
   $("#sell-cancel").addEventListener("click",()=>$("#modal-root").innerHTML="");
