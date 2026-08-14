@@ -793,7 +793,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.11.5</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.12.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -837,7 +837,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.11.5</span>
+        <span class="nav-ver">v5.12.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1065,6 +1065,12 @@ body.no-images .ms-head .thumb{ display:none !important; }
 
   <!-- ============ FEE CALC ============ -->
   <section id="calc-view" class="hidden shell px-4 py-6">
+    <!-- Marktplatz-Umschalter: eBay- vs Kaufland-Gebühren. Öffnet beim Tab-Wechsel
+         automatisch den Rechner deines Standard-Marktplatzes (Profil-Einstellung). -->
+    <div class="calc-switch mb-3" id="calc-market" role="tablist" aria-label="Marktplatz">
+      <button type="button" data-market="ebay" role="tab" aria-selected="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.5 10.5a2 2 0 0 1-2 1.5H6.5a2 2 0 0 1-2-1.5L3 9z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>eBay</button>
+      <button type="button" data-market="kaufland" role="tab" aria-selected="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.5 10.5a2 2 0 0 1-2 1.5H6.5a2 2 0 0 1-2-1.5L3 9z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>Kaufland</button>
+    </div>
     <!-- Umschalter: Standard = normaler Gebührenrechner · Schnell-Check optional -->
     <div class="calc-switch mb-3" id="calc-mode" role="tablist" aria-label="Rechner-Modus">
       <button type="button" data-mode="calc" role="tab" aria-selected="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h4"/></svg>Gebührenrechner</button>
@@ -1255,6 +1261,55 @@ body.no-images .ms-head .thumb{ display:none !important; }
           <div class="flex items-center justify-between mb-3"><h4 class="text-[13px] font-semibold uppercase tracking-wider c-sub">Verlauf</h4><div class="flex items-center gap-2"><select id="hist-count-sel" class="field" style="width:auto;padding:5px 9px;font-size:12px" title="Anzahl anzeigen"></select><button id="hist-clear" class="text-[12px] c-sub hover:opacity-70" style="background:none;border:0;cursor:pointer;">Leeren</button></div></div>
           <div id="calc-hist" class="flex flex-col gap-2"></div>
           <p id="calc-hist-empty" class="text-[13px] c-sub py-3">Noch keine gesicherten Berechnungen. Sichere eine Berechnung, um sie später per Klick zu laden.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Kaufland Global Marketplace · Gebührenrechner ===== -->
+    <div id="calc-kaufland" class="grid md:grid-cols-2 gap-3 hidden">
+      <div class="cell p-5">
+        <h3 class="text-[17px] font-semibold mb-1 tracking-tight">Kaufland-Gebührenrechner</h3>
+        <p class="c-sub text-[12px] mb-5 leading-relaxed">Verkaufsprovision auf den Verkaufspreis (netto, ohne MwSt.). Kein Auslandsentgelt, keine Fixgebühr pro Bestellung — außer Medien-Zuschlag.</p>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div><label class="label" for="k-ek">Einkaufspreis €</label><input id="k-ek" class="field tnum" inputmode="decimal" value="20" /></div>
+          <div><label class="label" for="k-vk">Verkaufspreis €</label><input id="k-vk" class="field tnum" inputmode="decimal" value="50" /></div>
+        </div>
+        <div class="mb-4"><label class="label" for="k-ship">Versand (du zahlst) €</label><input id="k-ship" class="field tnum" inputmode="decimal" value="4.99" /></div>
+        <div class="mb-4"><label class="label" for="k-cat">Kaufland-Kategorie</label>
+          <select id="k-cat" class="field"></select>
+          <p class="c-sub text-[11px] mt-1.5 leading-relaxed">Provision auf den Bruttopreis (ohne MwSt.). Stand 2026 · Kaufland.de. <a href="https://www.kauflandglobalmarketplace.com/konditionen/" target="_blank" rel="noopener noreferrer" class="c-accent" style="font-weight:600;text-decoration:none">Konditionen ansehen ↗</a></p>
+        </div>
+        <!-- Verpackungs-Pauschale: 1 € für Karton/Klebeband vom Gewinn abziehen -->
+        <label class="flex items-center gap-3 mb-4 cursor-pointer select-none rounded-[15px] px-4 py-3" style="background:var(--cell-2);border:1px solid var(--line)">
+          <input id="k-pack" type="checkbox" style="width:19px;height:19px;accent-color:var(--accent);flex:0 0 auto" />
+          <span class="text-[13.5px] leading-snug">Verpackungs-Pauschale <span class="c-sub">(Karton &amp; Klebeband · − 1,00 €)</span></span>
+        </label>
+        <div class="rounded-[14px] px-4 py-3" style="background:var(--cell-2);border:1px solid var(--line)">
+          <p class="text-[12px] c-sub leading-relaxed"><b style="color:var(--text)">Monatliche Grundgebühr:</b> Basic 39,95 € · Plus 59,95 € (zzgl. MwSt.) — fällt pro Monat an, nicht pro Verkauf. Erfasse sie am besten als monatliche Fixkosten. MwSt. auf Gebühren folgt dem Kleinunternehmer-Modus (eBay-Tab).</p>
+        </div>
+      </div>
+      <div class="flex flex-col gap-3">
+        <div class="cell p-5 relative overflow-hidden">
+          <div class="absolute -right-10 -top-12 w-48 h-48 rounded-full" style="background:radial-gradient(circle,var(--glow),transparent 70%);"></div>
+          <p class="label mb-2">Reingewinn</p>
+          <p id="k-profit" class="tnum font-bold leading-none" style="font-size:clamp(34px,9vw,48px); letter-spacing:-.03em;">0,00 €</p>
+          <div class="grid grid-cols-3 gap-2 mt-5 mb-4">
+            <div class="rounded-[14px] px-3 py-3" style="background:var(--cell-2);"><p class="text-[10px] c-sub uppercase tracking-wider mb-1">Auszahlung</p><p id="k-payout" class="mono font-semibold text-[15px]">0,00 €</p></div>
+            <div class="rounded-[14px] px-3 py-3" style="background:var(--cell-2);"><p class="text-[10px] c-sub uppercase tracking-wider mb-1">Gebühren</p><p id="k-fees" class="mono font-semibold text-[15px] c-danger">0,00 €</p></div>
+            <div class="rounded-[14px] px-3 py-3" style="background:var(--cell-2);"><p class="text-[10px] c-sub uppercase tracking-wider mb-1">Marge</p><p id="k-margin" class="mono font-semibold text-[15px]">0,0 %</p></div>
+          </div>
+          <button id="k-inv" class="btn-accent" style="width:100%">Zu Bestand hinzufügen ↗</button>
+        </div>
+        <div class="cell p-5">
+          <h4 class="text-[13px] font-semibold uppercase tracking-wider c-sub mb-4">Gebührenübersicht</h4>
+          <div class="flex flex-col gap-3 text-[14.5px]">
+            <div class="flex justify-between"><span class="c-sub">Verkaufspreis</span><span id="kb-vk" class="mono c-accent">+ 0,00 €</span></div>
+            <div class="flex justify-between"><span class="c-sub" id="kb-comm-l">Verkaufsprovision</span><span id="kb-comm" class="mono">- 0,00 €</span></div>
+            <div class="flex justify-between" id="kb-media-row"><span class="c-sub">Medien-Zuschlag</span><span id="kb-media" class="mono">- 0,00 €</span></div>
+            <div class="flex justify-between"><span class="c-sub">Versandkosten (deine)</span><span id="kb-ship" class="mono">- 0,00 €</span></div>
+            <div class="flex justify-between" id="kb-pack-row"><span class="c-sub">Verpackungs-Pauschale</span><span id="kb-pack" class="mono">- 0,00 €</span></div>
+            <hr class="hr my-1" /><div class="flex justify-between font-semibold"><span>Gesamt Gebühren <span id="kb-ku-note" class="c-sub" style="font-weight:400;font-size:11px"></span></span><span id="kb-total" class="mono c-danger">- 0,00 €</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1846,7 +1901,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.11.5 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.12.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 

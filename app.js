@@ -681,7 +681,7 @@ function setTab(name, instant){
   const active=$("#"+name+"-view"); active.classList.remove("view-enter"); void active.offsetWidth; active.classList.add("view-enter");
   const btn=$(`#tabs button[data-tab="${name}"]`); if(btn) btn.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
   if(name==="dashboard") renderDashboard();
-  if(name==="calc") setCalcMode(calcMode, false);
+  if(name==="calc") setCalcMarket(defaultPlatform==="kaufland"?"kaufland":"ebay", false);
   if(name==="tracker") renderTrackerList();
   if(name==="inventory") renderInventory();
   if(name==="fix") renderFixed();
@@ -1710,6 +1710,70 @@ function setCalcMode(m, persist){
   if(calcMode==="be") renderBreakEven();
 }
 $$("#calc-mode button").forEach(b=>b.addEventListener("click",()=>setCalcMode(b.dataset.mode)));
+
+/* ===== Kaufland Global Marketplace · Gebührenrechner (Stand 2026, Kaufland.de) =====
+   Verkaufsprovision auf den Verkaufspreis (netto). Kein Auslandsentgelt, keine
+   Fixgebühr je Bestellung außer Medien-Zuschlag (0,70 €). Grundgebühr (Abo) ist
+   monatlich — gehört in die Fixkosten, nicht in die Stück-Rechnung.
+   MwSt. auf Gebühren folgt dem konto-weiten Kleinunternehmer-Modus (vatF). */
+const KAUFLAND_CATS = [
+  {pct:13, label:"Standard / Sonstiges"},
+  {pct:7,  label:"Elektronik, Computer-Zubehör, Reifen"},
+  {pct:7,  label:"Großgeräte"},
+  {pct:10, label:"Werkzeug & Gartengeräte"},
+  {pct:10, label:"Parfüm"},
+  {pct:13, label:"Kleingeräte, Fahrräder"},
+  {pct:13, label:"Gesundheit & Beauty, Auto"},
+  {pct:13, label:"Baubedarf"},
+  {pct:13, label:"Möbel, Sport, Spielzeug, Lebensmittel"},
+  {pct:13, label:"Medien", fixed:0.70},
+  {pct:14, label:"Gartenprodukte"},
+  {pct:14, label:"Kleidung, Schuhe, Fitness"},
+  {pct:16, label:"Schmuck"}
+];
+let klPackMode = Store.get("fg_kpack")==="1";
+let kLast = {};
+function fillKauflandCats(){ const sel=$("#k-cat"); if(!sel || sel.dataset.filled) return;
+  sel.innerHTML=KAUFLAND_CATS.map((c,i)=>`<option value="${i}">${escapeHtml(c.label)} · ${c.pct} %${c.fixed?" + "+eur(c.fixed):""}</option>`).join("");
+  sel.dataset.filled="1"; }
+function kauflandCalc(){ if(!$("#k-vk")) return;
+  const vk=num($("#k-vk").value), ek=num($("#k-ek").value), ship=num($("#k-ship").value);
+  const cat=KAUFLAND_CATS[parseInt($("#k-cat").value)||0]||KAUFLAND_CATS[0];
+  const V=vatF(), pack=klPackMode?1:0;
+  const comm=vk*cat.pct/100*V, media=(cat.fixed||0)*V, fees=comm+media;
+  const payout=vk-fees, profit=payout-ek-ship-pack, margin=vk>0?profit/vk*100:0;
+  kLast={vk,ek,ship,pack,catPct:cat.pct,fees,payout,profit,margin};
+  const rp=$("#k-profit"); rp.textContent=(profit>=0?"+":"")+eur(profit); rp.style.color=profit>=0?"var(--accent)":"var(--danger)";
+  $("#k-payout").textContent=eur(payout); $("#k-fees").textContent=eur(fees); $("#k-margin").textContent=pct(margin);
+  $("#kb-vk").textContent="+ "+eur(vk);
+  $("#kb-comm-l").textContent=`Verkaufsprovision (${cat.pct.toLocaleString("de-DE")} %)`;
+  $("#kb-comm").textContent="- "+eur(comm);
+  $("#kb-media-row").style.display=(cat.fixed>0)?"":"none"; $("#kb-media").textContent="- "+eur(media);
+  $("#kb-ship").textContent="- "+eur(ship);
+  $("#kb-pack-row").style.display=(pack>0)?"":"none"; $("#kb-pack").textContent="- "+eur(pack);
+  $("#kb-total").textContent="- "+eur(fees);
+  $("#kb-ku-note").textContent = kuMode ? "inkl. 19 % MwSt." : "netto"; }
+if($("#k-cat")){ ["k-vk","k-ek","k-ship"].forEach(id=>$("#"+id).addEventListener("input",kauflandCalc)); $("#k-cat").addEventListener("change",kauflandCalc); }
+if($("#k-pack")) $("#k-pack").addEventListener("change",()=>{ klPackMode=$("#k-pack").checked; Store.set("fg_kpack",klPackMode?"1":"0"); kauflandCalc(); });
+if($("#k-inv")) $("#k-inv").addEventListener("click",()=>{ kauflandCalc(); setTab("inventory"); setInvForm(true);
+  $("#iv-name").value="Kaufland Deal"; $("#iv-ean").value=""; $("#iv-qty").value="1";
+  $("#iv-vk").value=(kLast.vk||0).toFixed(2).replace(".",","); $("#iv-ek").value=(kLast.ek||0).toFixed(2).replace(".",",");
+  $("#iv-ship").value=(kLast.ship||0).toFixed(2).replace(".",",");
+  window.scrollTo({top:0,behavior:"smooth"}); showToast("✓ Werte ins Inventory übernommen – prüfen & speichern"); });
+
+/* Marktplatz-Umschalter: eBay-Rechner (mit Modus-Umschalter) vs Kaufland-Rechner.
+   Beim Öffnen des Gebühren-Tabs wird der Standard-Marktplatz des Kontos gezeigt. */
+let calcMarket = "ebay";
+function setCalcMarket(mkt, persist){
+  calcMarket = (mkt==="kaufland") ? "kaufland" : "ebay";
+  $$("#calc-market button").forEach(b=>b.setAttribute("aria-selected", b.dataset.market===calcMarket));
+  const isK = calcMarket==="kaufland";
+  if($("#calc-mode")) $("#calc-mode").classList.toggle("hidden", isK);
+  if($("#calc-kaufland")) $("#calc-kaufland").classList.toggle("hidden", !isK);
+  if(isK){ if($("#be-card")) $("#be-card").classList.add("hidden"); if($("#calc-standard")) $("#calc-standard").classList.add("hidden"); fillKauflandCats(); if($("#k-pack")) $("#k-pack").checked=klPackMode; kauflandCalc(); }
+  else { setCalcMode(calcMode, false); }
+  if(persist!==false) Store.set(uKey("calcmarket"), calcMarket); }
+$$("#calc-market button").forEach(b=>b.addEventListener("click",()=>setCalcMarket(b.dataset.market)));
 setCalcMode(calcMode, false);   // Ausgangszustand ohne erneutes Schreiben herstellen
 
 /* ===== 10 · INVENTORY + PREISSCHUTZ ===== */

@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v38";   // v38 (App v5.11.5): Fixkosten — freie Intervalle (Tag/Woche/Monat/Jahr/alle X Tage), auf Monat normalisiert + nächste Fälligkeit
+const VERSION    = "flipdeck-v39";   // v39 (App v5.12.0): Kaufland-Gebührenrechner im Gebühren-Tab + Marktplatz-Umschalter (öffnet Standard-Marktplatz)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
