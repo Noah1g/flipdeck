@@ -2703,9 +2703,11 @@ async function maybeCloudBackup(){
 function downloadFullBackup(){
   const dump = Object.assign({ app:"Flipdeck", version:"3.0", exportedAt:new Date().toISOString() },
     { flips, inventory, fixed, fixcfg:fixCfg, shipcfg:shipCfg, calcs:(typeof calcs!=="undefined"?calcs:[]) });
-  downloadFile(`flipdeck-backup-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(dump,null,2), "application/json");
+  const json=JSON.stringify(dump,null,2);
+  downloadFile(`flipdeck-backup-${new Date().toISOString().slice(0,10)}.json`, json, "application/json");
   Store.set("fg_lastdl", new Date().toISOString());
-  showToast("✓ Voll-Backup als Datei gespeichert");
+  const kb=Math.max(1, Math.round((new Blob([json]).size)/1024));
+  showToast(`✓ Voll-Backup gespeichert (~${kb} KB · ${flips.length+inventory.length+fixed.length} Datensätze)`);
   renderBackupList();
 }
 
@@ -2752,7 +2754,7 @@ async function renderAutoFileStatus(){
     if(perm==="granted"){
       box.innerHTML=`<div class="rounded-[12px] px-3 py-3" style="background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))">
         <div class="flex items-center justify-between gap-2 flex-wrap">
-          <div style="min-width:0"><p class="text-[12.5px] font-semibold c-accent">✓ Automatische Datei-Backups aktiv</p><p class="c-sub text-[11.5px] mt-0.5">Ordner „${escapeHtml(dir.name||"Backup")}" · zuletzt ${when} · läuft wöchentlich von allein</p></div>
+          <div style="min-width:0"><p class="text-[12.5px] font-semibold c-accent">✓ Automatische Datei-Backups aktiv</p><p class="c-sub text-[11.5px] mt-0.5">Ordner „${escapeHtml(dir.name||"Backup")}" · zuletzt ${when} · ~${Math.max(1,Math.round(new Blob([backupJSONString()]).size/1024))} KB · läuft wöchentlich von allein</p></div>
           <button id="autofile-off" class="btn-ghost" style="padding:6px 11px;font-size:12px;flex:0 0 auto">Deaktivieren</button>
         </div></div>`;
       const o=$("#autofile-off"); if(o) o.addEventListener("click",disableAutoFileBackup);
@@ -3039,7 +3041,8 @@ function openImportModal(d){
 
   $("#modal-root").innerHTML = `<div class="overlay" id="ov"><div class="modal" style="max-height:88vh;display:flex;flex-direction:column">
     <p class="font-bold text-[16px] leading-snug">Backup einspielen</p>
-    <p class="c-sub text-[12px] mt-1 mb-3">Erstellt am ${escapeHtml(when)}${d.version?` · Version ${escapeHtml(String(d.version))}`:""}</p>
+    <p class="c-sub text-[12px] mt-1 mb-1.5">Erstellt am ${escapeHtml(when)}${d.version?` · Version ${escapeHtml(String(d.version))}`:""}</p>
+    <p class="text-[12px] font-semibold mb-3" style="color:var(--accent)">✓ Gültige Backup-Datei · ${inc.flips.length+inc.inventory.length+inc.fixed.length+inc.calcs.length} Datensätze insgesamt</p>
     <div style="overflow-y:auto;flex:1">
       ${row("Verkäufe", inc.flips.length, flips.length)}
       ${row("Bestand", inc.inventory.length, inventory.length)}
