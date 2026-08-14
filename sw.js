@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v36";   // v36 (App v5.11.3): mehr Zeitraum-Filter (Heute, Diese Woche, 90 Tage, Dieses Jahr, Alle)
+const VERSION    = "flipdeck-v37";   // v37 (App v5.11.4): Auswertung — Kennzahl Ausgaben-Gesamtsumme (Ware+Versand+Fixkosten)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

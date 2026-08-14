@@ -2698,6 +2698,7 @@ function renderReport(){
   $("#rp-profit-sub").textContent=`nach Fixkosten · ${scopeLabel()}`;
   $("#rp-rev").textContent=eur(rev);
   $("#rp-rev-sub").textContent=`Ø ${eur(list.length?rev/list.length:0)} pro Verkauf`;
+  if($("#rp-expenses")){ $("#rp-expenses").textContent=eur(ek+ship+fx); $("#rp-expenses-sub").textContent=`Ware + Versand + Fixkosten (${rpScope==="year"?"Jahr":"Monat"})`; }
   $("#rp-margin").textContent=pct(margin);
   $("#rp-count").textContent=String(units);
   $("#rp-count-sub").textContent=`${list.length} ${list.length===1?"Verkauf":"Verkäufe"}`;
