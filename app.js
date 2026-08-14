@@ -216,7 +216,7 @@ const DB = {
   /* ---- DATEN: jetzt in Supabase (pro User getrennt via RLS) ---- */
   getFlips(){ return dbLoad('flips'); },        saveFlips(arr){ return dbSave('flips', arr); },
   getCalcs(){ return dbLoad('calcs'); },         saveCalcs(arr){ return dbSave('calcs', arr); },
-  getInventory(){ return dbLoad('inventory'); }, saveInventory(arr){ return dbSave('inventory', arr); },
+  getInventory(){ return invGetRows(); },        saveInventory(arr){ return invSaveRows(arr); },
   getFixed(){ return dbLoad('fixed'); },         saveFixed(arr){ return dbSave('fixed', arr); },
   getFixCfg(){ return dbLoad('fixcfg'); },       saveFixCfg(o){ return dbSave('fixcfg', o); },
   getShipCfg(){ return dbLoad('shipcfg'); },      saveShipCfg(o){ return dbSave('shipcfg', o); },
@@ -228,6 +228,81 @@ const DB = {
   getSetting(k,def){ const v=Store.get("fg_"+k); return v===null?def:v; },
   setSetting(k,v){ Store.set("fg_"+k, v); }
 };
+
+/* =====================================================================
+   INVENTAR PER-ZEILE (Weg A.5 · Stufe 1)
+   Jeder Artikel liegt als eigene Zeile in 'inv_items' statt in einem großen
+   JSON-Klumpen. Speichern schreibt nur die GEÄNDERTEN Zeilen (Diff) — bleibt
+   auch bei zehntausenden Artikeln schnell. Fehlt die Tabelle, fällt alles
+   automatisch auf den alten Klumpen ('app_state' key 'inventory') zurück.
+   Ein Marker ('inv_ready') macht die Migration sicher (kein Teil-Verlust):
+   Zeilen gelten erst als maßgeblich, wenn die Migration KOMPLETT durch ist.
+   ===================================================================== */
+let _invMode = null;          // 'rows' | 'blob' | null(unbekannt)
+let _invRows = new Map();     // id -> JSON.stringify(item)  (Schatten des DB-Stands)
+function _invTableMissing(err){ return /relation|does not exist|schema cache|not find the table/i.test(((err&&err.message)||'')+''); }
+function invSetupSQL(){ return `-- In Supabase: SQL Editor -> New query -> einfügen -> RUN
+create table if not exists public.inv_items (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  id text not null,
+  data jsonb not null,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.inv_items enable row level security;
+create policy "inv_self_all" on public.inv_items for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);`; }
+async function _invMigrateFromBlob(arr){
+  const uid=currentUser.id, nowIso=new Date().toISOString();
+  const rows=arr.filter(it=>it&&it.id!=null).map(it=>({ user_id:uid, id:String(it.id), data:it, updated_at:nowIso }));
+  for(let i=0;i<rows.length;i+=200){ const { error }=await sb.from('inv_items').upsert(rows.slice(i,i+200), { onConflict:'user_id,id' }); if(error) throw error; }
+}
+async function invGetRows(){
+  if(!currentUser||!currentUser.id) return undefined;
+  const uid=currentUser.id;
+  const ready = (await dbLoad('inv_ready'))===true;
+  let res; try{ res = await sb.from('inv_items').select('id,data').eq('user_id', uid); }
+  catch(e){ _invMode='blob'; return dbLoad('inventory'); }
+  if(res.error){ _invMode='blob'; if(!_invTableMissing(res.error)) console.warn('[inv load]', res.error.message); return dbLoad('inventory'); }
+  const data = res.data||[];
+  const byTime=(a,b)=> new Date((b&&(b.touchedAt||b.date))||0) - new Date((a&&(a.touchedAt||a.date))||0);
+  if(ready){
+    _invMode='rows'; _invRows=new Map(data.map(r=>[String(r.id), JSON.stringify(r.data)]));
+    return data.map(r=>r.data).sort(byTime);
+  }
+  // Tabelle existiert, aber noch nicht migriert -> einmalig vom Klumpen übernehmen
+  const legacy = await dbLoad('inventory');
+  if(Array.isArray(legacy) && legacy.length){
+    legacy.forEach(it=>{ if(it && it.id==null) it.id='i'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }); // kein Artikel darf durchfallen
+    try{
+      await _invMigrateFromBlob(legacy);
+      await dbSave('inv_ready', true);   // erst JETZT gelten Zeilen als maßgeblich
+      _invMode='rows'; _invRows=new Map(legacy.filter(it=>it&&it.id!=null).map(it=>[String(it.id), JSON.stringify(it)]));
+      setTimeout(()=>{ try{ showToast('✓ Inventar auf schnelles Format umgestellt · '+legacy.length+' Artikel'); }catch(e){} }, 1500);
+      return legacy;
+    }catch(e){ console.warn('[inv migrate]', e&&e.message); _invMode='blob'; return legacy; }   // scheitert -> sicher beim Klumpen bleiben
+  }
+  // frisches Konto ohne Altdaten -> direkt im Zeilen-Modus starten
+  try{ await dbSave('inv_ready', true); }catch(e){}
+  _invMode='rows'; _invRows=new Map();
+  return legacy || undefined;
+}
+async function invSaveRows(arr){
+  if(_invMode!=='rows') return dbSave('inventory', arr);   // Blob-Modus (Tabelle fehlt / Migration offen) -> Alt-Verhalten
+  if(!currentUser||!currentUser.id){ showSaveError('Nicht angemeldet — Änderung wurde nicht gespeichert.'); return false; }
+  const uid=currentUser.id, nowIso=new Date().toISOString();
+  (arr||[]).forEach(it=>{ if(it && it.id==null) it.id='i'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }); // nie ohne id speichern
+  const cur=new Map(); (arr||[]).forEach(it=>{ if(it&&it.id!=null) cur.set(String(it.id), JSON.stringify(it)); });
+  const upserts=[], dels=[];
+  cur.forEach((json,id)=>{ if(_invRows.get(id)!==json) upserts.push({ user_id:uid, id, data:JSON.parse(json), updated_at:nowIso }); });
+  _invRows.forEach((_,id)=>{ if(!cur.has(id)) dels.push(id); });
+  if(!upserts.length && !dels.length){ clearSaveError(); markOnline(); return true; }
+  try{
+    for(let i=0;i<upserts.length;i+=200){ const { error }=await sb.from('inv_items').upsert(upserts.slice(i,i+200), { onConflict:'user_id,id' }); if(error){ console.warn('[inv save]',error.message); showSaveError(classifySaveError(error)); return false; } }
+    for(let i=0;i<dels.length;i+=200){ const { error }=await sb.from('inv_items').delete().eq('user_id',uid).in('id', dels.slice(i,i+200)); if(error){ console.warn('[inv del]',error.message); showSaveError(classifySaveError(error)); return false; } }
+    _invRows = cur; clearSaveError(); markOnline(); return true;
+  }catch(e){ console.warn('[inv save crash]', e); if(navigator.onLine) showSaveError('Speichern fehlgeschlagen (Netzwerkfehler) — Änderung evtl. nicht gespeichert.'); return false; }
+}
 
 /* =====================================================================
    UNDO / REDO (v5.0) — Snapshot-basiert über den gesamten Datenstand.
@@ -1021,7 +1096,7 @@ if($("#dash-customize")) $("#dash-customize").addEventListener("click",()=>{ set
 function setSettingsCat(cat){ if(!document.querySelector('[data-spanel="'+cat+'"]')) cat="profil";
   $$("#settings-nav .settings-navi").forEach(b=>b.classList.toggle("is-active", b.dataset.scat===cat));
   $$(".settings-panel").forEach(p=>p.classList.toggle("hidden", p.dataset.spanel!==cat));
-  if(cat==="daten") renderSnapshots();
+  if(cat==="daten"){ renderSnapshots(); renderInvFormatStatus(); }
   try{ Store.set(uKey("setcat"), cat); }catch(e){} }
 $$("#settings-nav .settings-navi").forEach(b=>b.addEventListener("click",()=>setSettingsCat(b.dataset.scat)));
 function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); renderDeadlines(); applyDashCfg(); }
@@ -3168,6 +3243,14 @@ async function renderSnapshots(){
     box.appendChild(el); });
   $$("#snap-list .snap-restore").forEach(b=>b.addEventListener("click",()=>snapRestoreConfirm(b.dataset.id, b.dataset.d)));
   $$("#snap-list .snap-del").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await snapDelete(b.dataset.id); renderSnapshots(); }catch(e){ showToast("Konnte nicht löschen"); b.disabled=false; } }));
+}
+function renderInvFormatStatus(){ const box=$("#inv-format-status"); if(!box) return;
+  if(_invMode==='rows'){ box.innerHTML=`<p class="c-sub text-[12.5px] leading-relaxed"><span class="pill pill-accent">⚡ Schnell</span> Dein Inventar liegt im <b>Zeilen-Format</b> — jede Änderung schreibt nur den betroffenen Artikel, nicht den ganzen Bestand. Skaliert mühelos auf zehntausende Artikel.</p>`; return; }
+  const sql=invSetupSQL();
+  box.innerHTML=`<p class="c-sub text-[12.5px] leading-relaxed mb-3"><span class="pill pill-mut">Klassisch</span> Dein Inventar liegt als ein Block — für normale Bestände völlig okay. Für sehr große Bestände (ab ~5.000 Artikeln) gibt es ein schnelleres <b>Zeilen-Format</b>. Optional: Tabelle in Supabase anlegen, dann stellt Flipdeck beim nächsten Laden <b>automatisch</b> um — deine Daten bleiben 1:1 unverändert.</p>
+    <button id="inv-sql-copy" class="btn-ghost w-full" style="margin-bottom:8px">SQL für schnelles Format kopieren</button>
+    <pre class="mono" style="font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:150px;overflow:auto;color:var(--sub);background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:10px">${escapeHtml(sql)}</pre>`;
+  const cp=$("#inv-sql-copy"); if(cp) cp.addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(sql); showToast("✓ SQL kopiert"); }catch(e){ showToast("Kopieren nicht möglich"); } });
 }
 if($("#snap-now")) $("#snap-now").addEventListener("click",async()=>{ const btn=$("#snap-now"); btn.disabled=true; const ol=btn.textContent; btn.textContent="Sichere…";
   const ok=await snapCreate('manual','Manuell gesichert'); btn.disabled=false; btn.textContent=ol;
