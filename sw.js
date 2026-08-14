@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v35";   // v35 (App v5.11.2): schnellerer Start (parallele Daten-Ladung) + kein Tab-Rücksprung mehr beim Laden
+const VERSION    = "flipdeck-v36";   // v36 (App v5.11.3): mehr Zeitraum-Filter (Heute, Diese Woche, 90 Tage, Dieses Jahr, Alle)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

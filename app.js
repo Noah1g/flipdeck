@@ -695,7 +695,7 @@ window.addEventListener("resize", moveThumb);
 let filterMode="range", activeRange=7, activeMonth=null;
 function mountFilters(){ $("#filter-slot-d").innerHTML="";
   $("#filter-slot-d").appendChild($("#filter-tpl").content.cloneNode(true));
-  $$(".range-group button").forEach(b=>b.addEventListener("click",()=>{ filterMode="range"; activeRange=parseInt(b.dataset.range); activeMonth=null; syncFilterButtons(); renderDashboard(); }));
+  $$(".range-group button").forEach(b=>b.addEventListener("click",()=>{ filterMode="range"; activeRange=b.dataset.range; activeMonth=null; syncFilterButtons(); renderDashboard(); }));
 }
 function buildMonthChains(){ const n=new Date();
   $$(".month-chain").forEach(chain=>{ chain.innerHTML=MONTHS.map((m,i)=>`<button data-month="${i}" aria-selected="false" ${i>n.getMonth()?'style="opacity:.4"':""}>${m}</button>`).join(""); });
@@ -703,16 +703,27 @@ function buildMonthChains(){ const n=new Date();
   syncFilterButtons();
 }
 function syncFilterButtons(){
-  $$(".range-group button").forEach(b=>b.setAttribute("aria-selected", filterMode==="range"&&parseInt(b.dataset.range)===activeRange));
+  $$(".range-group button").forEach(b=>b.setAttribute("aria-selected", filterMode==="range"&&b.dataset.range===String(activeRange)));
   $$(".month-chain button").forEach(b=>b.setAttribute("aria-selected", filterMode==="month"&&parseInt(b.dataset.month)===activeMonth));
 }
-function inFilter(iso){ const d=new Date(iso);
-  if(filterMode==="month"){ const n=new Date(); return d.getFullYear()===n.getFullYear()&&d.getMonth()===activeMonth; }
-  return (Date.now()-d.getTime())<=activeRange*86400000; }
+function startOfWeek(ref){ const d=new Date(ref); const wd=(d.getDay()+6)%7; d.setHours(0,0,0,0); d.setDate(d.getDate()-wd); return d; }  // Montag = Wochenstart
+function inFilter(iso){ const d=new Date(iso); const n=new Date();
+  if(filterMode==="month"){ return d.getFullYear()===n.getFullYear()&&d.getMonth()===activeMonth; }
+  const rk=activeRange;
+  if(rk==="all")  return true;
+  if(rk==="today")return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate();
+  if(rk==="week") return d.getTime()>=startOfWeek(n).getTime();
+  if(rk==="year") return d.getFullYear()===n.getFullYear();
+  const days=parseInt(rk)||365; return (Date.now()-d.getTime())<=days*86400000; }
 /* gleiche Länge, aber die Periode DAVOR – für Trend-Vergleiche */
-function prevFilter(iso){ const d=new Date(iso);
-  if(filterMode==="month"){ const n=new Date(); let y=n.getFullYear(), m=activeMonth-1; if(m<0){ m=11; y--; } return d.getFullYear()===y && d.getMonth()===m; }
-  const age=Date.now()-d.getTime(); return age>activeRange*86400000 && age<=2*activeRange*86400000; }
+function prevFilter(iso){ const d=new Date(iso); const n=new Date();
+  if(filterMode==="month"){ let y=n.getFullYear(), m=activeMonth-1; if(m<0){ m=11; y--; } return d.getFullYear()===y && d.getMonth()===m; }
+  const rk=activeRange;
+  if(rk==="all") return false;
+  if(rk==="today"){ const y=new Date(n); y.setDate(y.getDate()-1); return d.getFullYear()===y.getFullYear()&&d.getMonth()===y.getMonth()&&d.getDate()===y.getDate(); }
+  if(rk==="week"){ const s=startOfWeek(n); const ps=new Date(s); ps.setDate(ps.getDate()-7); return d.getTime()>=ps.getTime() && d.getTime()<s.getTime(); }
+  if(rk==="year") return d.getFullYear()===n.getFullYear()-1;
+  const days=parseInt(rk)||365; const age=Date.now()-d.getTime(); return age>days*86400000 && age<=2*days*86400000; }
 function cmpLabel(){ return filterMode==="month" ? "Vormonat" : "Vorperiode"; }
 /* kompakte €-Kurzform für enge Diagramm-Beschriftungen (1.234 -> „1,2k“) */
 function compactEur(n){ const a=Math.abs(n); if(a>=1000) return (n<0?"-":"")+(a/1000).toLocaleString("de-DE",{maximumFractionDigits:1})+"k"; return Math.round(n).toLocaleString("de-DE"); }
