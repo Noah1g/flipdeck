@@ -550,7 +550,7 @@ async function enterApp(){
   maybeAutoBackup();   // Ebene 1: lokale Tagessicherung
   maybeCloudBackup();  // Ebene 2: Cloud-Sicherung in Supabase (fire-and-forget)
   setTimeout(()=>{ try{ maybeAutoMigrate(); }catch(e){} }, 6000);  // Bilder automatisch im Hintergrund in den Storage sichern
-  setTimeout(()=>{ try{ maybeAutoFileBackup(); }catch(e){} }, 9000);  // wöchentliches Datei-Backup in den gewählten Ordner
+  setTimeout(()=>{ try{ maybeAutoWeeklyDownload(); }catch(e){} }, 9000);  // wöchentliches Datei-Backup automatisch herunterladen
   mountFilters(); buildMonthChains(); renderAvatar(); renderAdmin(); renderProfil(); renderFixed(); refreshBuyPlatSelect(); refreshPaySelects();
   // Deep-Link respektieren: kommt die App über #calc/#inventory/... rein, dort starten
   var _tabs=["dashboard","tracker","calc","inventory","fix","report","pwgen","admin","profil"];
@@ -2740,43 +2740,23 @@ async function setupAutoFileBackup(){
 async function disableAutoFileBackup(){ await clearBackupDirHandle(); showToast("Automatische Datei-Backups deaktiviert"); renderBackupList(); }
 async function reauthAutoFileBackup(){ const dir=await getBackupDirHandle(); if(!dir) return;
   try{ const p=await dir.requestPermission({mode:"readwrite"}); if(p==="granted"){ await writeBackupToDir(dir); showToast("✓ Wieder aktiv & gesichert"); renderBackupList(); } }catch(e){} }
-async function maybeAutoFileBackup(){
-  if(!FSA_SUPPORTED) return;
+/* Einfaches, verlässliches Wochen-Backup: lädt 1×/Woche automatisch eine Datei herunter
+   (im Browser lautlos in den Downloads-Ordner). Kein Ordner-Zugriff, keine Rechte-Rückfragen. */
+function maybeAutoWeeklyDownload(){
+  if(Store.get(uKey("autodl"))==="0") return;   // ausgeschaltet
   const last=Store.get(uKey("lastautofile")); const days=last?Math.floor((Date.now()-new Date(last).getTime())/86400000):999;
   if(days<7) return;
-  const dir=await getBackupDirHandle(); if(!dir) return;
-  try{ const perm=await dir.queryPermission({mode:"readwrite"}); if(perm!=="granted") return; // ohne Nutzer-Geste nicht erzwingen
-    await writeBackupToDir(dir); renderBackupList(); showToast("✓ Wochen-Backup automatisch gesichert");
-  }catch(e){ console.warn("[autofile]", e && e.message); } }
-async function renderAutoFileStatus(){
+  try{ downloadFullBackup(); Store.set(uKey("lastautofile"), new Date().toISOString()); }catch(e){ console.warn("[autodl]", e); }
+}
+function renderAutoFileStatus(){
   const box=$("#autofile-status"); if(!box) return;
-  if(!FSA_SUPPORTED){ box.innerHTML=`<div class="rounded-[12px] px-3 py-3" style="background:color-mix(in srgb,var(--cell-2) 55%,transparent);border:1px solid var(--line)"><p class="c-sub text-[11.5px] leading-relaxed">Automatische Datei-Backups werden in dieser Umgebung nicht unterstützt. Nutze regelmäßig <b>„Backup herunterladen"</b> und lege die Datei in einen Cloud-Ordner (OneDrive/iCloud).</p></div>`; return; }
-  const dir=await getBackupDirHandle();
-  if(dir){ let perm="granted"; try{ perm=await dir.queryPermission({mode:"readwrite"}); }catch(e){}
-    const last=Store.get(uKey("lastautofile")); const when=last?new Date(last).toLocaleDateString("de-DE",{day:"numeric",month:"short"}):"—";
-    if(perm==="granted"){
-      box.innerHTML=`<div class="rounded-[12px] px-3 py-3" style="background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-          <div style="min-width:0"><p class="text-[12.5px] font-semibold c-accent">✓ Automatische Datei-Backups aktiv</p><p class="c-sub text-[11.5px] mt-0.5">Ordner „${escapeHtml(dir.name||"Backup")}" · zuletzt ${when} · ~${Math.max(1,Math.round(new Blob([backupJSONString()]).size/1024))} KB · läuft wöchentlich von allein</p></div>
-          <button id="autofile-off" class="btn-ghost" style="padding:6px 11px;font-size:12px;flex:0 0 auto">Deaktivieren</button>
-        </div></div>`;
-      const o=$("#autofile-off"); if(o) o.addEventListener("click",disableAutoFileBackup);
-    } else {
-      box.innerHTML=`<div class="rounded-[12px] px-3 py-3" style="background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 26%,var(--line))">
-        <div class="flex items-center justify-between gap-2 flex-wrap">
-          <div style="min-width:0"><p class="text-[12.5px] font-semibold c-accent">✓ Automatische Datei-Backups aktiv</p><p class="c-sub text-[11.5px] mt-0.5">Ordner „${escapeHtml(dir.name||"Backup")}" — nach einem Neustart einmal kurz den Zugriff freigeben (Browser-Sicherheit).</p></div>
-          <div style="display:flex;gap:8px;flex:0 0 auto"><button id="autofile-reauth" class="btn-accent" style="padding:6px 12px;font-size:12px">Freigeben &amp; sichern</button><button id="autofile-off" class="btn-ghost" style="padding:6px 11px;font-size:12px">Aus</button></div>
-        </div></div>`;
-      const r=$("#autofile-reauth"); if(r) r.addEventListener("click",reauthAutoFileBackup);
-      const o2=$("#autofile-off"); if(o2) o2.addEventListener("click",disableAutoFileBackup);
-    }
-  } else {
-    box.innerHTML=`<div class="rounded-[12px] px-3 py-3" style="background:color-mix(in srgb,var(--brand) 10%,transparent);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent)">
-      <p class="text-[12.5px] font-semibold" style="color:var(--brand)">🛡 Automatische Datei-Sicherung einrichten (empfohlen)</p>
-      <p class="c-sub text-[11.5px] mt-0.5 leading-relaxed">Einmal einen Ordner wählen — am besten einen <b>Cloud-Sync-Ordner (OneDrive, iCloud, Google Drive)</b>. Danach sichert Flipdeck dort <b>wöchentlich automatisch</b> ein Voll-Backup — die einzige Sicherung außerhalb von Supabase, komplett ohne Dran-Denken.</p>
-      <button id="autofile-setup" class="btn-accent" style="margin-top:9px;padding:9px 14px;font-size:13px">Ordner wählen &amp; aktivieren</button></div>`;
-    const s=$("#autofile-setup"); if(s) s.addEventListener("click",setupAutoFileBackup);
-  }
+  const on = Store.get(uKey("autodl"))!=="0";   // Standard: AN
+  const last=Store.get(uKey("lastautofile")); const when=last?new Date(last).toLocaleDateString("de-DE",{day:"numeric",month:"short"}):"noch nie";
+  box.innerHTML=`<button type="button" id="autodl-toggle" class="pw-toggle" aria-pressed="${on?"true":"false"}" style="width:100%">
+      <span class="pw-toggle-info"><span class="pw-toggle-name">Automatisches Wochen-Backup</span><span class="pw-toggle-set">Speichert 1×/Woche automatisch eine Backup-Datei. Zuletzt: ${when}.</span></span><span class="pw-sw"></span>
+    </button>
+    <p class="c-sub text-[11.5px] leading-relaxed mt-2">Landet in deinem <b>Downloads-Ordner</b>. Tipp: Downloads mit OneDrive/iCloud syncen — dann liegt die Sicherung automatisch off-site (auch falls Supabase mal ausfällt).</p>`;
+  const t=$("#autodl-toggle"); if(t) t.addEventListener("click",()=>{ const nv=Store.get(uKey("autodl"))!=="0"?"0":"1"; Store.set(uKey("autodl"),nv); renderAutoFileStatus(); showToast(nv==="1"?"Automatisches Wochen-Backup an":"Automatisches Wochen-Backup aus"); });
 }
 
 /* ===== Erst-Login-Tour: kurze, überspringbare Führung durch die essenziellen Funktionen ===== */
