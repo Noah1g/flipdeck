@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v42";   // v42 (App v5.13.1): eBay-Rechner — redundanten KU-Haken entfernt (ist Konto-Einstellung)
+const VERSION    = "flipdeck-v43";   // v43 (App v5.14.0): Wiederherstellungs-Punkte (dauerhafte Snapshots in Supabase + Restore)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

@@ -245,6 +245,7 @@ function recordHistory(){
   _history.push(snap);
   if(_history.length>40) _history.shift();
   _hp=_history.length-1; updateUndoUI();
+  maybeAutoSnapshot();   // gedrosselt einen dauerhaften Wiederherstellungs-Punkt anlegen
 }
 function scheduleHistory(){ if(_restoring) return; clearTimeout(_histTimer); _histTimer=setTimeout(recordHistory, 500); }
 function flushHistory(){ if(_histTimer){ clearTimeout(_histTimer); _histTimer=null; recordHistory(); } }
@@ -554,6 +555,7 @@ async function enterApp(){
   }
   maybeAutoBackup();   // Ebene 1: lokale Tagessicherung
   maybeCloudBackup();  // Ebene 2: Cloud-Sicherung in Supabase (fire-and-forget)
+  snapInit();          // Ebene 3: feingranulare Wiederherstellungs-Punkte scharf schalten
   setTimeout(()=>{ try{ maybeAutoMigrate(); }catch(e){} }, 6000);  // Bilder automatisch im Hintergrund in den Storage sichern
   setTimeout(()=>{ try{ maybeAutoWeeklyDownload(); }catch(e){} }, 9000);  // wöchentliches Datei-Backup automatisch herunterladen
   mountFilters(); buildMonthChains(); renderAvatar(); renderAdmin(); renderProfil(); renderFixed(); refreshBuyPlatSelect(); refreshPaySelects();
@@ -1019,6 +1021,7 @@ if($("#dash-customize")) $("#dash-customize").addEventListener("click",()=>{ set
 function setSettingsCat(cat){ if(!document.querySelector('[data-spanel="'+cat+'"]')) cat="profil";
   $$("#settings-nav .settings-navi").forEach(b=>b.classList.toggle("is-active", b.dataset.scat===cat));
   $$(".settings-panel").forEach(p=>p.classList.toggle("hidden", p.dataset.spanel!==cat));
+  if(cat==="daten") renderSnapshots();
   try{ Store.set(uKey("setcat"), cat); }catch(e){} }
 $$("#settings-nav .settings-navi").forEach(b=>b.addEventListener("click",()=>setSettingsCat(b.dataset.scat)));
 function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); renderDeadlines(); applyDashCfg(); }
@@ -3086,6 +3089,89 @@ function renderBackupList(){
   $$("#backup-list .bak-restore").forEach(b=>b.addEventListener("click",()=>{ const it=(window._bakItems||[])[+b.dataset.i]; if(it) openImportModal(it.snap); }));
   $$("#backup-list .bak-dl").forEach(b=>b.addEventListener("click",()=>{ const it=(window._bakItems||[])[+b.dataset.i]; if(it) downloadFile(`flipdeck-backup-${it.snap.day}.json`, JSON.stringify(it.snap,null,2), "application/json"); }));
 }
+
+/* ===== Wiederherstellungs-Punkte (Snapshots) · dauerhaft in Supabase 'snapshots' =====
+   Feineres Netz oberhalb der Tages-Backups: erfasst den GESAMTEN Datenstand bei
+   Änderungen (gedrosselt, max. alle 10 Min.) sowie auf Knopfdruck — geräteübergreifend,
+   überlebt Neuladen (anders als der In-Memory-Undo), mit Restore. Nutzt _snapState()
+   und _applySnapshot() aus dem Undo-System. */
+const SNAP_KEEP = 25;
+const SNAP_MIN_GAP = 10*60*1000;
+let _snapLastAt = 0, _snapTimer = null, _snapMissing = false;
+function snapSetupSQL(){ return `-- In Supabase: SQL Editor -> New query -> einfügen -> RUN
+create table if not exists public.snapshots (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  taken_at timestamptz not null default now(),
+  kind text not null default 'auto',
+  label text,
+  payload jsonb not null
+);
+alter table public.snapshots enable row level security;
+create policy "snap_self_all" on public.snapshots for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists snapshots_user_time on public.snapshots (user_id, taken_at desc);`; }
+function _snapTableMissing(err){ return /relation|does not exist|schema cache|not find the table/i.test(((err&&err.message)||'')+''); }
+async function snapInit(){ if(!currentUser||!currentUser.id) return;
+  try{ const { data, error } = await sb.from('snapshots').select('taken_at').eq('user_id',currentUser.id).order('taken_at',{ascending:false}).limit(1);
+    if(error){ _snapMissing=_snapTableMissing(error); return; }
+    _snapMissing=false; if(data&&data.length) _snapLastAt=Date.parse(data[0].taken_at)||0; }catch(e){} }
+async function snapCreate(kind,label){ if(!currentUser||!currentUser.id||_snapMissing) return false;
+  let payload; try{ payload=JSON.parse(_snapState()); }catch(e){ return false; }
+  const { error } = await sb.from('snapshots').insert({ user_id:currentUser.id, kind:kind||'auto', label:label||null, payload });
+  if(error){ if(_snapTableMissing(error)) _snapMissing=true; else console.warn('[snap create]',error.message); return false; }
+  _snapLastAt=Date.now(); snapPrune(); return true; }
+async function snapPrune(){ try{ const { data } = await sb.from('snapshots').select('id').eq('user_id',currentUser.id).order('taken_at',{ascending:false});
+  if(data && data.length>SNAP_KEEP){ const del=data.slice(SNAP_KEEP).map(r=>r.id); await sb.from('snapshots').delete().in('id',del); } }catch(e){} }
+async function snapListAll(){ const { data, error } = await sb.from('snapshots').select('id,taken_at,kind,label').eq('user_id',currentUser.id).order('taken_at',{ascending:false}); if(error) throw error; return data||[]; }
+async function snapGetPayload(id){ const { data, error } = await sb.from('snapshots').select('payload').eq('id',id).maybeSingle(); if(error) throw error; return data?data.payload:null; }
+async function snapDelete(id){ return sb.from('snapshots').delete().eq('id',id); }
+function maybeAutoSnapshot(){ if(_restoring||_snapMissing||!currentUser||!currentUser.id) return;
+  if(Date.now()-_snapLastAt < SNAP_MIN_GAP) return;
+  clearTimeout(_snapTimer); _snapTimer=setTimeout(()=>{ snapCreate('auto').then(ok=>{ if(ok && document.querySelector('.settings-panel[data-spanel="daten"]:not(.hidden)')) renderSnapshots(); }); }, 8000); }
+async function snapRestore(id){
+  await snapCreate('manual','Automatisch vor Wiederherstellung');   // Sicherheitsnetz — auch das Zurücksetzen ist umkehrbar
+  let payload; try{ payload=await snapGetPayload(id); }catch(e){ showToast('Konnte Punkt nicht laden'); return; }
+  if(!payload){ showToast('Punkt nicht gefunden'); return; }
+  const str = typeof payload==='string' ? payload : JSON.stringify(payload);
+  _applySnapshot(str, _snapState());
+  showToast('✓ Stand wiederhergestellt'); renderSnapshots(); }
+function snapRestoreConfirm(id, dlabel){
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:410px">
+    <p class="font-bold text-[17px] mb-1">Auf diesen Stand zurück?</p>
+    <p class="c-sub text-[13px] leading-relaxed mb-4">Dein aktueller Stand wird durch den Punkt vom <b>${escapeHtml(dlabel)}</b> ersetzt. Zur Sicherheit wird vorher automatisch ein Punkt „vor Wiederherstellung" angelegt — du kannst es also jederzeit rückgängig machen.</p>
+    <div class="grid grid-cols-2 gap-3"><button id="snr-cancel" class="btn-ghost">Abbrechen</button><button id="snr-ok" class="btn-accent">Wiederherstellen</button></div>
+  </div></div>`;
+  $("#snr-cancel").addEventListener("click",()=>$("#modal-root").innerHTML="");
+  $("#snr-ok").addEventListener("click",async()=>{ $("#snr-ok").textContent="Stelle her…"; $("#snr-ok").disabled=true; await snapRestore(id); $("#modal-root").innerHTML=""; }); }
+function snapSetupHint(){ const box=$("#snap-setup"); if(!box) return; const sql=snapSetupSQL();
+  box.classList.remove("hidden");
+  box.innerHTML=`<div class="rounded-[14px] p-3.5 mt-1" style="background:var(--cell-2);border:1px solid var(--line)">
+    <p class="text-[13px] font-semibold mb-1">Einrichtung nötig</p>
+    <p class="c-sub text-[12px] leading-relaxed mb-2">Für dauerhafte Wiederherstellungs-Punkte lege einmalig die <span class="mono">snapshots</span>-Tabelle in Supabase an. SQL kopieren, im <span class="mono">SQL Editor</span> ausführen, dann neu laden.</p>
+    <button id="snap-sql-copy" class="btn-ghost w-full" style="margin-bottom:8px">SQL kopieren</button>
+    <pre class="mono" style="font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:150px;overflow:auto;color:var(--sub);background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:10px">${escapeHtml(sql)}</pre></div>`;
+  const cp=$("#snap-sql-copy"); if(cp) cp.addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(sql); showToast("✓ SQL kopiert"); }catch(e){ showToast("Kopieren nicht möglich"); } }); }
+async function renderSnapshots(){
+  const box=$("#snap-list"); if(!box) return;
+  if(_snapMissing){ box.innerHTML=""; snapSetupHint(); return; }
+  box.innerHTML=`<p class="c-sub text-[13px]">Lade…</p>`;
+  let list; try{ list=await snapListAll(); }
+  catch(e){ if(_snapTableMissing(e)){ _snapMissing=true; box.innerHTML=""; snapSetupHint(); return; } box.innerHTML=`<p class="c-sub text-[13px]">Konnte Punkte nicht laden.</p>`; return; }
+  const setup=$("#snap-setup"); if(setup){ setup.classList.add("hidden"); setup.innerHTML=""; }
+  if(!list.length){ box.innerHTML=`<p class="c-sub text-[13px]">Noch keine Punkte — sobald du etwas änderst, entsteht automatisch einer.</p>`; return; }
+  box.innerHTML="";
+  list.forEach(s=>{ const d=new Date(s.taken_at).toLocaleString("de-DE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}); const manual=s.kind==="manual";
+    const el=document.createElement("div"); el.className="flex items-center justify-between gap-2 rounded-[13px] p-3"; el.style.cssText="background:var(--cell-2);border:1px solid var(--line)";
+    el.innerHTML=`<div class="min-w-0"><div class="flex items-center gap-2"><span class="font-semibold text-[13.5px]">${d}</span>${manual?`<span class="pill pill-accent">manuell</span>`:`<span class="pill pill-mut">auto</span>`}</div>${s.label?`<p class="c-sub text-[11.5px] mt-0.5 truncate">${escapeHtml(s.label)}</p>`:""}</div>
+      <div class="flex items-center gap-2" style="flex:0 0 auto"><button class="btn-ghost snap-restore" data-id="${s.id}" data-d="${attrEsc(d)}" style="padding:6px 11px;font-size:12px">Wiederherstellen</button><button class="iconbtn danger snap-del" data-id="${s.id}" title="Löschen">${icoTrash}</button></div>`;
+    box.appendChild(el); });
+  $$("#snap-list .snap-restore").forEach(b=>b.addEventListener("click",()=>snapRestoreConfirm(b.dataset.id, b.dataset.d)));
+  $$("#snap-list .snap-del").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await snapDelete(b.dataset.id); renderSnapshots(); }catch(e){ showToast("Konnte nicht löschen"); b.disabled=false; } }));
+}
+if($("#snap-now")) $("#snap-now").addEventListener("click",async()=>{ const btn=$("#snap-now"); btn.disabled=true; const ol=btn.textContent; btn.textContent="Sichere…";
+  const ok=await snapCreate('manual','Manuell gesichert'); btn.disabled=false; btn.textContent=ol;
+  if(ok){ showToast("✓ Wiederherstellungs-Punkt gesichert"); renderSnapshots(); } else if(_snapMissing){ renderSnapshots(); } else showToast("Konnte nicht sichern"); });
 
 /* ===== Bilder-Migration: Base64 -> Storage ===== */
 function countBase64Images(){
