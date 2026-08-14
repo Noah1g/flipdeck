@@ -853,6 +853,47 @@ function renderAttention(){
     setTimeout(()=>{ const el=[...$$("#inv-list .inv-head")].find(h=>h.dataset.toggle===b.dataset.id); if(el) el.scrollIntoView({behavior:"smooth",block:"center"}); },60);
   }));
 }
+/* ===== Rückgabefristen-Kalender (Dashboard) + iPhone-Export (.ics) ===== */
+function renderDeadlines(){
+  const box=$("#deadlines-list"); if(!box) return;
+  const all=[];
+  inventory.forEach(it=>{ if(invStatus(it)==="returned"||!it.returnBy) return; const dl=deadlineInfo(it.returnBy); if(!dl) return;
+    all.push({ it, dl, ts:new Date(it.returnBy+"T12:00:00").getTime() }); });
+  all.sort((a,b)=>a.ts-b.ts);
+  const view=all.filter(x=>x.dl.days>=-3);   // knapp Abgelaufenes noch zeigen, uralte weg
+  const cnt=$("#deadlines-count"); if(cnt) cnt.textContent=view.length;
+  const exp=$("#deadlines-export"); if(exp) exp.style.display=all.length?"":"none";
+  if(!view.length){ box.innerHTML=`<p class="c-sub text-[13px] py-5 text-center">Keine offenen Rückgabefristen 🎉<br><span class="text-[11.5px]">Fristen entstehen automatisch, sobald du beim Einkauf eine Einkaufsplattform mit Retourenzeit wählst.</span></p>`; return; }
+  box.innerHTML=view.slice(0,40).map(x=>{ const d=new Date(x.it.returnBy+"T12:00:00");
+    const day=d.toLocaleDateString("de-DE",{day:"2-digit"}), mon=d.toLocaleDateString("de-DE",{month:"short"}).replace(".","");
+    const plat=(x.it.buyPlatformId&&buyPlatformById(x.it.buyPlatformId))?buyPlatformById(x.it.buyPlatformId).name:"";
+    return `<button type="button" class="dl-row" data-id="${x.it.id}">
+      <span class="dl-date" style="border-color:color-mix(in srgb,${x.dl.col} 45%,var(--line));color:${x.dl.col};background:color-mix(in srgb,${x.dl.col} 10%,transparent)"><span class="dl-day">${day}</span><span class="dl-mon">${mon}</span></span>
+      <span class="dl-main"><span class="dl-name">${escapeHtml(x.it.name)}</span><span class="dl-sub" style="color:${x.dl.col}">${x.dl.txt}${plat?` · ${escapeHtml(plat)}`:""}</span></span>
+    </button>`; }).join("");
+  box.querySelectorAll(".dl-row").forEach(r=>r.addEventListener("click",()=>{ invFilter="active"; invExpanded.add(r.dataset.id); setTab("inventory");
+    setTimeout(()=>{ const el=[...$$("#inv-list .inv-head")].find(h=>h.dataset.toggle===r.dataset.id); if(el) el.scrollIntoView({behavior:"smooth",block:"center"}); },80); }));
+}
+function exportDeadlinesICS(){
+  const items=inventory.filter(it=>invStatus(it)!=="returned" && it.returnBy);
+  if(!items.length){ showToast("Keine Rückgabefristen zum Exportieren"); return; }
+  const pad=n=>String(n).padStart(2,"0");
+  const now=new Date(); const dstamp=now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+"T"+pad(now.getUTCHours())+pad(now.getUTCMinutes())+pad(now.getUTCSeconds())+"Z";
+  const esc=s=>String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Flipdeck//Rueckgabefristen//DE","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:Flipdeck Rückgabefristen"];
+  items.forEach(it=>{ const dstart=it.returnBy.replace(/-/g,"");
+    const s=new Date(it.returnBy+"T00:00:00"), e=new Date(s.getTime()+86400000); const dend=e.getFullYear()+pad(e.getMonth()+1)+pad(e.getDate());
+    const plat=(it.buyPlatformId&&buyPlatformById(it.buyPlatformId))?buyPlatformById(it.buyPlatformId).name:"";
+    L.push("BEGIN:VEVENT","UID:flipdeck-"+it.id+"@flipdeck","DTSTAMP:"+dstamp,"DTSTART;VALUE=DATE:"+dstart,"DTEND;VALUE=DATE:"+dend,
+      "SUMMARY:↩ Rückgabe: "+esc(it.name),
+      "DESCRIPTION:"+esc("Rückgabefrist"+(plat?" bei "+plat:"")+(it.ek?" · EK "+eur(it.ek):"")+" — via Flipdeck"),
+      "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Rückgabefrist morgen","TRIGGER:-P1D","END:VALARM","END:VEVENT"); });
+  L.push("END:VCALENDAR");
+  downloadFile("flipdeck-rueckgabefristen.ics", L.join("\r\n"), "text/calendar");
+  showToast(`✓ ${items.length} Rückgabefristen als Kalender exportiert`);
+}
+if($("#deadlines-export")) $("#deadlines-export").addEventListener("click",e=>{ e.stopPropagation(); exportDeadlinesICS(); });
+
 /* Zeitabhängige Begrüßung + volles Datum (inkl. Wochentag) im Dashboard-Kopf */
 function renderGreeting(){
   const h=$("#dash-greeting"), d=$("#dash-date"); if(!h||!d) return;
@@ -887,6 +928,7 @@ const DASH_CARDS = [
   {key:"chart-revcost", label:"Umsatz & Gewinn",   sub:"Balken je Monat",      group:"detail"},
   {key:"chart-split",   label:"Umsatz-Aufteilung", sub:"nach Plattform",       group:"detail"},
   {key:"attention",     label:"Aufmerksamkeiten",  sub:"Warnungen & Hinweise", group:"detail"},
+  {key:"deadlines",     label:"Rückgabefristen",   sub:"Kalender & iPhone-Export", group:"detail"},
   {key:"history",       label:"Historie",          sub:"letzte Verkäufe",      group:"detail"}
 ];
 function getDashCfg(){ let o=null; try{ o=JSON.parse(Store.get(uKey("dashcfg"))||"null"); }catch(e){} if(!o||typeof o!=="object") o={}; if(!Array.isArray(o.hidden)) o.hidden=[]; if(!Array.isArray(o.order)) o.order=[]; return o; }
@@ -924,7 +966,7 @@ function setSettingsCat(cat){ if(!document.querySelector('[data-spanel="'+cat+'"
   $$(".settings-panel").forEach(p=>p.classList.toggle("hidden", p.dataset.spanel!==cat));
   try{ Store.set(uKey("setcat"), cat); }catch(e){} }
 $$("#settings-nav .settings-navi").forEach(b=>b.addEventListener("click",()=>setSettingsCat(b.dataset.scat)));
-function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); applyDashCfg(); }
+function renderDashboard(){ syncFilterButtons(); renderGreeting(); renderQuicklinks(); renderKPIs(); renderHistory(); renderCharts(); renderAttention(); renderDeadlines(); applyDashCfg(); }
 
 /* ===== Features & Workflow (Konto-Schalter) ===== */
 function getFeatCfg(){ let o=null; try{ o=JSON.parse(Store.get(uKey("featcfg"))||"null"); }catch(e){} if(!o||typeof o!=="object") o={}; return { images:o.images!==false, intake:o.intake===true, sellAvail:o.sellAvail===true }; }

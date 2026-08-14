@@ -761,6 +761,20 @@ body.no-images .ms-head .thumb{ display:none !important; }
 .is-electron .app-main{ padding-top:calc(150px + env(safe-area-inset-top,0px)); }
 .is-electron .nav-left .nav-ver{ display:inline-flex; }
 @media (max-width:480px){ .is-electron .nav-right{ margin-right:0; } }
+
+/* ===== Rückgabefristen-Kalender (Dashboard) ===== */
+#deadlines-list{ max-height:340px; overflow-y:auto; }
+.dl-row{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; cursor:pointer;
+  background:color-mix(in srgb,var(--cell-2) 50%,transparent); border:1px solid var(--line); border-radius:14px; padding:9px 12px;
+  transition:border-color .15s ease, transform .12s ease; }
+.dl-row:hover{ border-color:color-mix(in srgb,var(--brand) 40%,transparent); transform:translateY(-1px); }
+.dl-date{ flex:0 0 auto; width:46px; height:46px; border-radius:12px; border:1px solid var(--line);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; }
+.dl-date .dl-day{ font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
+.dl-date .dl-mon{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+.dl-main{ min-width:0; flex:1 1 auto; display:flex; flex-direction:column; gap:2px; }
+.dl-name{ font-weight:650; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dl-sub{ font-size:12px; font-weight:600; }
 </style>
 </head>
 
@@ -779,7 +793,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.10</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.11.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -823,7 +837,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.10.10</span>
+        <span class="nav-ver">v5.11.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -932,6 +946,14 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <div class="flex items-center justify-between mb-3"><h3 class="text-[15px] font-semibold tracking-tight">Umsatz-Aufteilung</h3><span class="c-sub text-[12px]">Zeitraum</span></div>
         <div id="chart-split"></div>
       </div>
+    </div>
+
+    <div class="cell p-5 mb-3" data-dash="deadlines">
+      <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <div class="flex items-center gap-2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><h3 class="text-[17px] font-semibold tracking-tight">Rückgabefristen</h3><span id="deadlines-count" class="pill pill-mut">0</span></div>
+        <button id="deadlines-export" class="btn-ghost" style="padding:7px 12px;font-size:12.5px;display:flex;align-items:center;gap:7px;flex:0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M12 14v4M10 16h4"/></svg>In Kalender (iPhone)</button>
+      </div>
+      <div id="deadlines-list" class="flex flex-col gap-2"></div>
     </div>
 
     <div id="attention-card" class="cell p-5 mb-3 hidden" data-dash="attention">
@@ -1803,7 +1825,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.10 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.11.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
