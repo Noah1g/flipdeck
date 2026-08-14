@@ -324,7 +324,9 @@ const fmtDate = iso => new Date(iso).toLocaleDateString("de-DE",{day:"numeric",m
 const flipProfit  = f => f.returned ? 0 : (num(f.payout)-num(f.ek)-num(f.ship))*(f.qty||1);
 const flipRevenue = f => f.returned ? 0 : num(f.payout)*(f.qty||1);
 const flipCost    = f => f.returned ? 0 : (num(f.ek)+num(f.ship))*(f.qty||1);
-const escapeHtml = s => { const d=document.createElement("div"); d.textContent=s==null?"":s; return d.innerHTML; };
+/* escapeHtml jetzt auch attribut-sicher: escapt zusätzlich " und ' → kein Quote-Breakout mehr,
+   egal ob der Wert in Textinhalt ODER in einem Attribut landet. (Härtung, v5.10.6) */
+const escapeHtml = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 /* Attribut-sicher escapen (auch Anführungszeichen!) – escapeHtml allein reicht in
    Attributen NICHT, weil " nicht ersetzt wird -> Ausbruch/XSS möglich. */
 const attrEsc = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
@@ -2464,7 +2466,7 @@ function renderFixed(){
   const arr=Object.values(groups).sort((a,b)=>b.sum-a.sum);
   const bd=$("#fx-breakdown");
   if(bd){ bd.classList.toggle("hidden", arr.length===0);
-    const bar=$("#fx-bar"); if(bar) bar.innerHTML = total>0 ? arr.map(g=>`<span style="width:${(g.sum/total*100).toFixed(2)}%;background:${g.cat.color}" title="${escapeHtml(g.cat.name)}"></span>`).join("") : "";
+    const bar=$("#fx-bar"); if(bar) bar.innerHTML = total>0 ? arr.map(g=>`<span style="width:${(g.sum/total*100).toFixed(2)}%;background:${g.cat.color}" title="${attrEsc(g.cat.name)}"></span>`).join("") : "";
     const sums=$("#fx-cat-sums"); if(sums) sums.innerHTML = arr.map(g=>`<div class="fx-sum-row"><span class="fx-cat-ic" style="${catTint(g.cat.color)}">${fixIconSVG(g.cat.icon)}</span><span class="fx-sum-name">${escapeHtml(g.cat.name)}</span><span class="c-sub tnum text-[12px]">${total>0?pct(g.sum/total*100):"0 %"}</span><span class="mono font-bold tnum">${eur(g.sum)}</span></div>`).join("");
   }
   // Liste
