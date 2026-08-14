@@ -874,13 +874,12 @@ function renderDeadlines(){
   box.querySelectorAll(".dl-row").forEach(r=>r.addEventListener("click",()=>{ invFilter="active"; invExpanded.add(r.dataset.id); setTab("inventory");
     setTimeout(()=>{ const el=[...$$("#inv-list .inv-head")].find(h=>h.dataset.toggle===r.dataset.id); if(el) el.scrollIntoView({behavior:"smooth",block:"center"}); },80); }));
 }
-function exportDeadlinesICS(){
+function buildDeadlinesICS(){
   const items=inventory.filter(it=>invStatus(it)!=="returned" && it.returnBy);
-  if(!items.length){ showToast("Keine Rückgabefristen zum Exportieren"); return; }
   const pad=n=>String(n).padStart(2,"0");
   const now=new Date(); const dstamp=now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+"T"+pad(now.getUTCHours())+pad(now.getUTCMinutes())+pad(now.getUTCSeconds())+"Z";
   const esc=s=>String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");
-  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Flipdeck//Rueckgabefristen//DE","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:Flipdeck Rückgabefristen"];
+  const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Flipdeck//Rueckgabefristen//DE","CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:Flipdeck Rückgabefristen","X-PUBLISHED-TTL:PT3H","REFRESH-INTERVAL;VALUE=DURATION:PT3H"];
   items.forEach(it=>{ const dstart=it.returnBy.replace(/-/g,"");
     const s=new Date(it.returnBy+"T00:00:00"), e=new Date(s.getTime()+86400000); const dend=e.getFullYear()+pad(e.getMonth()+1)+pad(e.getDate());
     const plat=(it.buyPlatformId&&buyPlatformById(it.buyPlatformId))?buyPlatformById(it.buyPlatformId).name:"";
@@ -889,10 +888,45 @@ function exportDeadlinesICS(){
       "DESCRIPTION:"+esc("Rückgabefrist"+(plat?" bei "+plat:"")+(it.ek?" · EK "+eur(it.ek):"")+" — via Flipdeck"),
       "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Rückgabefrist morgen","TRIGGER:-P1D","END:VALARM","END:VEVENT"); });
   L.push("END:VCALENDAR");
-  downloadFile("flipdeck-rueckgabefristen.ics", L.join("\r\n"), "text/calendar");
-  showToast(`✓ ${items.length} Rückgabefristen als Kalender exportiert`);
+  return { ics:L.join("\r\n"), count:items.length };
+}
+function exportDeadlinesICS(){ const {ics,count}=buildDeadlinesICS(); if(!count){ showToast("Keine Rückgabefristen zum Exportieren"); return; } downloadFile("flipdeck-rueckgabefristen.ics", ics, "text/calendar"); showToast(`✓ ${count} Rückgabefristen als Kalender exportiert`); }
+
+/* ===== Live-Kalender-Abo: .ics-Feed in den öffentlichen Storage (Token-URL), den iOS abonniert & selbst aktualisiert ===== */
+function getCalToken(){ if(!fixCfg.calToken){ fixCfg.calToken="c"+Math.random().toString(36).slice(2,11)+Math.random().toString(36).slice(2,11); DB.saveFixCfg(fixCfg); } return fixCfg.calToken; }
+function calFeedPath(){ return currentUser.id+"/fristen-"+getCalToken()+".ics"; }
+function calFeedUrl(){ try{ return (sb.storage.from(IMG_BUCKET).getPublicUrl(calFeedPath()).data||{}).publicUrl || ""; }catch(e){ return ""; } }
+async function uploadCalFeed(){ if(!sb||!currentUser||!currentUser.id) return "";
+  try{ const {ics}=buildDeadlinesICS(); const blob=new Blob([ics],{type:"text/calendar; charset=utf-8"});
+    const { error } = await sb.storage.from(IMG_BUCKET).upload(calFeedPath(), blob, { contentType:"text/calendar; charset=utf-8", upsert:true, cacheControl:"600" });
+    if(error){ console.warn("[cal feed]", error.message); return ""; }
+    return calFeedUrl();
+  }catch(e){ console.warn("[cal feed]", e && e.message); return ""; } }
+let _calSyncTimer=null;
+function scheduleCalFeedSync(){ if(!fixCfg.calEnabled) return; clearTimeout(_calSyncTimer); _calSyncTimer=setTimeout(()=>{ uploadCalFeed().catch(()=>{}); }, 4000); }
+async function openCalSubscribe(){
+  fixCfg.calEnabled=true; DB.saveFixCfg(fixCfg);
+  showToast("Live-Kalender wird vorbereitet …");
+  const url=await uploadCalFeed();
+  if(!url){ showToast("Konnte den Kalender nicht anlegen — Internet/Storage prüfen"); return; }
+  const webcal=url.replace(/^https?:\/\//i,"webcal://");
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:470px">
+    <div class="flex items-start justify-between gap-3 mb-1">
+      <div><p class="font-bold text-[18px]">Live-Kalender abonnieren</p><p class="c-sub text-[12.5px] mt-0.5">Aktualisiert sich von allein — neue Rückgabefristen erscheinen automatisch im iPhone-Kalender.</p></div>
+      <button id="cal-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <a href="${attrEsc(webcal)}" class="btn-accent w-full" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin:16px 0 6px">Auf diesem iPhone abonnieren ↗</a>
+    <p class="c-sub text-[11.5px] leading-relaxed mb-4">Am <b>iPhone</b> antippen → Kalender öffnet sich → „Abonnieren". Am PC/Android nutze den Link unten.</p>
+    <label class="label">Abo-Link (kopieren &amp; z. B. per iMessage/Mail aufs iPhone schicken)</label>
+    <div class="pw-wrap"><input id="cal-url" class="field mono" readonly value="${attrEsc(webcal)}" style="font-size:11.5px;padding-right:46px"><button id="cal-copy" class="pw-eye" title="Kopieren" style="font-size:15px">⧉</button></div>
+    <p class="c-sub text-[11px] leading-relaxed mt-3">Alternativ am iPhone: <b>Einstellungen → Kalender → Accounts → Account hinzufügen → Andere → Kalenderabo</b> → Link einfügen. iOS aktualisiert das Abo danach selbstständig.</p>
+  </div></div>`;
+  const close=()=>{ $("#modal-root").innerHTML=""; };
+  $("#cal-x").addEventListener("click",close);
+  $("#cal-copy").addEventListener("click",()=>{ try{ navigator.clipboard.writeText(webcal); showToast("Link kopiert"); }catch(e){ const i=$("#cal-url"); if(i){ i.select(); try{ document.execCommand("copy"); }catch(_){} showToast("Link kopiert"); } } });
 }
 if($("#deadlines-export")) $("#deadlines-export").addEventListener("click",e=>{ e.stopPropagation(); exportDeadlinesICS(); });
+if($("#deadlines-subscribe")) $("#deadlines-subscribe").addEventListener("click",e=>{ e.stopPropagation(); openCalSubscribe(); });
 
 /* Zeitabhängige Begrüßung + volles Datum (inkl. Wochentag) im Dashboard-Kopf */
 function renderGreeting(){
@@ -2167,7 +2201,7 @@ function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   invFormOpen=true; $("#iv-form").classList.remove("hidden"); $("#iv-toggle-ic").style.transform="rotate(45deg)"; $("#iv-toggle").querySelector("span").textContent=t("ui.close");
   window.scrollTo({top:0,behavior:"smooth"}); }
 
-function renderInventory(){ const list=$("#inv-list"); applyFeatCfg();
+function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleCalFeedSync();
   const goal=targetMargin(), goalPct=goal*100;
 
   /* 1) Kennzahlen nur über AKTIVEN Bestand (Lieferanten-Retouren zählen nicht) */

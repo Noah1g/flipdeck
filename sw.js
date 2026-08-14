@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v33";   // v33 (App v5.11.0): Rückgabefristen-Kalender im Dashboard + iPhone-Export (.ics)
+const VERSION    = "flipdeck-v34";   // v34 (App v5.11.1): Live-Kalender-Abo (webcal) über Storage-Feed — aktualisiert sich selbst
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
