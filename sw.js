@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v31";   // v31 (App v5.10.9): integrierte dunkle Titelleiste in der Desktop-Shell (Electron)
+const VERSION    = "flipdeck-v32";   // v32 (App v5.10.10): Fenstermodus-Fix — Tabs in eigener Reihe in der Desktop-Shell (nichts mehr abgeschnitten)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

@@ -751,8 +751,16 @@ body.no-images .ms-head .thumb{ display:none !important; }
 .is-electron .topnav .nav-left,
 .is-electron .topnav .nav-icon,
 .is-electron .topnav .nav-profile{ -webkit-app-region:no-drag; }
-.is-electron .topnav-inner{ padding-right:150px; }   /* Platz für die Fenster-Buttons oben rechts */
-@media (max-width:1040px){ .is-electron .topnav-inner{ padding-right:16px; } }
+/* Immer zweizeilig: Logo + Profil oben (Fenster-Buttons haben Platz), Tabs als volle Reihe
+   darunter → nie abgeschnitten, egal wie schmal das Fenster. */
+.is-electron .topnav-inner{ flex-wrap:wrap; height:auto; padding:9px 18px; row-gap:9px; }
+.is-electron .nav-left{ order:1; }
+.is-electron .nav-right{ order:2; margin-left:auto; margin-right:136px; }   /* Platz für Minimieren/Maximieren/Schließen */
+.is-electron .topnav .tabs{ order:3; flex:1 1 100%; width:100%; justify-content:flex-start; overflow-x:auto; gap:4px; padding:0; }
+.is-electron .topnav .tab-thumb{ display:none; }   /* Thumb passt bei der Scroll-Reihe nicht sauber */
+.is-electron .app-main{ padding-top:calc(150px + env(safe-area-inset-top,0px)); }
+.is-electron .nav-left .nav-ver{ display:inline-flex; }
+@media (max-width:480px){ .is-electron .nav-right{ margin-right:0; } }
 </style>
 </head>
 
@@ -771,7 +779,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.9</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.10</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -815,7 +823,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.10.9</span>
+        <span class="nav-ver">v5.10.10</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1795,7 +1803,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.9 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.10 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
