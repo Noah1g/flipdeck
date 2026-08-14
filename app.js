@@ -214,7 +214,7 @@ const DB = {
   setSession(s){ Store.set("fg_session", JSON.stringify(s)); }, clearSession(){ Store.del("fg_session"); },
 
   /* ---- DATEN: jetzt in Supabase (pro User getrennt via RLS) ---- */
-  getFlips(){ return dbLoad('flips'); },        saveFlips(arr){ return dbSave('flips', arr); },
+  getFlips(){ return flipGetRows(); },          saveFlips(arr){ return flipSaveRows(arr); },
   getCalcs(){ return dbLoad('calcs'); },         saveCalcs(arr){ return dbSave('calcs', arr); },
   getInventory(){ return invGetRows(); },        saveInventory(arr){ return invSaveRows(arr); },
   getFixed(){ return dbLoad('fixed'); },         saveFixed(arr){ return dbSave('fixed', arr); },
@@ -250,6 +250,7 @@ create table if not exists public.inv_items (
   primary key (user_id, id)
 );
 alter table public.inv_items enable row level security;
+drop policy if exists "inv_self_all" on public.inv_items;
 create policy "inv_self_all" on public.inv_items for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);`; }
 async function _invMigrateFromBlob(arr){
@@ -302,6 +303,75 @@ async function invSaveRows(arr){
     for(let i=0;i<dels.length;i+=200){ const { error }=await sb.from('inv_items').delete().eq('user_id',uid).in('id', dels.slice(i,i+200)); if(error){ console.warn('[inv del]',error.message); showSaveError(classifySaveError(error)); return false; } }
     _invRows = cur; clearSaveError(); markOnline(); return true;
   }catch(e){ console.warn('[inv save crash]', e); if(navigator.onLine) showSaveError('Speichern fehlgeschlagen (Netzwerkfehler) — Änderung evtl. nicht gespeichert.'); return false; }
+}
+
+/* =====================================================================
+   VERKÄUFE PER-ZEILE (Weg A.5 · Stufe 2) — identisches Muster wie Inventar.
+   Jeder Verkauf ('flip') liegt als Zeile in 'flip_items'. Diff-Speichern +
+   sichere, markierte Migration ('flips_ready'). Inert ohne die Tabelle.
+   ===================================================================== */
+let _flipMode = null;
+let _flipRows = new Map();
+function flipSetupSQL(){ return `-- In Supabase: SQL Editor -> New query -> einfügen -> RUN
+create table if not exists public.flip_items (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  id text not null,
+  data jsonb not null,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+alter table public.flip_items enable row level security;
+drop policy if exists "flip_self_all" on public.flip_items;
+create policy "flip_self_all" on public.flip_items for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);`; }
+async function _flipMigrateFromBlob(arr){
+  const uid=currentUser.id, nowIso=new Date().toISOString();
+  const rows=arr.filter(f=>f&&f.id!=null).map(f=>({ user_id:uid, id:String(f.id), data:f, updated_at:nowIso }));
+  for(let i=0;i<rows.length;i+=200){ const { error }=await sb.from('flip_items').upsert(rows.slice(i,i+200), { onConflict:'user_id,id' }); if(error) throw error; }
+}
+async function flipGetRows(){
+  if(!currentUser||!currentUser.id) return undefined;
+  const uid=currentUser.id;
+  const ready = (await dbLoad('flips_ready'))===true;
+  let res; try{ res = await sb.from('flip_items').select('id,data').eq('user_id', uid); }
+  catch(e){ _flipMode='blob'; return dbLoad('flips'); }
+  if(res.error){ _flipMode='blob'; if(!_invTableMissing(res.error)) console.warn('[flip load]', res.error.message); return dbLoad('flips'); }
+  const data = res.data||[];
+  const byDate=(a,b)=> new Date((b&&b.date)||0) - new Date((a&&a.date)||0);
+  if(ready){
+    _flipMode='rows'; _flipRows=new Map(data.map(r=>[String(r.id), JSON.stringify(r.data)]));
+    return data.map(r=>r.data).sort(byDate);
+  }
+  const legacy = await dbLoad('flips');
+  if(Array.isArray(legacy) && legacy.length){
+    legacy.forEach(f=>{ if(f && f.id==null) f.id='f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); });
+    try{
+      await _flipMigrateFromBlob(legacy);
+      await dbSave('flips_ready', true);
+      _flipMode='rows'; _flipRows=new Map(legacy.filter(f=>f&&f.id!=null).map(f=>[String(f.id), JSON.stringify(f)]));
+      setTimeout(()=>{ try{ showToast('✓ Verkäufe auf schnelles Format umgestellt · '+legacy.length+' Einträge'); }catch(e){} }, 2600);
+      return legacy;
+    }catch(e){ console.warn('[flip migrate]', e&&e.message); _flipMode='blob'; return legacy; }
+  }
+  try{ await dbSave('flips_ready', true); }catch(e){}
+  _flipMode='rows'; _flipRows=new Map();
+  return legacy || undefined;
+}
+async function flipSaveRows(arr){
+  if(_flipMode!=='rows') return dbSave('flips', arr);
+  if(!currentUser||!currentUser.id){ showSaveError('Nicht angemeldet — Änderung wurde nicht gespeichert.'); return false; }
+  const uid=currentUser.id, nowIso=new Date().toISOString();
+  (arr||[]).forEach(f=>{ if(f && f.id==null) f.id='f'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); });
+  const cur=new Map(); (arr||[]).forEach(f=>{ if(f&&f.id!=null) cur.set(String(f.id), JSON.stringify(f)); });
+  const upserts=[], dels=[];
+  cur.forEach((json,id)=>{ if(_flipRows.get(id)!==json) upserts.push({ user_id:uid, id, data:JSON.parse(json), updated_at:nowIso }); });
+  _flipRows.forEach((_,id)=>{ if(!cur.has(id)) dels.push(id); });
+  if(!upserts.length && !dels.length){ clearSaveError(); markOnline(); return true; }
+  try{
+    for(let i=0;i<upserts.length;i+=200){ const { error }=await sb.from('flip_items').upsert(upserts.slice(i,i+200), { onConflict:'user_id,id' }); if(error){ console.warn('[flip save]',error.message); showSaveError(classifySaveError(error)); return false; } }
+    for(let i=0;i<dels.length;i+=200){ const { error }=await sb.from('flip_items').delete().eq('user_id',uid).in('id', dels.slice(i,i+200)); if(error){ console.warn('[flip del]',error.message); showSaveError(classifySaveError(error)); return false; } }
+    _flipRows = cur; clearSaveError(); markOnline(); return true;
+  }catch(e){ console.warn('[flip save crash]', e); if(navigator.onLine) showSaveError('Speichern fehlgeschlagen (Netzwerkfehler) — Änderung evtl. nicht gespeichert.'); return false; }
 }
 
 /* =====================================================================
@@ -3245,12 +3315,21 @@ async function renderSnapshots(){
   $$("#snap-list .snap-del").forEach(b=>b.addEventListener("click",async()=>{ b.disabled=true; try{ await snapDelete(b.dataset.id); renderSnapshots(); }catch(e){ showToast("Konnte nicht löschen"); b.disabled=false; } }));
 }
 function renderInvFormatStatus(){ const box=$("#inv-format-status"); if(!box) return;
-  if(_invMode==='rows'){ box.innerHTML=`<p class="c-sub text-[12.5px] leading-relaxed"><span class="pill pill-accent">⚡ Schnell</span> Dein Inventar liegt im <b>Zeilen-Format</b> — jede Änderung schreibt nur den betroffenen Artikel, nicht den ganzen Bestand. Skaliert mühelos auf zehntausende Artikel.</p>`; return; }
-  const sql=invSetupSQL();
-  box.innerHTML=`<p class="c-sub text-[12.5px] leading-relaxed mb-3"><span class="pill pill-mut">Klassisch</span> Dein Inventar liegt als ein Block — für normale Bestände völlig okay. Für sehr große Bestände (ab ~5.000 Artikeln) gibt es ein schnelleres <b>Zeilen-Format</b>. Optional: Tabelle in Supabase anlegen, dann stellt Flipdeck beim nächsten Laden <b>automatisch</b> um — deine Daten bleiben 1:1 unverändert.</p>
-    <button id="inv-sql-copy" class="btn-ghost w-full" style="margin-bottom:8px">SQL für schnelles Format kopieren</button>
-    <pre class="mono" style="font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:150px;overflow:auto;color:var(--sub);background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:10px">${escapeHtml(sql)}</pre>`;
-  const cp=$("#inv-sql-copy"); if(cp) cp.addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(sql); showToast("✓ SQL kopiert"); }catch(e){ showToast("Kopieren nicht möglich"); } });
+  const line=(label,mode)=> mode==='rows'
+    ? `<div class="flex items-center gap-2 mb-2"><span class="pill pill-accent">⚡ Schnell</span><span class="text-[13.5px]">${label} · Zeilen-Format</span></div>`
+    : `<div class="flex items-center gap-2 mb-2"><span class="pill pill-mut">Klassisch</span><span class="text-[13.5px]">${label} · ein Block</span></div>`;
+  let html = line('Inventar', _invMode) + line('Verkäufe', _flipMode);
+  const anyBlob = _invMode!=='rows' || _flipMode!=='rows';
+  if(anyBlob){
+    const sql = invSetupSQL()+"\n\n"+flipSetupSQL();
+    html += `<p class="c-sub text-[12.5px] leading-relaxed mt-2 mb-3">Für sehr große Bestände/Verkaufslisten (ab ~5.000 Einträgen) gibt es ein schnelleres <b>Zeilen-Format</b>. Optional: die Tabellen anlegen, dann stellt Flipdeck beim nächsten Laden <b>automatisch</b> um — deine Daten bleiben 1:1 unverändert. Die SQL ist gefahrlos mehrfach ausführbar.</p>
+      <button id="inv-sql-copy" class="btn-ghost w-full" style="margin-bottom:8px">SQL für schnelles Format kopieren</button>
+      <pre class="mono" style="font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:170px;overflow:auto;color:var(--sub);background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:10px">${escapeHtml(sql)}</pre>`;
+  } else {
+    html += `<p class="c-sub text-[12.5px] leading-relaxed mt-2">Beides im schnellen Zeilen-Format — jede Änderung schreibt nur den betroffenen Eintrag, nicht die ganze Liste. Skaliert mühelos.</p>`;
+  }
+  box.innerHTML=html;
+  const cp=$("#inv-sql-copy"); if(cp) cp.addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(invSetupSQL()+"\n\n"+flipSetupSQL()); showToast("✓ SQL kopiert"); }catch(e){ showToast("Kopieren nicht möglich"); } });
 }
 if($("#snap-now")) $("#snap-now").addEventListener("click",async()=>{ const btn=$("#snap-now"); btn.disabled=true; const ol=btn.textContent; btn.textContent="Sichere…";
   const ok=await snapCreate('manual','Manuell gesichert'); btn.disabled=false; btn.textContent=ol;

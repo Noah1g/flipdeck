@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v44";   // v44 (App v5.15.0): Weg A.5 Stufe 1 - Inventar per Zeile (inv_items, Diff-Speichern, sichere Migration); inert bis Tabelle existiert
+const VERSION    = "flipdeck-v45";   // v45 (App v5.16.0): Weg A.5 Stufe 2 - Verkaeufe per Zeile (flip_items); Kern-Datenpfad komplett auf Diff-Speichern
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
