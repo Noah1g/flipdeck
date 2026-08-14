@@ -542,7 +542,7 @@ async function enterApp(){
   renderShipPresets(); initShipDropdowns(); applyShipDefaults();
   let taxCfg=null; try{ taxCfg = await DB.getTaxCfg(); }catch(e){ console.warn("[taxcfg load]", e); }
   if(taxCfg && typeof taxCfg==="object"){
-    kuMode = !!taxCfg.kuMode; $("#c-ku").checked = kuMode;
+    kuMode = !!taxCfg.kuMode;
     defaultUstRate = taxCfg.defaultUstRate || 19;
     defaultPlatform = PLATFORMS[taxCfg.defaultPlatform] ? taxCfg.defaultPlatform : "ebay";
     if(taxCfg.tourDone){ try{ Store.set(uKey("tourdone"),"1"); }catch(e){} }   // kontoweit: Tour nie wieder zeigen
@@ -1639,7 +1639,6 @@ function renderGoalStatus(vk,ek,ship,combined,margin,profit){
 }
 ["c-vk","c-ek","c-ship","c-ad"].forEach(id=>$("#"+id).addEventListener("input",calc));
 $("#c-cat").addEventListener("change",calc);
-$("#c-ku").addEventListener("change",()=>{ kuMode=$("#c-ku").checked; Store.set("fg_ku", kuMode?"1":"0"); DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, onboarded:true }); calc(); renderInventory(); renderBreakEven(); });
 $("#c-pack").addEventListener("change",()=>{ packMode=$("#c-pack").checked; Store.set("fg_pack", packMode?"1":"0"); calc(); });
 /* USt-Schieberegler (toggle, gegenseitig exklusiv pro Feld) */
 $$(".ust").forEach(b=>b.addEventListener("click",()=>{
@@ -2174,7 +2173,7 @@ function openAccountSetup(){
     kuMode = $("#as-ku").getAttribute("aria-selected")==="true";
     defaultUstRate = num($("#as-rate").value);
     defaultPlatform = $("#as-platform").value||"ebay";
-    Store.set("fg_ku", kuMode?"1":"0"); $("#c-ku").checked=kuMode;
+    Store.set("fg_ku", kuMode?"1":"0");
     Store.set(uKey("ustrate"), String(defaultUstRate));
     Store.set(uKey("platform"), defaultPlatform);
     Store.set(uKey("onboarded"),"1");
@@ -3626,7 +3625,6 @@ $("#pw-save").addEventListener("click", async ()=>{
     applyPalette(Store.get("fg_theme")||"spacegray");
     applyI18n();
     kuMode = Store.get("fg_ku")===null ? true : Store.get("fg_ku")==="1";
-    $("#c-ku").checked = kuMode;
     packMode = Store.get("fg_pack")===null ? true : Store.get("fg_pack")==="1";
     $("#c-pack").checked = packMode;
     $("#f-date").value = todayISOInput(); 

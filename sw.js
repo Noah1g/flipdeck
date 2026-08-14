@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v41";   // v41 (App v5.13.0): Feedback-&-Bug-System (Dashboard-Button, Bild-Upload, Admin-Inbox, Badge); Kaufland ohne eBay-Bewerben
+const VERSION    = "flipdeck-v42";   // v42 (App v5.13.1): eBay-Rechner — redundanten KU-Haken entfernt (ist Konto-Einstellung)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
