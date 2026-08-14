@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v34";   // v34 (App v5.11.1): Live-Kalender-Abo (webcal) über Storage-Feed — aktualisiert sich selbst
+const VERSION    = "flipdeck-v35";   // v35 (App v5.11.2): schnellerer Start (parallele Daten-Ladung) + kein Tab-Rücksprung mehr beim Laden
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

@@ -527,13 +527,13 @@ async function enterApp(){
 
   // --- Daten aus Supabase laden (pro User getrennt via RLS) ---
   // Neue Konten starten komplett leer – keine Demo-/Beispieldaten.
-  flips = (await DB.getFlips()) || [];
-  calcs = (await DB.getCalcs()) || [];
-  inventory = (await DB.getInventory()) || [];
-  avatarUrl = (await DB.getAvatar()) || null;
-  fixed = (await DB.getFixed()) || [];
-  fixCfg = (await DB.getFixCfg()) || {revenue:4000, packages:60, baseMargin:15};
-  shipCfg = normalizeShipCfg(await DB.getShipCfg());
+  // Alle Datensätze PARALLEL laden (vorher nacheinander -> deutlich schnellerer Start)
+  const [ _flips, _calcs, _inv, _avatar, _fixed, _fixcfg, _shipcfg ] = await Promise.all([
+    DB.getFlips(), DB.getCalcs(), DB.getInventory(), DB.getAvatar(), DB.getFixed(), DB.getFixCfg(), DB.getShipCfg()
+  ]);
+  flips = _flips || []; calcs = _calcs || []; inventory = _inv || []; avatarUrl = _avatar || null; fixed = _fixed || [];
+  fixCfg = _fixcfg || {revenue:4000, packages:60, baseMargin:15};
+  shipCfg = normalizeShipCfg(_shipcfg);
   await profileUpsert();
 
   renderShipPresets(); initShipDropdowns(); applyShipDefaults();
@@ -557,7 +557,11 @@ async function enterApp(){
   // Deep-Link respektieren: kommt die App über #calc/#inventory/... rein, dort starten
   var _tabs=["dashboard","tracker","calc","inventory","fix","report","pwgen","admin","profil"];
   var _want=(location.hash||"").replace(/^#/,"");
-  setTab(_tabs.indexOf(_want)>-1 ? _want : "dashboard", true);
+  // Hat der Nutzer während des Ladens schon einen Tab geöffnet, DORT bleiben (nicht zurück aufs Dashboard springen).
+  // In jedem Fall den nun aktiven Tab mit den frisch geladenen Daten neu rendern.
+  var _sel = document.querySelector('#tabs button[aria-selected="true"]');
+  var _target = (_navPicked && _sel) ? _sel.dataset.tab : (_tabs.indexOf(_want)>-1 ? _want : "dashboard");
+  setTab(_target, true);
   renderCalcHistory(); calc();
   refreshPendingBadge(true);   // Owner: offene Registrierungsanfragen melden (Toast + Badge + Dashboard-Hinweis)
   initHistory();               // Undo/Redo-Ausgangspunkt setzen
@@ -667,7 +671,9 @@ $$("#profile-menu .menu-item[data-tab]").forEach(b=>b.addEventListener("click",(
 function moveThumb(){ const btn=$('#tabs button[aria-selected="true"]'); const thumb=$("#tab-thumb");
   if(btn){ thumb.style.opacity="1"; thumb.style.width=btn.offsetWidth+"px"; thumb.style.transform=`translateX(${btn.offsetLeft}px)`; }
   else thumb.style.opacity="0"; }
+let _navPicked=false;
 function setTab(name, instant){
+  if(!instant) _navPicked=true;   // Nutzer hat aktiv navigiert (z. B. schon während des Ladens)
   $$("#tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
   ["dashboard","tracker","calc","inventory","fix","report","pwgen","admin","profil"].forEach(v=>$("#"+v+"-view").classList.toggle("hidden", v!==name));
   const thumb=$("#tab-thumb");
