@@ -713,7 +713,8 @@ function animate(el,target,fmt){ if(matchMedia("(prefers-reduced-motion:reduce)"
   const start=performance.now(),dur=500; (function step(t){ const p=Math.min((t-start)/dur,1),e=1-Math.pow(1-p,3); el.textContent=fmt(target*e); if(p<1) requestAnimationFrame(step); })(start); }
 function renderKPIs(){ const view=flips.filter(f=>inFilter(f.date));
   const revenue=view.reduce((s,f)=>s+flipRevenue(f),0), profit=view.reduce((s,f)=>s+flipProfit(f),0), margin=revenue>0?profit/revenue*100:0;
-  animate($("#kpi-revenue"),revenue,eur); animate($("#kpi-profit"),profit,eur); animate($("#kpi-margin"),margin,pct);
+  const cost=view.reduce((s,f)=>s+num(f.ek)*(f.qty||1),0), roi=cost>0?profit/cost*100:0;
+  animate($("#kpi-revenue"),revenue,eur); animate($("#kpi-profit"),profit,eur); animate($("#kpi-margin"),margin,pct); if($("#kpi-roi")) animate($("#kpi-roi"),roi,pct);
 
   // Trend ggü. der gleich langen Vorperiode
   const prev=flips.filter(f=>prevFilter(f.date));
@@ -876,6 +877,7 @@ const DASH_CARDS = [
   {key:"profit",        label:"Nettogewinn",       sub:"Große Karte oben",     group:"kpi"},
   {key:"revenue",       label:"Gesamtumsatz",      sub:"eBay netto",           group:"kpi"},
   {key:"margin",        label:"Ø Marge",           sub:"Gewinn / Umsatz",      group:"kpi"},
+  {key:"roi",           label:"Ø ROI",             sub:"Gewinn / Einsatz",     group:"kpi"},
   {key:"chart-profit",  label:"Profit-Verlauf",    sub:"6-Monats-Chart",       group:"detail"},
   {key:"chart-revcost", label:"Umsatz & Gewinn",   sub:"Balken je Monat",      group:"detail"},
   {key:"chart-split",   label:"Umsatz-Aufteilung", sub:"nach Plattform",       group:"detail"},
@@ -2129,6 +2131,7 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg();
   });
   $("#inv-kpi-units").textContent=units; $("#inv-kpi-cap").textContent=eur(cap);
   const pe=$("#inv-kpi-prof"); pe.textContent=eur(prof); pe.style.color=prof>=0?"var(--accent)":"var(--danger)";
+  const roiEl=$("#inv-kpi-roi"); if(roiEl){ const roi=cap>0?prof/cap*100:0; roiEl.textContent=pct(roi); roiEl.style.color=roi>=0?"var(--accent)":"var(--danger)"; }
 
   $("#inv-empty").classList.toggle("hidden", inventory.length>0);
 

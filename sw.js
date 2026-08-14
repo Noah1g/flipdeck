@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v24";   // v24 (App v5.10.2): Erst-Login-Tour (überspringbar) durch essenzielle Funktionen inkl. Backup-Einrichtung
+const VERSION    = "flipdeck-v25";   // v25 (App v5.10.3): ROI-Kennzahl (Dashboard & Bestand)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

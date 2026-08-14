@@ -757,7 +757,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.2</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.3</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -801,7 +801,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.10.2</span>
+        <span class="nav-ver">v5.10.3</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -892,6 +892,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       </div>
       <div class="cell p-5" data-dash="revenue"><p class="label mb-2" data-i18n="dash.revenue">Gesamtumsatz</p><p id="kpi-revenue" class="tnum font-bold leading-none" style="font-size:clamp(22px,6vw,28px); letter-spacing:-.02em;">0,00 €</p><p id="kpi-revenue-sub" class="c-sub text-[12px] mt-2">eBay netto</p></div>
       <div class="cell p-5" data-dash="margin"><p class="label mb-2" data-i18n="dash.margin">Ø Marge</p><p id="kpi-margin" class="tnum font-bold leading-none" style="font-size:clamp(22px,6vw,28px); letter-spacing:-.02em;">0,0 %</p><p class="c-sub text-[12px] mt-2">Gewinn / Umsatz</p></div>
+      <div class="cell p-5" data-dash="roi"><p class="label mb-2">Ø ROI <span class="info-i" data-tip="Return on Investment = Gewinn ÷ Einsatz (EK). Wie viel Prozent Gewinn du auf dein eingesetztes Geld gemacht hast.">i</span></p><p id="kpi-roi" class="tnum font-bold leading-none" style="font-size:clamp(22px,6vw,28px); letter-spacing:-.02em;">0,0 %</p><p class="c-sub text-[12px] mt-2">Gewinn / Einsatz</p></div>
     </div>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
@@ -1209,10 +1210,11 @@ body.no-images .ms-head .thumb{ display:none !important; }
 
   <!-- ============ INVENTORY ============ -->
   <section id="inventory-view" class="hidden shell px-4 py-6">
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
       <div class="cell p-4"><p class="label mb-2" data-i18n="inv.units">Artikel</p><p id="inv-kpi-units" class="tnum font-bold text-[24px]">0</p></div>
       <div class="cell p-4"><p class="label mb-2" data-i18n="inv.capital">Kapital gebunden</p><p id="inv-kpi-cap" class="tnum font-bold text-[24px]">0,00 €</p></div>
       <div class="cell p-4"><p class="label mb-2" data-i18n="inv.potential">Potenzieller Profit</p><p id="inv-kpi-prof" class="tnum c-accent font-bold text-[24px]">0,00 €</p></div>
+      <div class="cell p-4"><p class="label mb-2">Ø ROI <span class="info-i" data-tip="Return on Investment = potenzieller Gewinn ÷ gebundenes Kapital (EK). Zeigt, wie effizient dein Geld im Bestand arbeitet.">i</span></p><p id="inv-kpi-roi" class="tnum c-accent font-bold text-[24px]">0,0 %</p></div>
     </div>
 
     <!-- Prominenter Toggle: Maske ist standardmäßig eingeklappt -->
@@ -1777,7 +1779,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.2 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.3 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
