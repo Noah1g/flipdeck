@@ -1816,7 +1816,38 @@ function stampAllFeeVer(){ inventory.forEach(it=>{ if(!it.feeVer||it.feeVer<FEE_
      -> Je höher der Umsatz, desto kleiner der Anteil -> niedrigere Zielmarge.
    • fixedPerPackage = Fixkosten / Pakete  -> fließt als Overhead in den
      Break-Even jedes Artikels ein (weniger Pakete => höherer Mindest-VK). */
-function fixedTotal(){ return fixed.reduce((s,f)=>s+num(f.amount),0); }
+/* Wiederkehrende Ausgaben: frei wählbares Intervall (Tag/Woche/Monat/Jahr/alle X Tage).
+   Jeder Betrag wird auf einen MONATSWERT normalisiert, damit „Ausgaben/Monat",
+   Break-Even, Zielmarge, Report & Aufschlüsselung alle stimmig bleiben. */
+const DAYS_PER_MONTH = 30.4375;
+function fixTodayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function fixIntervalDays(f){ const iv=f&&f.interval;
+  if(iv==="day") return 1; if(iv==="week") return 7; if(iv==="year") return 365.25;
+  if(iv==="custom") return Math.max(1, num(f.intervalDays)||30);
+  return DAYS_PER_MONTH; /* month (Standard, auch für Alt-Einträge ohne interval) */ }
+function fixMonthly(f){ return num(f.amount) * (DAYS_PER_MONTH / fixIntervalDays(f)); }
+function fixIntervalShort(f){ const iv=f&&f.interval;
+  if(iv==="day") return "/Tag"; if(iv==="week") return "/Wo"; if(iv==="year") return "/Jahr";
+  if(iv==="custom") return "/"+Math.max(1,num(f.intervalDays)||30)+" T"; return "/M"; }
+function fixIntervalLabel(f){ const iv=f&&f.interval;
+  if(iv==="day") return "täglich"; if(iv==="week") return "wöchentlich"; if(iv==="year") return "jährlich";
+  if(iv==="custom") return "alle "+Math.max(1,num(f.intervalDays)||30)+" Tage"; return "monatlich"; }
+function fixNextDue(f){ if(!f||!f.anchor) return null;
+  const today=new Date(); today.setHours(0,0,0,0);
+  let d=new Date(f.anchor+"T00:00:00"); if(isNaN(d)) return null;
+  const iv=f.interval;
+  if(!iv||iv==="month"){ while(d<today) d.setMonth(d.getMonth()+1); }
+  else if(iv==="year"){ while(d<today) d.setFullYear(d.getFullYear()+1); }
+  else { const step=Math.round(fixIntervalDays(f))||1;
+    if(d<today){ const diff=Math.ceil((today-d)/86400000/step); d=new Date(d.getTime()+diff*step*86400000); } }
+  return d; }
+function fixNextDueTxt(f){ const nd=fixNextDue(f); if(!nd) return "";
+  const today=new Date(); today.setHours(0,0,0,0);
+  const days=Math.round((nd-today)/86400000);
+  const dstr=nd.toLocaleDateString("de-DE",{day:"2-digit",month:"short"}).replace(".","");
+  if(days<=0) return "heute fällig"; if(days===1) return "morgen · "+dstr;
+  return "in "+days+" T · "+dstr; }
+function fixedTotal(){ return fixed.reduce((s,f)=>s+fixMonthly(f),0); }
 /* Auto-Statistik aus dem Tracker für einen Zeitraum (Tage) */
 let fixPeriod = parseInt(Store.get("fg_fixperiod")||"30") || 30;
 function recentStats(days){
@@ -2558,7 +2589,7 @@ function renderFixed(){
   // Aufschlüsselung nach Kategorie
   const total=fixedTotal(); const groups={};
   fixed.forEach(f=>{ const cat=resolveFixCat(f); const key=cat.id||("legacy:"+cat.name);
-    if(!groups[key]) groups[key]={cat, sum:0}; groups[key].sum+=num(f.amount); });
+    if(!groups[key]) groups[key]={cat, sum:0}; groups[key].sum+=fixMonthly(f); });
   const arr=Object.values(groups).sort((a,b)=>b.sum-a.sum);
   const bd=$("#fx-breakdown");
   if(bd){ bd.classList.toggle("hidden", arr.length===0);
@@ -2568,9 +2599,11 @@ function renderFixed(){
   // Liste
   const box=$("#fx-list"); box.innerHTML=""; $("#fx-empty").classList.toggle("hidden",fixed.length>0);
   fixed.forEach(f=>{ const cat=resolveFixCat(f); const el=document.createElement("div"); el.className="row"; el.style.cssText="border:1px solid var(--line);background:var(--cell-2);align-items:center";
+    const nonMonthly=f.interval&&f.interval!=="month"; const nd=fixNextDueTxt(f);
+    const sub=`${escapeHtml(cat.name)} · ${fixIntervalLabel(f)}${nonMonthly?` · ≙ ${eur(fixMonthly(f))}/M`:""}${nd?` · ${nd}`:""}`;
     el.innerHTML=`<span class="fx-cat-ic" style="${catTint(cat.color)}">${fixIconSVG(cat.icon)}</span>
-      <div class="flex-1 min-w-0"><p class="font-semibold text-[14.5px] truncate">${escapeHtml(f.name)}</p><p class="c-sub text-[12px] mt-0.5">${escapeHtml(cat.name)}</p></div>
-      <span class="mono font-bold text-[15px] shrink-0 mr-1">${eur(num(f.amount))}<span class="c-sub text-[11px] font-normal"> /M</span></span>
+      <div class="flex-1 min-w-0"><p class="font-semibold text-[14.5px] truncate">${escapeHtml(f.name)}</p><p class="c-sub text-[12px] mt-0.5 truncate">${sub}</p></div>
+      <span class="mono font-bold text-[15px] shrink-0 mr-1">${eur(num(f.amount))}<span class="c-sub text-[11px] font-normal"> ${fixIntervalShort(f)}</span></span>
       <div class="flex flex-col gap-2 shrink-0"><button class="iconbtn fx-edit" data-id="${f.id}" title="Bearbeiten">${icoEdit}</button><button class="iconbtn danger fx-del" data-id="${f.id}" title="Löschen">${icoTrash}</button></div>`;
     box.appendChild(el); });
   $$(".fx-edit").forEach(b=>b.addEventListener("click",()=>openFixEdit(b.dataset.id)));
@@ -2586,17 +2619,23 @@ if($("#fx-cat")) $("#fx-cat").addEventListener("change",()=>{ if($("#fx-cat").va
 function setFixForm(open){ fxFormOpen=open; $("#fx-form").classList.toggle("hidden",!open);
   $("#fx-toggle-ic").style.transform=open?"rotate(45deg)":"rotate(0deg)";
   $("#fx-toggle").querySelector("span").textContent= open ? (lang==="en"?"Close":"Schließen") : t("fix.add");
-  if(!open){ editingFixId=null; $("#fx-name").value=""; $("#fx-amount").value=""; refreshFixCatSelect(); const first=getExpenseCats()[0]; if($("#fx-cat")) $("#fx-cat").value=first?first.id:""; refreshPaySelects(); if($("#fx-paymethod")) $("#fx-paymethod").value=""; $("#fx-add").textContent=t("btn.add"); } }
+  if(!open){ editingFixId=null; $("#fx-name").value=""; $("#fx-amount").value=""; if($("#fx-interval")) $("#fx-interval").value="month"; if($("#fx-interval-days")){ $("#fx-interval-days").value=""; $("#fx-interval-days").classList.add("hidden"); } refreshFixCatSelect(); const first=getExpenseCats()[0]; if($("#fx-cat")) $("#fx-cat").value=first?first.id:""; refreshPaySelects(); if($("#fx-paymethod")) $("#fx-paymethod").value=""; $("#fx-add").textContent=t("btn.add"); } }
 $("#fx-toggle").addEventListener("click",()=>setFixForm(!fxFormOpen));
 $("#fx-cancel").addEventListener("click",()=>setFixForm(false));
 $("#fx-add").addEventListener("click",()=>{ const name=$("#fx-name").value.trim(), amount=num($("#fx-amount").value); const sc=$("#fx-cat"); let catId=sc?sc.value:""; if(catId==="__new__") catId="";
   const ps=$("#fx-paymethod"); let payMethodId=ps?ps.value:""; if(payMethodId==="__new__") payMethodId="";
+  const iv=$("#fx-interval")?$("#fx-interval").value:"month"; const ivDays=iv==="custom"?Math.max(1,parseInt($("#fx-interval-days").value)||0):null;
   if(!name){ flashError($("#fx-name")); return; } if(amount<=0){ flashError($("#fx-amount")); return; }
-  if(editingFixId){ const f=fixed.find(x=>x.id===editingFixId); if(f){ Object.assign(f,{name,amount,catId,payMethodId}); delete f.cat; } }
-  else fixed.unshift({id:"fx"+Date.now(),name,amount,catId,payMethodId});
+  if(iv==="custom" && (!ivDays||ivDays<1)){ flashError($("#fx-interval-days")); return; }
+  const patch={name,amount,catId,payMethodId,interval:iv,intervalDays:ivDays};
+  if(editingFixId){ const f=fixed.find(x=>x.id===editingFixId); if(f){ Object.assign(f,patch); if(!f.anchor) f.anchor=fixTodayISO(); delete f.cat; } }
+  else fixed.unshift(Object.assign({id:"fx"+Date.now(),anchor:fixTodayISO()},patch));
   DB.saveFixed(fixed); setFixForm(false); renderFixed(); renderInventory(); showToast(t("toast.saved")); });
+if($("#fx-interval")) $("#fx-interval").addEventListener("change",()=>{ const c=$("#fx-interval").value==="custom"; if($("#fx-interval-days")) $("#fx-interval-days").classList.toggle("hidden",!c); });
 function openFixEdit(id){ const f=fixed.find(x=>x.id===id); if(!f) return; editingFixId=id;
   $("#fx-name").value=f.name; $("#fx-amount").value=String(f.amount).replace(".",","); refreshFixCatSelect();
+  if($("#fx-interval")) $("#fx-interval").value=f.interval||"month";
+  if($("#fx-interval-days")){ $("#fx-interval-days").value=f.intervalDays||""; $("#fx-interval-days").classList.toggle("hidden",(f.interval||"month")!=="custom"); }
   refreshPaySelects(); if($("#fx-paymethod")) $("#fx-paymethod").value=(f.payMethodId && payMethodById(f.payMethodId))?f.payMethodId:"";
   const sc=$("#fx-cat"); if(sc){ if(f.catId && getExpenseCats().some(c=>c.id===f.catId)) sc.value=f.catId; else { const first=getExpenseCats()[0]; sc.value=first?first.id:""; } }
   $("#fx-add").textContent=t("btn.save"); fxFormOpen=true; $("#fx-form").classList.remove("hidden"); $("#fx-toggle-ic").style.transform="rotate(45deg)"; $("#fx-toggle").querySelector("span").textContent=(lang==="en"?"Close":"Schließen"); }
@@ -2649,8 +2688,8 @@ function renderSplit(list){
   if(rpSplit==="expenses"){
     if(!fixed.length){ box.innerHTML=`<p class="c-sub text-[13px] text-center py-6">Keine Fixkosten hinterlegt.</p>`; return; }
     const mult = rpScope==="year" ? 12 : 1;
-    const rows=[...fixed].sort((a,b)=>num(b.amount)-num(a.amount));
-    box.innerHTML=rows.map(f=>`<div class="brk"><span>${escapeHtml(f.name||"—")}</span><span class="mono">${eur(num(f.amount)*mult)}</span></div>`).join("")
+    const rows=[...fixed].sort((a,b)=>fixMonthly(b)-fixMonthly(a));
+    box.innerHTML=rows.map(f=>`<div class="brk"><span>${escapeHtml(f.name||"—")}</span><span class="mono">${eur(fixMonthly(f)*mult)}</span></div>`).join("")
       + `<div class="brk brk-total"><span>Gesamt · ${scopeLabel()}</span><span class="mono font-bold">${eur(fixedTotal()*mult)}</span></div>`;
     return;
   }

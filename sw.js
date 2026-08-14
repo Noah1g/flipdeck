@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v37";   // v37 (App v5.11.4): Auswertung — Kennzahl Ausgaben-Gesamtsumme (Ware+Versand+Fixkosten)
+const VERSION    = "flipdeck-v38";   // v38 (App v5.11.5): Fixkosten — freie Intervalle (Tag/Woche/Monat/Jahr/alle X Tage), auf Monat normalisiert + nächste Fälligkeit
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
