@@ -739,6 +739,20 @@ body.no-images .ms-head .thumb{ display:none !important; }
 .tour-dots{ display:flex; gap:5px; align-items:center; }
 .tour-dot{ width:6px; height:6px; border-radius:999px; background:var(--line); transition:all .2s ease; }
 .tour-dot.on{ background:var(--brand); width:17px; }
+
+/* ===== Desktop-Shell (Electron): integrierte, dunkle Titelleiste statt nativem Balken ===== */
+.is-electron .topnav{ -webkit-app-region:drag; }
+.is-electron .topnav button,
+.is-electron .topnav a,
+.is-electron .topnav input,
+.is-electron .topnav select,
+.is-electron .topnav .tabs,
+.is-electron .topnav .nav-right,
+.is-electron .topnav .nav-left,
+.is-electron .topnav .nav-icon,
+.is-electron .topnav .nav-profile{ -webkit-app-region:no-drag; }
+.is-electron .topnav-inner{ padding-right:150px; }   /* Platz für die Fenster-Buttons oben rechts */
+@media (max-width:1040px){ .is-electron .topnav-inner{ padding-right:16px; } }
 </style>
 </head>
 
@@ -757,7 +771,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.8</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.10.9</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -801,7 +815,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.10.8</span>
+        <span class="nav-ver">v5.10.9</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1781,7 +1795,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.8 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.10.9 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 

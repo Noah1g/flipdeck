@@ -42,6 +42,8 @@ const Store = (() => {
 })();
 let currentUser = null;
 const uKey = base => `fg_${base}_${currentUser ? currentUser.username : "guest"}`;
+/* Läuft die App in der neuen Desktop-Shell? Dann Titelleisten-Optik anpassen (Platz für Fenster-Buttons). */
+try{ if(/FlipdeckShell/i.test(navigator.userAgent)) document.documentElement.classList.add("is-electron"); }catch(e){}
 
 /* =====================================================================
    SUPABASE-HELFER · Daten liegen in EINER Tabelle 'app_state'

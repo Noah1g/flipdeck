@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v30";   // v30 (App v5.10.8): Backup-Rework — simples automatisches Wochen-Backup (Download) statt Ordner-Zugriff
+const VERSION    = "flipdeck-v31";   // v31 (App v5.10.9): integrierte dunkle Titelleiste in der Desktop-Shell (Electron)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
