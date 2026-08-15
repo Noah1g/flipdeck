@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v89";   // v89 (App v5.21.9): kein horizontaler Scrollbalken im Verkaufs-Dialog; Recherche-Links als Grid
+const VERSION    = "flipdeck-v90";   // v90 (App v5.21.10): Amazon und Etsy nicht mehr in Marktplatz-Auswahl (noch nicht ausgereift)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

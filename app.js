@@ -1961,10 +1961,15 @@ function attachPlatformDropdown(){
   btn.addEventListener("click",e=>{ e.stopPropagation(); menu?close():open(); });
 }
 /* Profil → Marktplätze ein-/ausblenden */
+/* Marktplätze, die (noch) nicht sauber für Flipdeck ausgearbeitet sind -> nicht anbieten.
+   Sie erscheinen nur, wenn sie bei einem Konto bereits aktiv sind (damit man sie abschalten kann). */
+const NOT_READY_PLATFORMS = ["amazon","etsy"];
 function renderPlatManager(){
   const box=$("#plat-manage-list"); if(!box) return;
   const en=getEnabledPlatforms();
-  box.innerHTML=Object.entries(PLATFORMS).map(([k,v])=>`
+  box.innerHTML=Object.entries(PLATFORMS)
+    .filter(([k])=> !NOT_READY_PLATFORMS.includes(k) || en.includes(k))
+    .map(([k,v])=>`
     <button type="button" class="pw-toggle plat-manage-row" data-plat="${k}" aria-pressed="${en.includes(k)?"true":"false"}">
       ${platformIcon(k)}
       <span class="pw-toggle-info"><span class="pw-toggle-name">${v.label}</span><span class="pw-toggle-set">${v.ebayPrivate?"privat · innerdeutsch 0 €, Ausland 5 %":(v.hasFees?"mit Gebühren":"ohne Gebühren")}</span></span>
