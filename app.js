@@ -2233,13 +2233,9 @@ let staleDays = parseInt(DB.getSetting("stale","30")) || 30;   // Ladenhüter-Sc
    Der Standard (def) ist überall vorausgewählt; die Presets erscheinen als
    Dropdown (datalist) an jedem Versand-Feld – frei überschreibbar bleibt es.
    Gespeichert pro User in Supabase (app_state 'shipcfg'), also geräteübergreifend. */
-function defaultShipCfg(){ return { def:6.19, presets:[
-  {label:"Warensendung / Brief", amount:1.95},
-  {label:"DHL Päckchen", amount:4.79},
-  {label:"Paket bis 2 kg", amount:5.49},
-  {label:"Paket bis 5 kg", amount:6.19},
-  {label:"Paket bis 10 kg", amount:8.49}
-] }; }
+/* Keine vordefinierten Porto-Werte mehr — die waren nur Platzhalter und meist falsch.
+   Nutzer legen ihre echten Portokosten selbst als Vorlagen an. */
+function defaultShipCfg(){ return { def:0, presets:[] }; }
 function normalizeShipCfg(o){
   const d = (o && typeof o==="object") ? o : {};
   let presets = Array.isArray(d.presets) ? d.presets
@@ -2249,11 +2245,11 @@ function normalizeShipCfg(o){
   // pro Betrag nur eine Vorlage (Betrag ist der eindeutige Schlüssel für Standard/Löschen)
   const seen=new Set();
   presets = presets.filter(p=>{ const k=p.amount.toFixed(2); if(seen.has(k)) return false; seen.add(k); return true; });
-  let def = num(d.def); if(!isFinite(def) || def<0) def = 6.19;
+  let def = num(d.def); if(!isFinite(def) || def<0) def = 0;
   return { def, presets };
 }
 let shipCfg = defaultShipCfg();
-const shipDef = () => (shipCfg && isFinite(num(shipCfg.def))) ? num(shipCfg.def) : 6.19;
+const shipDef = () => (shipCfg && isFinite(num(shipCfg.def))) ? num(shipCfg.def) : 0;
 const shipDefStr = () => String(shipDef()).replace(".",",");
 /* Das eigene Dropdown (siehe attachShipDropdown) liest shipCfg direkt –
    ein <datalist> ist nicht mehr nötig. Funktion bleibt als No-op erhalten,
@@ -3575,8 +3571,7 @@ const TOUR_STEPS = [
   { tab:"inventory", sel:'#tabs button[data-tab="inventory"]', title:"Bestand — dein Herzstück", body:"Hier legst du Einkäufe an und trägst später Verkäufe ein. Optional pro Artikel: Einkaufsplattform (mit Retourenfrist) und Zahlungsmethode." },
   { tab:"dashboard", sel:'#dash-customize', title:"Dashboard anpassen", body:"Über den Anpassen-Knopf blendest du Karten ein/aus und ordnest sie per Drag & Drop — dein Cockpit, wie du es brauchst." },
   { sel:'#profile-btn', title:"Alle Einstellungen", body:"Oben rechts (Profil) sitzt der Einstellungs-Hub: Steuerart, Marktplätze, Zahlungsmethoden, Dashboard und Daten/Backup." },
-  { tab:"profil", scat:"geschaeft", sel:'.settings-navi[data-scat="geschaeft"]', title:"Steuerart festlegen", body:"Unter Geschäft stellst du Privat/Gewerblich & MwSt. ein — wichtig für korrekte Gewinne. Einmal einstellen, fertig." },
-  { tab:"profil", scat:"daten", sel:'#autofile-status', title:"Backup einrichten (wichtig!)", body:"Richte hier die automatische Datei-Sicherung ein: einmal einen Cloud-Ordner (OneDrive/iCloud) wählen — dann sichert Flipdeck wöchentlich von allein. Die einzige Sicherung, falls die Cloud mal ausfällt." }
+  { tab:"profil", scat:"geschaeft", sel:'.settings-navi[data-scat="geschaeft"]', title:"Steuerart festlegen", body:"Unter Geschäft stellst du Privat/Gewerblich & MwSt. ein — wichtig für korrekte Gewinne. Einmal einstellen, fertig." }
 ];
 let _tourActive=false, _tourIdx=0, _tourHole=null, _tourTip=null, _tourReposition=null;
 function startTour(){ if(_tourActive) return; _tourActive=true; _tourIdx=0;

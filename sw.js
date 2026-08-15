@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v80";   // v80 (App v5.21.0): Ersteinrichtung Kontotyp Privat/Gewerblich; Privat = keine USt
+const VERSION    = "flipdeck-v81";   // v81 (App v5.21.1): keine Standard-Porto-Vorlagen; Backup-Schritt aus der Tour entfernt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
