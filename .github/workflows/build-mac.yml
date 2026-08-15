@@ -30,7 +30,7 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"   # kein Apple-Signing -> unsigniert
         run: |
-          npx electron-builder --mac dmg --x64 --arm64
+          npx electron-builder --mac dmg --x64 --arm64 --publish never
           echo "===== Inhalt von desktop/dist ====="
           ls -la dist || true
 
