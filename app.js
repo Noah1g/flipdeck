@@ -3675,6 +3675,84 @@ $("#rp-import-input").addEventListener("change", e=>{
   r.readAsText(f);
 });
 
+/* ===== CSV-Import: Verkäufe aus eBay/Excel/anderen Tools übernehmen ===== */
+function impNum(s){ if(s==null) return 0; s=String(s).replace(/[^\d.,\-]/g,"").trim(); if(!s) return 0;
+  const hasC=s.includes(","), hasD=s.includes(".");
+  if(hasC&&hasD){ if(s.lastIndexOf(",")>s.lastIndexOf(".")) s=s.replace(/\./g,"").replace(",","."); else s=s.replace(/,/g,""); }
+  else if(hasC) s=s.replace(",",".");
+  const n=parseFloat(s); return isFinite(n)?n:0; }
+function csvDate(s){ s=String(s||"").trim(); if(!s) return null; let m;
+  if(m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)) return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;
+  if(m=s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})/)){ let y=m[3]; if(y.length===2) y="20"+y; return `${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; }
+  const d=new Date(s); return isNaN(d)?null:d.toISOString().slice(0,10); }
+function csvPlatform(s){ s=String(s||"").trim().toLowerCase(); if(!s) return "kein";
+  for(const k of Object.keys(PLATFORMS)){ const lbl=(PLATFORMS[k].label||"").toLowerCase(); if(k.toLowerCase()===s||lbl===s) return k; }
+  for(const k of Object.keys(PLATFORMS)){ const lbl=(PLATFORMS[k].label||"").toLowerCase(); if(s&&(lbl.includes(s)||s.includes(k.toLowerCase()))) return k; }
+  return "kein"; }
+function parseCSV(text){ text=String(text||"").replace(/^﻿/,"");
+  const firstLine=(text.split(/\r?\n/).find(l=>l.trim())||"");
+  const cS=(firstLine.match(/;/g)||[]).length, cC=(firstLine.match(/,/g)||[]).length, cT=(firstLine.match(/\t/g)||[]).length;
+  let delim=";"; if(cT>=cS&&cT>=cC&&cT>0) delim="\t"; else if(cC>cS) delim=","; else if(cS===0) delim=(cC>0?",":";");
+  const rows=[]; let row=[], field="", inQ=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(inQ){ if(c==='"'){ if(text[i+1]==='"'){ field+='"'; i++; } else inQ=false; } else field+=c; }
+    else if(c==='"') inQ=true;
+    else if(c===delim){ row.push(field); field=""; }
+    else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=""; }
+    else if(c!=='\r') field+=c; }
+  if(field.length||row.length){ row.push(field); rows.push(row); }
+  return rows.map(r=>r.map(c=>c.trim())).filter(r=>r.some(c=>c!=="")); }
+const CSV_TEMPLATE = "Produkt;Menge;Verkaufspreis;Einkaufspreis;Versand;Marktplatz;Datum;EAN\nBeispiel-Artikel;1;49,99;20,00;4,99;eBay;15.08.2026;\n";
+const CSV_FIELDS = [
+  {key:"name",     label:"Produkt", req:true,  kw:["produkt","artikel","name","title","bezeichnung","item"]},
+  {key:"qty",      label:"Menge",   kw:["menge","anzahl","qty","quantity","stück","stk"]},
+  {key:"payout",   label:"Verkaufspreis / Auszahlung", req:true, kw:["auszahlung","verkaufspreis","erlös","payout","umsatz","sold","betrag","preis"]},
+  {key:"ek",       label:"Einkaufspreis", kw:["einkaufspreis","einkauf","kosten","cost","buy","ek"]},
+  {key:"ship",     label:"Versand", kw:["versand","porto","shipping","ship"]},
+  {key:"platform", label:"Marktplatz", kw:["marktplatz","plattform","platform","kanal","channel","market"]},
+  {key:"date",     label:"Datum",   kw:["datum","date","verkauft"]},
+  {key:"ean",      label:"EAN",     kw:["ean","gtin","barcode","upc"]}
+];
+function csvGuess(headers, kw){ const low=headers.map(h=>String(h).toLowerCase());
+  for(const k of kw){ const i=low.findIndex(h=>h.includes(k)); if(i>-1) return i; } return -1; }
+function openCsvImportModal(rows){
+  const headers=rows[0], data=rows.slice(1);
+  const map={}; CSV_FIELDS.forEach(f=>map[f.key]=csvGuess(headers,f.kw));
+  const opts=sel=>`<option value="-1">— nicht zuordnen —</option>`+headers.map((h,i)=>`<option value="${i}"${i===sel?" selected":""}>${escapeHtml(h||("Spalte "+(i+1)))}</option>`).join("");
+  const build=r=>{ const g=k=>{ const i=map[k]; return (i>=0&&i<r.length)?r[i]:""; };
+    return { name:g("name").trim(), qty:Math.max(1,parseInt(impNum(g("qty")))||1), payout:impNum(g("payout")), ek:impNum(g("ek")), ship:impNum(g("ship")), platform:csvPlatform(g("platform")), date:csvDate(g("date")), ean:g("ean").trim() }; };
+  const renderModal=()=>{
+    const fieldsHTML=CSV_FIELDS.map(f=>`<div><label class="label">${f.label}${f.req?' *':''}</label><select class="field csv-map" data-key="${f.key}">${opts(map[f.key])}</select></div>`).join("");
+    const valid=data.map(build).filter(x=>x.name);
+    const prev=valid.slice(0,4).map(x=>{ const p=(x.payout-x.ek-x.ship)*x.qty, pp=p>=0;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 2px;border-top:1px solid var(--line)"><span style="flex:1;min-width:0" class="truncate text-[13px]">${escapeHtml(x.name)}</span><span class="c-sub text-[11.5px]">${x.qty}×</span><span class="mono text-[12.5px]">${eur(x.payout)}</span><span class="mono text-[12.5px]" style="font-weight:700;color:${pp?'var(--accent)':'var(--danger)'}">${pp?'+':''}${eur(p)}</span></div>`; }).join("");
+    $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:560px;max-height:90vh;overflow:auto">
+      <div class="flex items-start justify-between gap-3 mb-1"><div><p class="font-bold text-[18px]">Verkäufe importieren</p><p class="c-sub text-[12.5px] mt-0.5">${data.length} Zeilen erkannt · Spalten zuordnen. Preise <b>pro Stück</b>.</p></div><button id="csv-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">${fieldsHTML}</div>
+      <p class="label mb-1">Vorschau <span class="c-sub" style="font-weight:400">(${valid.length} importierbar)</span></p>
+      <div style="background:var(--cell-2);border:1px solid var(--line);border-radius:12px;padding:2px 12px 8px">${prev||'<p class="c-sub text-[12px] py-3">Keine Zeile mit Produktname erkannt — bitte Spalte „Produkt" zuordnen.</p>'}</div>
+      <p class="c-sub text-[11px] leading-relaxed mt-2.5">„Verkaufspreis/Auszahlung" = Betrag, den du <b>tatsächlich erhalten hast</b> (nach Marktplatz-Gebühren) — bei Import werden keine Gebühren erneut abgezogen.</p>
+      <div class="grid grid-cols-2 gap-3 mt-4"><button id="csv-cancel" class="btn-ghost">Abbrechen</button><button id="csv-do" class="btn-accent"${valid.length?'':' disabled'}>${valid.length} Verkäufe importieren</button></div>
+    </div></div>`;
+    const close=()=>{ $("#modal-root").innerHTML=""; };
+    $("#csv-x").addEventListener("click",close); $("#csv-cancel").addEventListener("click",close);
+    $$("#modal-root .csv-map").forEach(sel=>sel.addEventListener("change",()=>{ map[sel.dataset.key]=parseInt(sel.value); renderModal(); }));
+    const dob=$("#csv-do"); if(dob) dob.addEventListener("click",()=>{
+      const items=data.map(build).filter(x=>x.name); if(!items.length){ showToast("Nichts zu importieren"); return; }
+      const base=Date.now();
+      const newFlips=items.map((x,i)=>({ id:"f"+base+"_"+i, name:x.name, ean:x.ean||"", qty:x.qty, ek:x.ek, payout:x.payout, ship:x.ship, date:new Date((x.date||fixTodayISO())+"T12:00:00").toISOString(), img:null, platform:x.platform, imported:true }));
+      flips = newFlips.concat(flips); DB.saveFlips(flips); close(); showToast(`✓ ${newFlips.length} Verkäufe importiert`);
+      renderTrackerList&&renderTrackerList(); renderDashboard&&renderDashboard();
+    });
+  };
+  renderModal();
+}
+if($("#csv-template")) $("#csv-template").addEventListener("click",()=>downloadFile("flipdeck-import-vorlage.csv", CSV_TEMPLATE, "text/csv;charset=utf-8"));
+if($("#csv-import")) $("#csv-import").addEventListener("click",()=>{ const i=$("#csv-import-input"); if(i) i.click(); });
+if($("#csv-import-input")) $("#csv-import-input").addEventListener("change",function(){ const f=this.files&&this.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=()=>{ try{ const rows=parseCSV(r.result); if(rows.length<2){ showToast("CSV enthält keine Datenzeilen"); } else openCsvImportModal(rows); }catch(err){ console.warn("[csv]",err&&err.message); showToast("CSV konnte nicht gelesen werden"); } this.value=""; };
+  r.onerror=()=>showToast("Datei konnte nicht gelesen werden"); r.readAsText(f); });
+
 function openImportModal(d){
   const arr = v => Array.isArray(v) ? v : [];
   const inc = { flips:arr(d.flips), inventory:arr(d.inventory), fixed:arr(d.fixed),

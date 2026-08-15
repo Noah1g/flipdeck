@@ -809,7 +809,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.17.0</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.18.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -857,7 +857,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.17.0</span>
+        <span class="nav-ver">v5.18.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1919,6 +1919,17 @@ body.no-images .ms-head .thumb{ display:none !important; }
             <p class="c-sub text-[11.5px] leading-relaxed mt-2.5">Beim Einspielen einer JSON-Datei kannst du wählen, ob die Daten <b>ergänzt</b> oder komplett <b>ersetzt</b> werden.</p>
           </div>
 
+          <!-- Verkäufe aus CSV importieren (Umstieg von eBay/Excel/anderem Tool) -->
+          <div class="cell p-5">
+            <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Verkäufe importieren (CSV)</h3>
+            <p class="c-sub text-[12.5px] leading-relaxed mb-4">Von eBay, Excel oder einem anderen Tool umsteigen? Lade deine Verkäufe als <b>CSV</b> hoch — du ordnest die Spalten zu, den Rest übernimmt Flipdeck. Am einfachsten mit der Vorlage. Preise <b>pro Stück</b>.</p>
+            <input id="csv-import-input" type="file" accept=".csv,text/csv" class="hidden" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button id="csv-import" class="btn-accent" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 8l5-5 5 5M12 3v12"/></svg>CSV-Datei wählen</button>
+              <button id="csv-template" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Vorlage herunterladen</button>
+            </div>
+          </div>
+
           <!-- Erweitert · Technisches: läuft alles automatisch, standardmäßig zugeklappt -->
           <div class="cell p-5">
             <details class="iv-more">
@@ -1973,7 +1984,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.17.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.18.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
