@@ -167,7 +167,7 @@ input[type=date].field::-webkit-calendar-picker-indicator{ filter:invert(.6); cu
 .region button[aria-selected="true"]{ border-color:color-mix(in srgb,var(--brand) 55%,transparent); background:color-mix(in srgb,var(--brand) 12%,transparent); box-shadow:0 0 0 1px color-mix(in srgb,var(--brand) 40%,transparent) inset, 0 8px 22px -12px color-mix(in srgb,var(--brand) 50%,transparent); }
 .region button[aria-selected="true"] .r-pct{ color:var(--brand); }
 
-.pill{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:5px 11px; border-radius:999px; border:1px solid transparent; }
+.pill{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px; border:1px solid transparent; }
 .pill-accent{ background:var(--accent-soft); color:var(--accent); border-color:color-mix(in srgb,var(--accent) 22%,transparent); }
 .pill-blue{ background:color-mix(in srgb,var(--brand) 14%,transparent); color:color-mix(in srgb,var(--brand) 80%, #fff); border-color:color-mix(in srgb,var(--brand) 26%,transparent); }
 .pill-mut{ background:color-mix(in srgb,var(--cell-2) 70%,transparent); color:var(--sub); border-color:var(--line); }
@@ -239,8 +239,8 @@ input[type=date].field::-webkit-calendar-picker-indicator{ filter:invert(.6); cu
 .seg-btn:active{ transform:scale(.96); }
 .seg-btn.is-active{ color:#fff; background:linear-gradient(180deg, color-mix(in srgb,var(--brand) 92%, #fff 8%), color-mix(in srgb,var(--brand) 74%, #000)); border-color:transparent; box-shadow:0 8px 20px -10px color-mix(in srgb,var(--brand) 60%,transparent); }
 .light .seg-btn.is-active{ color:#fff; }
-.pill-floor{ background:color-mix(in srgb,var(--danger) 11%, transparent); color:var(--text); border-color:color-mix(in srgb,var(--danger) 26%,transparent); font-variant-numeric:tabular-nums; }
-.pill-floor svg{ color:var(--danger); }
+.pill-floor{ background:color-mix(in srgb,var(--cell-2) 55%, transparent); color:var(--sub); border-color:var(--line); font-variant-numeric:tabular-nums; }
+.pill-floor svg{ color:var(--sub); opacity:.85; }
 .pill-floor .pf-label{ color:var(--sub); font-weight:600; }
 
 .drop{ position:relative; border:1.5px dashed var(--line); border-radius:16px; background:color-mix(in srgb,var(--cell-2) 45%,transparent); padding:18px; text-align:center; cursor:pointer; transition:border-color .18s ease, background .18s ease; }
@@ -816,7 +816,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.19.0</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.19.1</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -864,7 +864,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.19.0</span>
+        <span class="nav-ver">v5.19.1</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -2001,7 +2001,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.19.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.19.1 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
