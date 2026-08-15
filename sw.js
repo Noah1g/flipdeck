@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v74";   // v74 (App v5.20.5): Registrierung - doppelte Benutzernamen und E-Mails verhindern
+const VERSION    = "flipdeck-v75";   // v75 (App v5.20.6): DB-seitige Benutzernamen-Sperre - passende Fehlermeldung
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
