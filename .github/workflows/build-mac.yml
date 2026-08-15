@@ -1,8 +1,8 @@
 name: Build macOS App (Flipdeck)
 
 # Manuell auslösbar: GitHub → Actions → "Build macOS App (Flipdeck)" → Run workflow.
-# Baut die Mac-App auf einem echten macOS-Runner (nicht auf deinem Windows-PC möglich)
-# und lädt die .dmg als Release-Asset hoch (Version aus desktop/package.json).
+# Baut die Mac-App (.dmg für Intel x64 UND Apple Silicon arm64) auf einem echten
+# macOS-Runner und stellt sie als Download bereit (Actions-Artifact + Release).
 on:
   workflow_dispatch:
 
@@ -19,17 +19,32 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         working-directory: desktop
         run: npm install
 
-      - name: Build & publish macOS (.dmg)
+      - name: Build macOS (.dmg, x64 + arm64)
         working-directory: desktop
         env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"   # kein Apple-Signing -> unsigniert
+        run: |
+          npx electron-builder --mac dmg --x64 --arm64
+          echo "===== Inhalt von desktop/dist ====="
+          ls -la dist || true
+
+      - name: Upload .dmg als Download (Actions-Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flipdeck-macOS
+          path: desktop/dist/*.dmg
+          if-no-files-found: error   # kein .dmg -> Job wird ROT (kein falsches Gruen)
+
+      - name: An Release anhaengen (optional, best effort)
+        continue-on-error: true
+        env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Kein Apple-Code-Signing (kein Developer-Account nötig). Die App ist damit
-          # "unsigniert" – siehe Hinweis in der README zum ersten Öffnen auf dem Mac.
-          CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: npx electron-builder --mac --publish always
+        run: |
+          gh release upload "desktop-v$(node -p "require('./desktop/package.json').version")" desktop/dist/*.dmg --clobber \
+            || gh release create "desktop-v$(node -p "require('./desktop/package.json').version")" desktop/dist/*.dmg --title "Flipdeck Desktop" --notes "macOS-Builds (unsigniert)"
