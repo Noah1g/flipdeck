@@ -2437,6 +2437,14 @@ function ebayPctToKauflandPct(ebayPct){ ebayPct=num(ebayPct);
   if(ebayPct>=14) return 14;               // Kleidung / Sport / Möbel-Zone
   return 13;                               // Standard / Mode / Medien / Garten
 }
+/* Passenden Kaufland-Kategorie-INDEX aus der eBay-Kategorie des Artikels ableiten —
+   für die Vorauswahl im Verkaufs-Dialog, damit Elektronik nicht auf 13 % Standard fällt. */
+function ebayPctToKauflandIdx(ebayPct){ ebayPct=num(ebayPct);
+  if(ebayPct>0 && ebayPct<=7) return 1;    // Computer, Elektronik, Reifen, Felgen (7 %)
+  if(ebayPct>=16) return 12;               // Schmuck (16 %)
+  if(ebayPct>=14) return 11;               // Kleidung/Küche/Sport/Schuhe … (14 %)
+  return 0;                                // Standard / alle anderen (13 %)
+}
 /* Marktplatz-abhängige Gewinn-Projektion für den Bestand-Deal-Score: rechnet mit dem
    Gebührenmodell des angegebenen Marktplatzes statt fix eBay-gewerblich. */
 function mpEval(platKey, vk, ek, ship, item){
@@ -2879,7 +2887,8 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     $("#sell-sub").textContent=`${noFee?"Ohne Gebühren · ":""}Auszahlung gesamt ${eur(payoutTotal)} · EK ${eur(it.ek)}/Stk${_ekR?` (netto ${eur(ekNet)})`:""} · Porto ${eur(shipTot)}${pack?" · +1€ Verpackung":""} · Marge ${pct(margin)}${ustTotal>0?` · davon ${eur(ustTotal)} USt ans Finanzamt`:""}`; };
   /* Felder je Marktplatz: Versand/Sendungsnr./Zahlungsmethode nur bei gebührenfreien
      (privaten) Verkäufen; Kaufland-Kategorie nur bei Kaufland. */
-  const fillSellKCat=()=>{ const sel=$("#sell-k-cat"); if(!sel) return; const cur=sel.value||"0"; const isPL=sellKRegion==="pl";
+  const kDefault=String(ebayPctToKauflandIdx(it.catPct));   // Kaufland-Kategorie aus der eBay-Kategorie des Artikels vorauswählen
+  const fillSellKCat=()=>{ const sel=$("#sell-k-cat"); if(!sel) return; const cur=sel.value||kDefault; const isPL=sellKRegion==="pl";
     sel.innerHTML=KAUFLAND_CATS.map((c,i)=>`<option value="${i}">${escapeHtml(c.label)} · ${kauflandPct(c,isPL)} %${c.fixed?" + "+eur(c.fixed):""}</option>`).join(""); sel.value=cur; };
   const updateSellFields=()=>{ const plat=$("#sell-platform").value; const v=PLATFORMS[plat]||PLATFORMS.ebay; const isEbp=!!v.ebayPrivate;
     const pf=$("#sell-private-fields"); if(pf) pf.classList.toggle("hidden", !!v.hasFees);

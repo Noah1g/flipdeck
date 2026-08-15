@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v86";   // v86 (App v5.21.6): Login-Untertitel Hub fuers alternative Reselling
+const VERSION    = "flipdeck-v87";   // v87 (App v5.21.7): Verkauf - Kaufland-Kategorie aus eBay-Kategorie vorwaehlen (Elektronik 7 statt 13)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
