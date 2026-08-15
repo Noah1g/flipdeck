@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v47";   // v47 (App v5.16.2): Desktop-Download prominent in Toolbar + Direkt-Download (feste .exe) statt GitHub-Weiterleitung
+const VERSION    = "flipdeck-v48";   // v48 (App v5.16.3): Marktplatz eBay-Privat (innerdeutsch gebuehrenfrei, Ausland 5%)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

@@ -1643,6 +1643,7 @@ let regionPct=0, last={}, kuMode=true, vkUst=0, ekUst=0, packMode=true;
    hasFees=false -> beim Öffnen des Verkaufs-Dialogs wird "Ohne Marktplatz-Gebühren" vorausgewählt. */
 const PLATFORMS = {
   ebay:          { label:"eBay",            pill:"pill-blue", hasFees:true,  img:"ebay",          bg:"#ffffff" },
+  ebay_privat:   { label:"eBay · Privat",   pill:"pill-blue", hasFees:true,  ebayPrivate:true, img:"ebay", bg:"#ffffff" },
   kleinanzeigen: { label:"Kleinanzeigen",   pill:"pill-mut",  hasFees:false, img:"kleinanzeigen", bg:"#c3e94e" },
   vinted:        { label:"Vinted",          pill:"pill-mut",  hasFees:false, img:"vinted",        bg:"#007782" },
   amazon:        { label:"Amazon",          pill:"pill-mut",  hasFees:true,  img:"amazon",        bg:"#ffffff" },
@@ -1665,7 +1666,7 @@ function platformIcon(key){
   return `<span class="plat-ic" style="background:${p.tile};color:${p.fg}">${inner}</span>`;
 }
 /* Welche Marktplätze im Verkauf-Dropdown erscheinen (im Profil einstellbar) */
-const DEFAULT_ENABLED_PLATFORMS = ["ebay","kleinanzeigen","vinted","amazon","kaufland","privat","kein"];
+const DEFAULT_ENABLED_PLATFORMS = ["ebay","ebay_privat","kleinanzeigen","vinted","amazon","kaufland","privat","kein"];
 function getEnabledPlatforms(){
   let arr=null; try{ arr=JSON.parse(Store.get(uKey("platforms_enabled"))||"null"); }catch(e){}
   if(!Array.isArray(arr) || !arr.length) arr = DEFAULT_ENABLED_PLATFORMS.slice();
@@ -1710,7 +1711,7 @@ function renderPlatManager(){
   box.innerHTML=Object.entries(PLATFORMS).map(([k,v])=>`
     <button type="button" class="pw-toggle plat-manage-row" data-plat="${k}" aria-pressed="${en.includes(k)?"true":"false"}">
       ${platformIcon(k)}
-      <span class="pw-toggle-info"><span class="pw-toggle-name">${v.label}</span><span class="pw-toggle-set">${v.hasFees?"mit Gebühren":"ohne Gebühren"}</span></span>
+      <span class="pw-toggle-info"><span class="pw-toggle-name">${v.label}</span><span class="pw-toggle-set">${v.ebayPrivate?"privat · innerdeutsch 0 €, Ausland 5 %":(v.hasFees?"mit Gebühren":"ohne Gebühren")}</span></span>
       <span class="pw-sw"></span>
     </button>`).join("");
   box.querySelectorAll(".plat-manage-row").forEach(row=>row.addEventListener("click",()=>{
@@ -2412,6 +2413,14 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
         </div>
         <p class="c-sub text-[11px] mt-1.5">Bestimmt die Verkaufsprovision für diesen Verkauf. „Bewerben %" kommt on top.</p>
       </div>
+      <div id="sell-ebp" class="hidden">
+        <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">eBay-Gebühr (Privatverkäufer)</span><span class="ms-sec-line"></span></div>
+        <div class="calc-switch" id="sell-ebp-region" role="tablist" style="grid-template-columns:1fr 1fr">
+          <button type="button" data-intl="0" role="tab" aria-selected="true">Innerhalb Deutschlands</button>
+          <button type="button" data-intl="1" role="tab" aria-selected="false">Ins Ausland · 5 %</button>
+        </div>
+        <p class="c-sub text-[11px] mt-1.5">Privatverkäufer zahlen innerdeutsch <b>keine</b> Gebühr. Bei Lieferadresse im Ausland zieht eBay <b>5 %</b> auf (Artikel + Porto) ab.</p>
+      </div>
 
       <div id="sell-private-fields">
         <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Versand &amp; Zahlung</span><span class="ms-sec-line"></span></div>
@@ -2442,6 +2451,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
      sie ist eine Steuerschuld ans Finanzamt, kein eigener Ertrag. */
   const _ekR = ekVatRate(it); const ekNet = _ekR ? it.ek/(1+_ekR/100) : it.ek;
   let sellKRegion = klRegion;   // DE-Zone / PL für Kaufland-Verkäufe in diesem Dialog
+  let sellEbpIntl = false;      // eBay-Privat: Verkauf ins Ausland (5 %)?
   const calcSale=(q,vk,shipTot,noFee,pack,adPct,ustRate)=>{
     const plat=$("#sell-platform").value;
     const V=vatF();
@@ -2449,6 +2459,9 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     const ustPerUnit = vk - vkNet;
     let feesTotal;
     if(noFee){ feesTotal=0; }
+    else if(PLATFORMS[plat] && PLATFORMS[plat].ebayPrivate){
+      feesTotal = sellEbpIntl ? (vkNet*q + shipTot)*0.05 : 0;   // Privat: innerdeutsch 0 €, Ausland 5 % auf (Artikel + Porto)
+    }
     else if(plat==="kaufland"){
       const kc=$("#sell-k-cat"); const cat=KAUFLAND_CATS[(kc?parseInt(kc.value):0)||0]||KAUFLAND_CATS[0];
       const p=kauflandPct(cat, sellKRegion==="pl");   // Kaufland kennt kein eBay-artiges „Bewerben %"
@@ -2466,9 +2479,9 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
   };
   /* Gebühren fallen an, wenn der gewählte Marktplatz sie hat (kein Haken mehr –
      der Marktplatz entscheidet). Porto wird NICHT mehr automatisch auf 0 gesetzt. */
-  const updatePlatNote=()=>{ const noFee=!PLATFORMS[$("#sell-platform").value].hasFees; const note=$("#plat-note"); if(!note) return;
-    note.className="plat-note"+(noFee?" free":""); const t=note.querySelector(".plat-note-t");
-    if(t) t.textContent = noFee ? "Gebührenfrei — es werden keine Marktplatz-Gebühren abgezogen." : "Marktplatz-Gebühren werden automatisch berücksichtigt."; };
+  const updatePlatNote=()=>{ const plat=$("#sell-platform").value; const v=PLATFORMS[plat]||PLATFORMS.ebay; const noFee=!v.hasFees; const note=$("#plat-note"); if(!note) return;
+    note.className="plat-note"+(noFee||v.ebayPrivate?" free":""); const t=note.querySelector(".plat-note-t");
+    if(t) t.textContent = v.ebayPrivate ? "Privatverkauf: innerdeutsch gebührenfrei, ins Ausland 5 % (Artikel + Porto)." : (noFee ? "Gebührenfrei — es werden keine Marktplatz-Gebühren abgezogen." : "Marktplatz-Gebühren werden automatisch berücksichtigt."); };
   const recompute=()=>{ const q=parseInt($("#sell-qty").value)||1, vk=num($("#sell-vk").value), shipTot=num($("#sell-ship").value);
     const noFee=!PLATFORMS[$("#sell-platform").value].hasFees, pack=$("#sell-pack")&&$("#sell-pack").checked;
     const adPct=num($("#sell-ad").value);
@@ -2480,14 +2493,16 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
      (privaten) Verkäufen; Kaufland-Kategorie nur bei Kaufland. */
   const fillSellKCat=()=>{ const sel=$("#sell-k-cat"); if(!sel) return; const cur=sel.value||"0"; const isPL=sellKRegion==="pl";
     sel.innerHTML=KAUFLAND_CATS.map((c,i)=>`<option value="${i}">${escapeHtml(c.label)} · ${kauflandPct(c,isPL)} %${c.fixed?" + "+eur(c.fixed):""}</option>`).join(""); sel.value=cur; };
-  const updateSellFields=()=>{ const plat=$("#sell-platform").value; const v=PLATFORMS[plat]||PLATFORMS.ebay;
+  const updateSellFields=()=>{ const plat=$("#sell-platform").value; const v=PLATFORMS[plat]||PLATFORMS.ebay; const isEbp=!!v.ebayPrivate;
     const pf=$("#sell-private-fields"); if(pf) pf.classList.toggle("hidden", !!v.hasFees);
     const kp=$("#sell-kaufland"); if(kp) kp.classList.toggle("hidden", plat!=="kaufland");
-    const ads=$("#sell-ad-section"); if(ads) ads.classList.toggle("hidden", plat==="kaufland"); };
+    const ebp=$("#sell-ebp"); if(ebp) ebp.classList.toggle("hidden", !isEbp);
+    const ads=$("#sell-ad-section"); if(ads) ads.classList.toggle("hidden", plat==="kaufland" || isEbp); };
   fillSellKCat();
   $$("#sell-k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===sellKRegion));
   if($("#sell-k-cat")) $("#sell-k-cat").addEventListener("change",recompute);
   $$("#sell-k-region button").forEach(b=>b.addEventListener("click",()=>{ sellKRegion=b.dataset.region==="pl"?"pl":"de"; $$("#sell-k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===sellKRegion)); fillSellKCat(); recompute(); }));
+  $$("#sell-ebp-region button").forEach(b=>b.addEventListener("click",()=>{ sellEbpIntl=b.dataset.intl==="1"; $$("#sell-ebp-region button").forEach(x=>x.setAttribute("aria-selected", (x.dataset.intl==="1")===sellEbpIntl)); recompute(); }));
   ["sell-qty","sell-vk","sell-ship","sell-ad"].forEach(x=>$("#"+x).addEventListener("input",recompute));
   if($("#sell-ad-zero")) $("#sell-ad-zero").addEventListener("click",()=>{ $("#sell-ad").value="0"; recompute(); });
   $("#sell-pack").addEventListener("change",recompute);
