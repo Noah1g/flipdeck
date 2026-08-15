@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v83";   // v83 (App v5.21.3): Bestand - eBay-Gebuehr als optionale Schaetzung eingeklappt, schlanker EK-Flow
+const VERSION    = "flipdeck-v84";   // v84 (App v5.21.4): Gebuehr-Vorschau prominent+offen; Standard-Marktplatz im Tab; Vorsteuer-Zeile nur Regelbest.; Marge-Label
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

@@ -1975,7 +1975,24 @@ function renderPlatManager(){
     if(en.includes(k)){ if(en.length<=1){ showToast("Mindestens ein Marktplatz muss aktiv bleiben"); return; } en=en.filter(x=>x!==k); }
     else { en=Object.keys(PLATFORMS).filter(x=>en.includes(x)||x===k); }
     setEnabledPlatforms(en); row.setAttribute("aria-pressed", en.includes(k)?"true":"false");
+    fillDefaultPlatSelect();   // Deaktivierter Marktplatz darf nicht Standard bleiben
   }));
+  fillDefaultPlatSelect();
+}
+/* Standard-Verkaufsplattform: nur aktivierte Marktplätze; steuert Gebühren-Vorschau + Verkaufs-Vorauswahl. */
+function fillDefaultPlatSelect(){
+  const sel=$("#mp-default"); if(!sel) return;
+  const en=getEnabledPlatforms();
+  if(!en.includes(defaultPlatform)){ defaultPlatform = en[0] || "ebay"; }   // gefallener Standard -> ersten aktiven nehmen
+  sel.innerHTML = en.map(k=>`<option value="${k}"${k===defaultPlatform?" selected":""}>${(PLATFORMS[k]&&PLATFORMS[k].label)||k}</option>`).join("");
+  sel.onchange = ()=>{
+    defaultPlatform = sel.value || "ebay";
+    Store.set(uKey("platform"), defaultPlatform);
+    try{ DB.saveTaxCfg({ defaultPlatform }); }catch(e){}
+    if(typeof renderInventory==="function") renderInventory();
+    if(typeof calc==="function") calc();
+    showToast("✓ Standard-Marktplatz: "+((PLATFORMS[defaultPlatform]&&PLATFORMS[defaultPlatform].label)||defaultPlatform));
+  };
 }
 /* Eigene Marktplätze: vom Nutzer angelegt, ohne Gebühren-Automatik (echte Gebühren baut
    noah auf Feedback ein). Gespeichert in fixCfg.customMarkets, beim Laden in PLATFORMS
@@ -2637,6 +2654,8 @@ function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek",
 function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hidden",!open);
   $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
   $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
+  // Vorsteuerabzug ist nur bei Regelbesteuerung relevant -> für Kleinunternehmer & Privat ausblenden
+  const nir=$("#iv-noinputvat-row"); if(nir) nir.style.display = (acctType==="gewerblich" && !kuMode) ? "flex" : "none";
   if(!open) resetInvForm(); }
 $("#iv-toggle").addEventListener("click",()=>setInvForm(!invFormOpen));
 $("#iv-cancel").addEventListener("click",()=>setInvForm(false));
@@ -3018,7 +3037,7 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleC
           <span class="inv-meta">${it.qty} ${lang==="en"?"pcs":"Stk"} · VK ${eur(it.vk)} · EK ${eur(it.ek)}${it.ean?` · ${escapeHtml(it.ean)}`:""}</span>
           ${tagsChipsHTML(it.tags)}
           <span class="inv-hero">
-            <span><span class="inv-hero-label">${lang==="en"?"Profit / unit":"Profit / Stück"}</span><span class="inv-hero-val" style="color:${pCol}">${ev.profit>=0?"+":""}${eur(ev.profit)}<span class="c-sub" style="font-size:12px;font-weight:600;margin-left:6px">${pct(ev.margin)}</span></span></span>
+            <span><span class="inv-hero-label">${lang==="en"?"Profit / unit":"Profit / Stück"}</span><span class="inv-hero-val" style="color:${pCol}">${ev.profit>=0?"+":""}${eur(ev.profit)}<span class="c-sub" style="font-size:12px;font-weight:600;margin-left:6px">${pct(ev.margin)} Marge</span></span></span>
             <svg class="inv-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </span>
         </span>

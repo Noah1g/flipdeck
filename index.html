@@ -213,6 +213,9 @@ input[type=date].field::-webkit-calendar-picker-indicator{ filter:invert(.6); cu
   transform:rotate(45deg); transition:transform .2s ease; margin-left:2px; margin-top:-3px; }
 .iv-more[open] > summary::after{ transform:rotate(-135deg); margin-top:2px; }
 .iv-more > summary:hover{ color:var(--text); }
+/* Hervorgehobene Variante für die (wichtige) Gebühren-Vorschau — soll nicht untergehen */
+.iv-more.iv-more-strong{ padding-top:14px; }
+.iv-more.iv-more-strong > summary{ font-size:13.5px; font-weight:700; letter-spacing:.005em; text-transform:none; color:var(--text); }
 .inv-card{ position:relative; background:color-mix(in srgb, var(--cell) 45%, transparent); border-radius:22px; overflow:hidden; transition:border-color .18s ease, transform .14s ease; }
 .inv-card::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; background:linear-gradient(155deg, color-mix(in srgb,#fff 14%, transparent), transparent 55%); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; }
 .light .inv-card{ background:color-mix(in srgb, var(--cell) 92%, transparent); box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 18px 44px -30px rgba(0,0,0,.22); }
@@ -826,7 +829,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.21.3</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.21.4</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -879,7 +882,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.21.3</span>
+        <span class="nav-ver">v5.21.4</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1403,8 +1406,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <div><label class="label" for="iv-vk">Inserierter Preis € *</label><input id="iv-vk" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
         <div><label class="label" for="iv-ek">EK € *</label><input id="iv-ek" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
         <div><label class="label" for="iv-ship">Versand €</label><input id="iv-ship" class="field tnum" inputmode="decimal" value="6.19" /></div>
-        <details class="col-span-2 iv-more">
-          <summary>eBay-Gebühr · Gewinn-Vorschau <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></summary>
+        <details class="col-span-2 iv-more iv-more-strong" open>
+          <summary>eBay-Gebühr · Gewinn-Vorschau <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:12px" class="c-sub">(Schätzung)</span></summary>
           <p class="c-sub text-[11.5px] leading-relaxed" style="margin-top:10px">Nur eine <b>Schätzung</b> für die Gewinn-Vorschau im Bestand. Beim Verkauf berechnet Flipdeck die <b>echten Gebühren nach Marktplatz</b>. Standard 12 % passt für die meisten Artikel — du musst hier nichts einstellen.</p>
           <div class="grid grid-cols-2 gap-3" style="margin-top:12px">
         <div class="col-span-2"><label class="label" for="iv-cat">eBay-Gebühren-Kategorie</label>
@@ -1480,7 +1483,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
             <div><label class="label" for="iv-carrier">Versanddienst (Einkauf)</label><select id="iv-carrier" class="field"><option value="">— Dienst —</option><option value="dhl">DHL</option><option value="hermes">Hermes</option><option value="gls">GLS</option><option value="dpd">DPD</option><option value="ups">UPS</option><option value="post">Deutsche Post</option><option value="dpd_at">Österr. Post</option></select></div>
             <div><label class="label" for="iv-tracking">Sendungsnummer</label><input id="iv-tracking" class="field" placeholder="optional"></div>
             <div class="col-span-2"><label class="label" for="iv-tags">Tags</label><input id="iv-tags" class="field" placeholder="Komma-getrennt · z. B. Sneaker, Q3, eBay"></div>
-            <label class="col-span-2" style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;cursor:pointer;user-select:none;margin-top:2px">
+            <label id="iv-noinputvat-row" class="col-span-2" style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;cursor:pointer;user-select:none;margin-top:2px">
               <span><span class="text-[13.5px] font-semibold">Kein Vorsteuerabzug bei diesem Einkauf</span><span class="c-sub text-[12px]" style="display:block;line-height:1.4">Nur bei Regelbesteuerung relevant. Aktivieren, wenn der Einkauf <b>keine abziehbare deutsche USt</b> enthält (z. B. Kauf bei einem ausländischen Shop ohne deutsche USt auf der Rechnung). Dann wird der <b>volle EK</b> gerechnet statt netto. Deine Steuerart stellst du im Profil ein.</span></span>
               <input id="iv-noinputvat" type="checkbox" style="width:18px;height:18px;accent-color:var(--brand);flex:0 0 auto;margin-top:1px">
             </label>
@@ -1868,6 +1871,11 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <div class="cell p-5 md:col-span-2">
         <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Marktplätze</h3>
         <p class="c-sub text-[12.5px] mb-4">Wähle, welche Marktplätze im Verkauf-Dialog zur Auswahl stehen. Ausgeschaltete werden ausgeblendet — mindestens einer bleibt immer aktiv.</p>
+        <div class="mb-4">
+          <label class="label mb-2" for="mp-default">Standard-Verkaufsplattform</label>
+          <select id="mp-default" class="field"></select>
+          <p class="c-sub text-[11.5px] mt-1.5">Danach richtet sich die <b>Gebühren-Vorschau im Bestand</b> und die Vorauswahl im Verkaufs-Dialog. Hier jederzeit änderbar — nur aktivierte Marktplätze stehen zur Wahl.</p>
+        </div>
         <div id="plat-manage-list" class="plat-manage"></div>
         <button id="plat-add-custom" class="btn-ghost w-full" style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Eigenen Marktplatz anlegen</button>
         <p class="c-sub text-[11.5px] leading-relaxed mt-2.5">Dein Marktplatz fehlt? Leg ihn selbst an — er läuft <b>ohne Gebühren-Automatik</b> (Auszahlung trägst du selbst ein). Soll die echte Gebühren-Struktur eingebaut werden, sag uns per <b>Feedback</b> Bescheid — wird dann von uns ergänzt.</p>
@@ -2022,7 +2030,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.21.3 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.21.4 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
