@@ -682,6 +682,7 @@ async function enterApp(){
   ]);
   flips = _flips || []; calcs = _calcs || []; inventory = _inv || []; avatarUrl = _avatar || null; fixed = _fixed || [];
   fixCfg = _fixcfg || {revenue:4000, packages:60, baseMargin:15};
+  syncCustomMarkets();   // eigene Marktplätze aus fixCfg in PLATFORMS spiegeln, bevor irgendwas rendert
   shipCfg = normalizeShipCfg(_shipcfg);
   await profileUpsert();
 
@@ -1536,8 +1537,8 @@ function inPeriod(iso, p){
   if(p==="ty"){ return t.getFullYear()===now.getFullYear(); }
   return true;
 }
-/* Verkäufe-Ansicht: „cards" (chronologische Kacheln) oder „grouped" (nach Produkt gestapelt). */
-let trackView = Store.get("fg_trackview")==="grouped" ? "grouped" : "cards";
+/* Verkäufe-Ansicht: „grouped" (nach Produkt gestapelt) ist Standard; „cards" wenn bewusst gewählt. */
+let trackView = Store.get("fg_trackview")==="cards" ? "cards" : "grouped";
 let trackGrpExpanded = new Set();
 function groupedTrackerHTML(list){
   const groups=new Map();
@@ -1554,12 +1555,12 @@ function groupedTrackerHTML(list){
         <span class="mono c-sub" style="font-size:12px;flex:0 0 auto">${eur(num(f.payout))}</span>
         <span class="mono" style="font-weight:700;flex:0 0 auto;min-width:66px;text-align:right;color:${pp?'var(--accent)':'var(--danger)'}">${pp?"+":""}${eur(p)}</span>
       </button>`; }).join("");
-    return `<div class="grp-item" style="border:1px solid var(--line);border-radius:14px;background:var(--cell-2);overflow:hidden">
-      <button type="button" class="grp-head" data-key="${attrEsc(g.key)}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;background:none;border:0;cursor:pointer">
-        <span style="flex:0 0 auto;width:42px;height:42px;border-radius:11px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--cell)">${g.img?`<img src="${attrEsc(g.img)}" style="width:100%;height:100%;object-fit:cover">`:dealIconSVG}</span>
-        <span style="flex:1;min-width:0"><span class="font-semibold text-[14px] truncate" style="display:block">${escapeHtml(g.name||"—")}</span><span class="c-sub text-[12px]">${g.sales.length} ${g.sales.length===1?"Verkauf":"Verkäufe"} · ${g.units} Stück · zuletzt ${fmtDate(new Date(g.last).toISOString())}</span></span>
-        <span class="mono" style="font-weight:800;font-size:15px;flex:0 0 auto;color:${pos?'var(--accent)':'var(--danger)'}">${pos?"+":""}${eur(g.profit)}</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;transition:transform .2s;transform:rotate(${open?90:0}deg)"><path d="m9 18 6-6-6-6"/></svg>
+    return `<div class="grp-item" style="border:1px solid var(--line);border-radius:15px;background:var(--cell-2);overflow:hidden">
+      <button type="button" class="grp-head" data-key="${attrEsc(g.key)}" style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;background:none;border:0;cursor:pointer">
+        <span style="flex:0 0 auto;width:56px;height:56px;border-radius:13px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--cell)">${g.img?`<img src="${attrEsc(g.img)}" style="width:100%;height:100%;object-fit:cover">`:dealIconSVG}</span>
+        <span style="flex:1;min-width:0"><span class="font-semibold text-[15.5px] truncate" style="display:block;margin-bottom:2px">${escapeHtml(g.name||"—")}</span><span class="c-sub text-[12.5px]">${g.sales.length} ${g.sales.length===1?"Verkauf":"Verkäufe"} · ${g.units} Stück · zuletzt ${fmtDate(new Date(g.last).toISOString())}</span></span>
+        <span class="mono" style="font-weight:800;font-size:16.5px;flex:0 0 auto;color:${pos?'var(--accent)':'var(--danger)'}">${pos?"+":""}${eur(g.profit)}</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;transition:transform .2s;transform:rotate(${open?90:0}deg)"><path d="m9 18 6-6-6-6"/></svg>
       </button>
       <div class="grp-body ${open?'':'hidden'}" style="padding:0 14px 10px">${rows}</div>
     </div>`; }).join("");
@@ -1688,9 +1689,6 @@ const PLATFORMS = {
   amazon:        { label:"Amazon",          pill:"pill-mut",  hasFees:true,  img:"amazon",        bg:"#ffffff" },
   kaufland:      { label:"Kaufland",        pill:"pill-mut",  hasFees:true,  img:"kaufland",      bg:"#ffffff" },
   etsy:          { label:"Etsy",            pill:"pill-mut",  hasFees:true,  tile:"linear-gradient(135deg,#f1641e,#d24d0e)", fg:"#fff", mark:"E" },
-  facebook:      { label:"Facebook Marketplace", pill:"pill-mut", hasFees:false, tile:"linear-gradient(135deg,#1a8bff,#0a5fd6)", fg:"#fff", mark:"f" },
-  shpock:        { label:"Shpock",          pill:"pill-mut",  hasFees:false, tile:"linear-gradient(135deg,#ffcf33,#f7b500)", fg:"#3a2b00", mark:"S" },
-  hood:          { label:"Hood.de",         pill:"pill-mut",  hasFees:true,  tile:"linear-gradient(135deg,#ff8a00,#e2001a)", fg:"#fff", mark:"H" },
   privat:        { label:"Privat/Freunde",  pill:"pill-mut",  hasFees:false, tile:"#475569", fg:"#e2e8f0", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>' },
   kein:          { label:"Kein Marktplatz", pill:"pill-mut",  hasFees:false, tile:"#3b4457", fg:"#cbd5e1", svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>' },
   sonstige:      { label:"Sonstige",        pill:"pill-mut",  hasFees:false, tile:"#3b4457", fg:"#cbd5e1", svg:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18" cy="12" r="1.7"/></svg>' },
@@ -1760,6 +1758,48 @@ function renderPlatManager(){
     setEnabledPlatforms(en); row.setAttribute("aria-pressed", en.includes(k)?"true":"false");
   }));
 }
+/* Eigene Marktplätze: vom Nutzer angelegt, ohne Gebühren-Automatik (echte Gebühren baut
+   noah auf Feedback ein). Gespeichert in fixCfg.customMarkets, beim Laden in PLATFORMS
+   gespiegelt, damit alle bestehenden Lookups (Verkauf, Anzeige, Report) greifen. */
+function getCustomMarkets(){ if(!Array.isArray(fixCfg.customMarkets)) fixCfg.customMarkets=[]; return fixCfg.customMarkets; }
+function syncCustomMarkets(){
+  Object.keys(PLATFORMS).forEach(k=>{ if(PLATFORMS[k] && PLATFORMS[k].custom) delete PLATFORMS[k]; });
+  getCustomMarkets().forEach(cm=>{ if(!cm||!cm.id) return;
+    PLATFORMS[cm.id]={ label:cm.name||"Marktplatz", pill:"pill-mut", hasFees:false, custom:true,
+      tile:cm.color||"#475569", fg:"#fff", mark:((cm.name||"?").trim().charAt(0)||"?").toUpperCase() }; });
+}
+function openCustomMarketModal(){
+  let selColor = FIX_COLORS[Math.floor(Math.random()*FIX_COLORS.length)];
+  const colorsHTML=FIX_COLORS.map(c=>`<button type="button" class="ec-swatch" data-color="${c}" style="background:${c}" aria-selected="${c===selColor?"true":"false"}"></button>`).join("");
+  const listHTML=()=>{ const cm=getCustomMarkets(); if(!cm.length) return `<p class="c-sub text-[12px]">Noch keine eigenen Marktplätze.</p>`;
+    return cm.map(m=>`<div class="flex items-center justify-between gap-2 rounded-[12px] p-2.5" style="background:var(--cell-2);border:1px solid var(--line)"><div class="flex items-center gap-2 min-w-0"><span class="plat-ic" style="background:${m.color||'#475569'};color:#fff;width:26px;height:26px;border-radius:8px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">${escapeHtml(((m.name||'?').trim().charAt(0)||'?').toUpperCase())}</span><span class="font-semibold text-[13.5px] truncate">${escapeHtml(m.name)}</span></div><button class="iconbtn danger cm-del" data-id="${m.id}" title="Löschen">${icoTrash}</button></div>`).join(""); };
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:440px">
+    <div class="flex items-start justify-between gap-3 mb-1">
+      <div><p class="font-bold text-[18px]">Eigener Marktplatz</p><p class="c-sub text-[12.5px] mt-0.5">Für Marktplätze, die (noch) nicht dabei sind.</p></div>
+      <button id="cm-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="my-4"><label class="label" for="cm-name">Name *</label><input id="cm-name" class="field" placeholder="z. B. Momox, Rebuy, Discogs …"></div>
+    <div class="mb-4"><p class="label mb-2">Farbe</p><div id="cm-colors" class="ec-swatches">${colorsHTML}</div></div>
+    <div class="rounded-[12px] p-3 mb-4" style="background:var(--cell-2);border:1px solid var(--line)"><p class="c-sub text-[12px] leading-relaxed">Eigene Marktplätze laufen <b>ohne Gebühren-Automatik</b> — du trägst die Auszahlung selbst ein. Soll die echte Gebühren-Struktur eingebaut werden? <button type="button" id="cm-feedback" style="background:none;border:0;padding:0;color:var(--brand);font-weight:700;cursor:pointer">Per Feedback melden ↗</button></p></div>
+    <button id="cm-add" class="btn-accent w-full" style="margin-bottom:16px">Anlegen</button>
+    <p class="label mb-2">Deine Marktplätze</p>
+    <div id="cm-list" class="flex flex-col gap-2">${listHTML()}</div>
+  </div></div>`;
+  const close=()=>{ $("#modal-root").innerHTML=""; };
+  $("#cm-x").addEventListener("click",close);
+  $$("#cm-colors .ec-swatch").forEach(b=>b.addEventListener("click",()=>{ selColor=b.dataset.color; $$("#cm-colors .ec-swatch").forEach(x=>x.setAttribute("aria-selected",x.dataset.color===selColor?"true":"false")); }));
+  $("#cm-feedback").addEventListener("click",()=>{ close(); if(typeof openFeedbackModal==="function") openFeedbackModal(); });
+  const bindDel=()=>{ $$("#cm-list .cm-del").forEach(b=>b.addEventListener("click",()=>{ const id=b.dataset.id;
+    fixCfg.customMarkets=getCustomMarkets().filter(m=>m.id!==id); DB.saveFixCfg(fixCfg);
+    setEnabledPlatforms(getEnabledPlatforms().filter(x=>x!==id)); syncCustomMarkets();
+    $("#cm-list").innerHTML=listHTML(); bindDel(); renderPlatManager(); showToast("Marktplatz gelöscht"); })); };
+  bindDel();
+  $("#cm-add").addEventListener("click",()=>{ const name=$("#cm-name").value.trim(); if(!name){ flashError($("#cm-name")); return; }
+    const id="cm"+Date.now(); getCustomMarkets().push({id,name,color:selColor}); DB.saveFixCfg(fixCfg); syncCustomMarkets();
+    setEnabledPlatforms(Object.keys(PLATFORMS).filter(x=>getEnabledPlatforms().includes(x)||x===id));
+    $("#cm-name").value=""; $("#cm-list").innerHTML=listHTML(); bindDel(); renderPlatManager(); showToast("✓ Marktplatz angelegt"); });
+}
+if($("#plat-add-custom")) $("#plat-add-custom").addEventListener("click",openCustomMarketModal);
 let defaultPlatform = "ebay", defaultUstRate = 19;
 const vatF = () => kuMode ? 1.19 : 1;
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
