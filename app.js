@@ -826,7 +826,7 @@ let _navPicked=false;
 function setTab(name, instant){
   if(!instant) _navPicked=true;   // Nutzer hat aktiv navigiert (z. B. schon während des Ladens)
   $$("#tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["dashboard","tracker","calc","inventory","fix","report","pwgen","admin","profil"].forEach(v=>$("#"+v+"-view").classList.toggle("hidden", v!==name));
+  ["dashboard","tracker","calc","inventory","fix","report","pwgen","admin","profil","guides"].forEach(v=>{ const el=$("#"+v+"-view"); if(el) el.classList.toggle("hidden", v!==name); });
   const thumb=$("#tab-thumb");
   if(instant){ thumb.style.transition="none"; moveThumb(); requestAnimationFrame(()=>thumb.style.transition=""); } else moveThumb();
   const active=$("#"+name+"-view"); active.classList.remove("view-enter"); void active.offsetWidth; active.classList.add("view-enter");
@@ -839,9 +839,120 @@ function setTab(name, instant){
   if(name==="report") renderReport();
   if(name==="profil") renderProfil();
   if(name==="admin"){ renderAdmin(); renderFeedbackAdmin(); }
+  if(name==="guides") renderGuides();
 }
 $$("#tabs button").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
 window.addEventListener("resize", moveThumb);
+
+/* ===== Guides & Hilfe — kurze, klare Erklärungen mit Direkt-Sprung zum Feature ===== */
+const GUIDES = [
+  { cat:"Erste Schritte", items:[
+    { t:"Wie Flipdeck funktioniert", ic:"🚀", act:{tab:"dashboard"}, go:"Zum Dashboard", body:`
+      <p>Flipdeck begleitet deinen kompletten Reselling-Kreislauf — von der Kalkulation bis zur Auswertung:</p>
+      <ol>
+        <li><b>Kalkulieren</b> — im <b>Gebühren-Rechner</b> prüfst du vor dem Kauf, ob sich ein Deal nach Marktplatz-Gebühren lohnt.</li>
+        <li><b>Bestand</b> — gekaufte Artikel erfasst du im <b>Bestand</b> mit Einkaufspreis, Zielpreis und Status.</li>
+        <li><b>Verkauf</b> — beim Verkauf tippst du auf „Verkaufen" und wählst den Marktplatz; Gebühren &amp; Gewinn rechnet Flipdeck automatisch.</li>
+        <li><b>Auswertung</b> — Dashboard &amp; Auswertung zeigen Gewinn, Marge und ROI über jeden Zeitraum.</li>
+      </ol>
+      <p>Deine Daten liegen sicher in der Cloud und werden automatisch gesichert.</p>` },
+  ]},
+  { cat:"Bestand &amp; Verkauf", items:[
+    { t:"Artikel in den Bestand aufnehmen", ic:"📦", act:{tab:"inventory"}, go:"Zum Bestand", body:`
+      <p>Im <b>Bestand</b> legst du jeden Einkauf an, damit du später den Gewinn genau kennst.</p>
+      <ul>
+        <li><b>Einkaufspreis (EK)</b> und dein geplanter <b>Verkaufspreis (VK)</b>.</li>
+        <li><b>Gebühren-Kategorie</b> (bestimmt die eBay-Gebühr) und optional <b>Einkaufsplattform</b> mit Retourenfrist.</li>
+        <li>Flipdeck zeigt sofort den <b>Mindest-VK</b> (nie darunter verkaufen) und den <b>Ziel-VK</b> für deine Zielmarge.</li>
+      </ul>
+      <p>Über den Status (Bestellt → Unterwegs → Im Lager) behältst du auch unterwegs gekaufte Ware im Blick.</p>` },
+    { t:"Einen Verkauf eintragen", ic:"💸", act:{tab:"inventory"}, go:"Zum Bestand", body:`
+      <p>Beim verkauften Artikel im Bestand auf <b>„Verkaufen"</b> tippen.</p>
+      <ul>
+        <li><b>Marktplatz wählen</b> — eBay, Kaufland, eBay Privat, Kleinanzeigen … die passenden <b>Gebühren werden automatisch</b> abgezogen.</li>
+        <li><b>eBay Privat</b>: innerdeutsch 0 €, Ausland 5 %. <b>Kaufland</b>: Provision je Kategorie.</li>
+        <li>Der <b>Gewinn</b> wird live berechnet und landet im Tracker &amp; in der Auswertung.</li>
+      </ul>` },
+    { t:"Deal-Score &amp; ROI verstehen", ic:"◆", act:{tab:"inventory"}, go:"Zum Bestand", body:`
+      <p>Der <b>Deal-Score (A–E)</b> zeigt auf einen Blick, wie profitabel ein Artikel ist — gemessen am <b>ROI</b> (Rendite = Gewinn ÷ Einkaufspreis).</p>
+      <ul>
+        <li><b>A</b> ≥ 50 % · <b>B</b> ≥ 30 % · <b>C</b> ≥ 15 % · <b>D</b> ≥ 5 % · <b>E</b> darunter/Verlust.</li>
+        <li>Tippe im Bestand auf den <b>◆ Deal</b>-Pill für die Erklärung + die Marktplatz-Aufschlüsselung.</li>
+      </ul>` },
+    { t:"Verkäufe-Übersicht (Nach Produkt)", ic:"📊", act:{tab:"tracker"}, go:"Zu Verkäufe", body:`
+      <p>Im <b>Verkäufe</b>-Tab siehst du alle Verkäufe. Bei viel Umschlag nutze die Ansicht <b>„Nach Produkt"</b>:</p>
+      <ul>
+        <li>Eine Zeile pro Produkt mit Anzahl Verkäufe, Stück und Gesamt-Gewinn.</li>
+        <li>Aufklappen zeigt die Einzelverkäufe — wie eine Verkaufs-Chronik.</li>
+      </ul>` },
+  ]},
+  { cat:"Gebühren &amp; Preise", items:[
+    { t:"Gebühren-Rechner (eBay &amp; Kaufland)", ic:"🧮", act:{tab:"calc"}, go:"Zum Rechner", body:`
+      <p>Der <b>Gebühren-Rechner</b> zeigt vor dem Kauf, was nach Marktplatz-Gebühren übrig bleibt.</p>
+      <ul>
+        <li>Oben zwischen <b>eBay</b> und <b>Kaufland</b> umschalten (öffnet automatisch deinen Standard-Marktplatz).</li>
+        <li>EK, VK, Versand &amp; Kategorie eingeben → Reingewinn, Marge und Zielmargen-Ampel erscheinen live.</li>
+        <li>„Zu Bestand hinzufügen" übernimmt die Werte direkt.</li>
+      </ul>` },
+    { t:"eBay Privat vs. gewerblich", ic:"🏷️", act:{tab:"calc"}, go:"Zum Rechner", body:`
+      <p>Beim Verkauf-Eintragen wählst du den passenden eBay-Typ:</p>
+      <ul>
+        <li><b>eBay (gewerblich)</b> — Verkaufsprovision je Kategorie + Transaktionsgebühr.</li>
+        <li><b>eBay · Privat</b> — innerdeutsch <b>gebührenfrei</b>, ins Ausland <b>5 %</b> auf (Artikel + Porto).</li>
+      </ul>
+      <p>Welche Marktplätze zur Auswahl stehen, stellst du unter Geschäft → Marktplätze ein.</p>` },
+  ]},
+  { cat:"Kosten &amp; Auswertung", items:[
+    { t:"Fixkosten &amp; Zielmarge", ic:"🧾", act:{tab:"fix"}, go:"Zu Fixkosten", body:`
+      <p>Im <b>Fixkosten</b>-Tab erfasst du wiederkehrende Kosten (Abos, Material …) mit <b>frei wählbarem Intervall</b> (monatlich, jährlich, alle X Tage …) und Startdatum — die nächste Fälligkeit wird berechnet.</p>
+      <p>Die <b>Zielmarge</b> (Standard 15 %) ist deine gewünschte Gewinn-Marge je Artikel. Sie bestimmt den vorgeschlagenen <b>Ziel-VK</b> im Bestand — hier im Tab einstellbar.</p>` },
+    { t:"Auswertung lesen", ic:"📈", act:{tab:"report"}, go:"Zur Auswertung", body:`
+      <p>Die <b>Auswertung</b> fasst einen Zeitraum (Monat/Jahr) zusammen: <b>Gewinn, Umsatz, Ausgaben, Marge</b> und die Aufteilung nach Produkten, Plattformen und Fixkosten.</p>
+      <p>Im <b>Dashboard</b> siehst du die wichtigsten Kennzahlen mit Zeitraum-Filtern — per „Anpassen" wählst du, welche Karten erscheinen.</p>` },
+  ]},
+  { cat:"Einrichtung &amp; Daten", items:[
+    { t:"Marktplätze wählen &amp; eigene anlegen", ic:"🛒", act:{tab:"profil",scat:"geschaeft"}, go:"Zu Marktplätzen", body:`
+      <p>Unter <b>Geschäft → Marktplätze</b> schaltest du ein, welche Marktplätze im Verkauf-Dialog erscheinen.</p>
+      <ul>
+        <li>Fehlt einer? <b>„Eigenen Marktplatz anlegen"</b> — läuft ohne Gebühren-Automatik (Auszahlung selbst eintragen).</li>
+        <li>Echte Gebühren-Struktur gewünscht? Per <b>Feedback</b> melden — wird ergänzt.</li>
+      </ul>` },
+    { t:"Verkäufe per CSV importieren", ic:"⬆️", act:{tab:"profil",scat:"daten"}, go:"Zum Import", body:`
+      <p>Umstieg von eBay/Excel? Unter <b>Daten → Verkäufe importieren (CSV)</b> lädst du deine Verkäufe hoch.</p>
+      <ul>
+        <li>Am einfachsten mit der <b>Vorlage</b>.</li>
+        <li>Flipdeck <b>erkennt die Spalten automatisch</b> (auch fremde Exporte) — du prüfst nur die Vorschau und klickst Import.</li>
+        <li>„Verkaufspreis" = der Betrag, den du <b>tatsächlich erhalten</b> hast (nach Gebühren).</li>
+      </ul>` },
+    { t:"Datensicherheit &amp; Backups", ic:"🛡️", act:{tab:"profil",scat:"daten"}, go:"Zu Daten", body:`
+      <p>Deine Daten sind <b>automatisch sicher</b>: laufende Cloud-Sicherung, tägliche Backups und Wiederherstellungs-Punkte, auf die du jederzeit zurück kannst.</p>
+      <p>Für ganz sicher lädst du unter <b>Daten</b> ab und zu ein <b>Backup als Datei</b> herunter.</p>` },
+  ]},
+];
+let _guidesOpen = new Set();
+function renderGuides(){
+  const box=$("#guides-list"); if(!box) return;
+  box.innerHTML = GUIDES.map(cat=>`
+    <div class="mb-6">
+      <p class="label mb-2.5" style="letter-spacing:.08em">${cat.cat}</p>
+      <div class="flex flex-col gap-2.5">
+        ${cat.items.map((g,i)=>{ const id=cat.cat.replace(/[^a-zA-Z]/g,"")+"-"+i, open=_guidesOpen.has(id);
+          return `<div class="cell" style="overflow:hidden;padding:0">
+            <button type="button" class="guide-head" data-id="${id}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:15px 16px;background:none;border:0;cursor:pointer">
+              <span style="flex:0 0 auto;font-size:19px;line-height:1">${g.ic}</span>
+              <span class="flex-1 min-w-0"><span class="font-semibold text-[15px]">${g.t}</span></span>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;transition:transform .2s;transform:rotate(${open?90:0}deg)"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="guide-body ${open?"":"hidden"}" style="padding:0 16px 16px">
+              <div class="guide-content" style="color:var(--sub);font-size:13.5px;line-height:1.65">${g.body}</div>
+              <button type="button" class="btn-accent guide-go" data-tab="${g.act.tab}" data-scat="${g.act.scat||""}" style="margin-top:12px;display:inline-flex;align-items:center;gap:7px;width:auto;padding:9px 15px">${g.go} →</button>
+            </div>
+          </div>`; }).join("")}
+      </div>
+    </div>`).join("");
+  $$("#guides-list .guide-head").forEach(b=>b.addEventListener("click",()=>{ const id=b.dataset.id; if(_guidesOpen.has(id)) _guidesOpen.delete(id); else _guidesOpen.add(id); renderGuides(); }));
+  $$("#guides-list .guide-go").forEach(b=>b.addEventListener("click",()=>{ const tab=b.dataset.tab, scat=b.dataset.scat; setTab(tab); if(scat) setTimeout(()=>setSettingsCat(scat),50); window.scrollTo({top:0,behavior:"smooth"}); }));
+}
 
 /* ===== 6 · FILTER (geteilt zwischen Dashboard & Tracker) ===== */
 let filterMode="range", activeRange=7, activeMonth=null;

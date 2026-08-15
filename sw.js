@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v57";   // v57 (App v5.18.1): CSV-Import - intelligente Auto-Zuordnung per Inhalts-Analyse (Datum/Geld/EAN/Text)
+const VERSION    = "flipdeck-v58";   // v58 (App v5.19.0): Guides // v57 (App v5.18.1): CSV-Import - intelligente Auto-Zuordnung per Inhalts-Analyse (Datum/Geld/EAN/Text) Hilfe-Bereich (kategorisiert, aufklappbar, Direkt-Sprung zum Feature)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

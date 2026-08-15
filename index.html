@@ -313,6 +313,13 @@ body.has-save-error #save-error-bar{ transform:translate(-50%, 0); }
 .grp-sale:hover{ background:color-mix(in srgb,var(--brand) 8%,transparent); }
 .grp-head:hover{ background:color-mix(in srgb,var(--brand) 6%,transparent); }
 
+/* Guides & Hilfe */
+.guide-head:hover{ background:color-mix(in srgb,var(--brand) 6%,transparent); }
+.guide-content p{ margin:0 0 10px; }
+.guide-content ul, .guide-content ol{ margin:0 0 10px; padding-left:20px; }
+.guide-content li{ margin:5px 0; }
+.guide-content b{ color:var(--text); font-weight:650; }
+
 /* Zeitraum-Filter garantiert einzeilig (statt 2+1-Umbruch) */
 .range-group{ flex-wrap:nowrap; max-width:100%; overflow-x:auto; scrollbar-width:none; }
 .range-group::-webkit-scrollbar{ display:none; }
@@ -809,7 +816,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.18.1</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.19.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -857,7 +864,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.18.1</span>
+        <span class="nav-ver">v5.19.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -892,6 +899,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
           <div id="profile-menu" class="menu hidden">
             <button class="menu-item" data-tab="profil"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg><span data-i18n="tab.profil">Profil</span></button>
             <button class="menu-item" id="menu-admin" data-tab="admin" style="display:none"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="tab.admin">Admin</span><span id="admin-badge" class="pill pill-warn hidden" style="margin-left:auto;padding:2px 8px;font-size:11px">0</span></button>
+            <button class="menu-item" id="menu-guides" data-tab="guides"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Guides &amp; Hilfe</span></button>
             <button class="menu-item" id="menu-tour"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span>App-Tour</span></button>
             <div class="menu-sep"></div>
             <button class="menu-item menu-item-danger" id="logout-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span data-i18n="nav.logout">Abmelden</span></button>
@@ -1720,6 +1728,15 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
+  <!-- ============ GUIDES & HILFE ============ -->
+  <section id="guides-view" class="hidden shell px-4 py-6">
+    <div class="mb-5">
+      <h2 class="text-2xl font-bold tracking-tight">Guides &amp; Hilfe</h2>
+      <p class="c-sub text-sm mt-1">Kurz &amp; klar erklärt — jeder Guide bringt dich mit einem Klick direkt zum Feature.</p>
+    </div>
+    <div id="guides-list"></div>
+  </section>
+
   <section id="admin-view" class="hidden shell px-4 py-6">
     <div class="mb-5">
       <h2 class="text-2xl font-bold tracking-tight">Nutzerverwaltung</h2>
@@ -1984,7 +2001,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.18.1 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.19.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
