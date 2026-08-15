@@ -302,6 +302,8 @@ body.has-save-error #save-error-bar{ transform:translate(-50%, 0); }
 .calc-switch{ display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; background:color-mix(in srgb,var(--cell-2) 55%,transparent); border:1px solid var(--line); border-radius:16px; }
 .calc-switch button{ display:flex; align-items:center; justify-content:center; gap:7px; padding:11px 10px; border:0; border-radius:12px; background:transparent; color:var(--sub); font-size:13.5px; font-weight:650; cursor:pointer; transition:background .18s ease, color .18s ease; }
 .calc-switch button svg{ flex:0 0 auto; }
+.mk-logo{ width:19px; height:19px; border-radius:5px; background:#fff; display:inline-flex; align-items:center; justify-content:center; overflow:hidden; flex:0 0 auto; }
+.mk-logo img{ width:100%; height:100%; object-fit:contain; }
 .calc-switch button:hover{ color:var(--text); }
 .calc-switch button[aria-selected="true"]{ background:color-mix(in srgb,var(--brand) 16%,transparent); color:var(--text); box-shadow:0 0 0 1px color-mix(in srgb,var(--brand) 40%,transparent) inset; }
 
@@ -807,7 +809,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.16.9</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.17.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -855,7 +857,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.16.9</span>
+        <span class="nav-ver">v5.17.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1097,8 +1099,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <!-- Marktplatz-Umschalter: eBay- vs Kaufland-Gebühren. Öffnet beim Tab-Wechsel
          automatisch den Rechner deines Standard-Marktplatzes (Profil-Einstellung). -->
     <div class="calc-switch mb-3" id="calc-market" role="tablist" aria-label="Marktplatz">
-      <button type="button" data-market="ebay" role="tab" aria-selected="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.5 10.5a2 2 0 0 1-2 1.5H6.5a2 2 0 0 1-2-1.5L3 9z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>eBay</button>
-      <button type="button" data-market="kaufland" role="tab" aria-selected="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.5 10.5a2 2 0 0 1-2 1.5H6.5a2 2 0 0 1-2-1.5L3 9z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>Kaufland</button>
+      <button type="button" data-market="ebay" role="tab" aria-selected="true"><span class="mk-logo"><img src="./logos/ebay.png" alt="" loading="lazy"></span>eBay</button>
+      <button type="button" data-market="kaufland" role="tab" aria-selected="false"><span class="mk-logo"><img src="./logos/kaufland.png" alt="" loading="lazy"></span>Kaufland</button>
     </div>
     <!-- Umschalter: Standard = normaler Gebührenrechner · Schnell-Check optional -->
     <div class="calc-switch mb-3" id="calc-mode" role="tablist" aria-label="Rechner-Modus">
@@ -1523,7 +1525,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
       <div class="cell p-4"><p class="label mb-2">Ausgaben / Monat</p><p id="fx-total" class="tnum font-bold text-[24px]">0,00 €</p></div>
       <div class="cell p-4"><p class="label mb-2">Ausgaben / Paket</p><p id="fx-perpkg" class="tnum font-bold text-[24px]">0,00 €</p></div>
-      <div class="cell p-4"><p class="label mb-2" data-i18n="fix.algo">Zielmarge</p><p id="fx-target" class="tnum c-accent font-bold text-[24px]">0,0 %</p></div>
+      <div class="cell p-4"><p class="label mb-2" data-i18n="fix.algo">Zielmarge <span class="info-i" data-tip="Deine gewünschte Gewinn-Marge pro verkauftem Artikel. Sie bestimmt den vorgeschlagenen Ziel-Verkaufspreis (Ziel-VK) im Bestand und ab wann ein Deal als „gesund" gilt. Direkt hier im Fixkosten-Tab unter „Zielmarge" einstellbar. Standard 15 %.">i</span></p><p id="fx-target" class="tnum c-accent font-bold text-[24px]">0,0 %</p></div>
     </div>
 
     <!-- Aufschlüsselung nach Kategorie -->
@@ -1971,7 +1973,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.16.9 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.17.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 

@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v54";   // v54 (App v5.16.9): Shpock/Facebook/Hood raus + eigene Marktplaetze anlegbar; Verkaeufe Standard Nach-Produkt + groessere Zeilen
+const VERSION    = "flipdeck-v55";   // v55 (App v5.17.0): echte Marktplatz-Logos im Gebuehren-Umschalter; Zielmarge erklaert (Info-Punkt)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
