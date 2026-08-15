@@ -3416,20 +3416,20 @@ async function reauthAutoFileBackup(){ const dir=await getBackupDirHandle(); if(
 /* Einfaches, verlässliches Wochen-Backup: lädt 1×/Woche automatisch eine Datei herunter
    (im Browser lautlos in den Downloads-Ordner). Kein Ordner-Zugriff, keine Rechte-Rückfragen. */
 function maybeAutoWeeklyDownload(){
-  if(Store.get(uKey("autodl"))==="0") return;   // ausgeschaltet
+  if(Store.get(uKey("autodl"))!=="1") return;   // Standard AUS — nur wenn bewusst aktiviert (kein aufdringlicher Download bei Login)
   const last=Store.get(uKey("lastautofile")); const days=last?Math.floor((Date.now()-new Date(last).getTime())/86400000):999;
   if(days<7) return;
   try{ downloadFullBackup(); Store.set(uKey("lastautofile"), new Date().toISOString()); }catch(e){ console.warn("[autodl]", e); }
 }
 function renderAutoFileStatus(){
   const box=$("#autofile-status"); if(!box) return;
-  const on = Store.get(uKey("autodl"))!=="0";   // Standard: AN
+  const on = Store.get(uKey("autodl"))==="1";   // Standard: AUS (opt-in)
   const last=Store.get(uKey("lastautofile")); const when=last?new Date(last).toLocaleDateString("de-DE",{day:"numeric",month:"short"}):"noch nie";
   box.innerHTML=`<button type="button" id="autodl-toggle" class="pw-toggle" aria-pressed="${on?"true":"false"}" style="width:100%">
-      <span class="pw-toggle-info"><span class="pw-toggle-name">Automatisches Wochen-Backup</span><span class="pw-toggle-set">Speichert 1×/Woche automatisch eine Backup-Datei. Zuletzt: ${when}.</span></span><span class="pw-sw"></span>
+      <span class="pw-toggle-info"><span class="pw-toggle-name">Automatisches Wochen-Backup <span class="c-sub" style="font-weight:400">(optional)</span></span><span class="pw-toggle-set">Wenn an: speichert 1×/Woche automatisch eine Backup-Datei in den Downloads. Zuletzt: ${when}.</span></span><span class="pw-sw"></span>
     </button>
-    <p class="c-sub text-[11.5px] leading-relaxed mt-2">Landet in deinem <b>Downloads-Ordner</b>. Tipp: Downloads mit OneDrive/iCloud syncen — dann liegt die Sicherung automatisch off-site (auch falls Supabase mal ausfällt).</p>`;
-  const t=$("#autodl-toggle"); if(t) t.addEventListener("click",()=>{ const nv=Store.get(uKey("autodl"))!=="0"?"0":"1"; Store.set(uKey("autodl"),nv); renderAutoFileStatus(); showToast(nv==="1"?"Automatisches Wochen-Backup an":"Automatisches Wochen-Backup aus"); });
+    <p class="c-sub text-[11.5px] leading-relaxed mt-2">Standardmäßig <b>aus</b> — deine Daten sind ohnehin automatisch in der Cloud + über Wiederherstellungs-Punkte gesichert. Nur einschalten, wenn du zusätzlich eine Datei-Kopie im Downloads-Ordner (z. B. mit OneDrive/iCloud off-site) willst.</p>`;
+  const t=$("#autodl-toggle"); if(t) t.addEventListener("click",()=>{ const nv=Store.get(uKey("autodl"))==="1"?"0":"1"; Store.set(uKey("autodl"),nv); renderAutoFileStatus(); showToast(nv==="1"?"Automatisches Wochen-Backup an":"Automatisches Wochen-Backup aus"); });
 }
 
 /* ===== Erst-Login-Tour: kurze, überspringbare Führung durch die essenziellen Funktionen ===== */
