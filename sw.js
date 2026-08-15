@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v82";   // v82 (App v5.21.2): Standard-Marktplaetze je Kontotyp; Amazon/eBay-Privat nicht mehr default an
+const VERSION    = "flipdeck-v83";   // v83 (App v5.21.3): Bestand - eBay-Gebuehr als optionale Schaetzung eingeklappt, schlanker EK-Flow
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

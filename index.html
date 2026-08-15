@@ -826,7 +826,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.21.2</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.21.3</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -879,7 +879,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.21.2</span>
+        <span class="nav-ver">v5.21.3</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1403,7 +1403,11 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <div><label class="label" for="iv-vk">Inserierter Preis € *</label><input id="iv-vk" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
         <div><label class="label" for="iv-ek">EK € *</label><input id="iv-ek" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
         <div><label class="label" for="iv-ship">Versand €</label><input id="iv-ship" class="field tnum" inputmode="decimal" value="6.19" /></div>
-        <div><label class="label" for="iv-cat">Kategorie</label>
+        <details class="col-span-2 iv-more">
+          <summary>eBay-Gebühr · Gewinn-Vorschau <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></summary>
+          <p class="c-sub text-[11.5px] leading-relaxed" style="margin-top:10px">Nur eine <b>Schätzung</b> für die Gewinn-Vorschau im Bestand. Beim Verkauf berechnet Flipdeck die <b>echten Gebühren nach Marktplatz</b>. Standard 12 % passt für die meisten Artikel — du musst hier nichts einstellen.</p>
+          <div class="grid grid-cols-2 gap-3" style="margin-top:12px">
+        <div class="col-span-2"><label class="label" for="iv-cat">eBay-Gebühren-Kategorie</label>
           <select id="iv-cat" class="field">
             <optgroup label="Standard · 12 %">
               <option value="12" selected>Standard / Mode / Kleidung · 12 %</option>
@@ -1462,6 +1466,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <div class="col-span-2"><label class="label" for="iv-region">Ausland</label>
           <select id="iv-region" class="field"><option value="0">EU · 0 %</option><option value="1.2">UK · 1,2 %</option><option value="1.6">USA / CA · 1,6 %</option></select>
         </div>
+          </div>
+        </details>
         <details class="col-span-2 iv-more">
           <summary>Workflow &amp; Einkauf <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></summary>
           <div class="grid grid-cols-2 gap-3" style="margin-top:12px">
@@ -2016,7 +2022,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.21.2 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.21.3 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
