@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v66";   // v66 (App v5.19.8): Download-Dialog verlinkt Dateien direkt auf ihr Release (exe in v1.1.0, dmgs in desktop-v1.1.0)
+const VERSION    = "flipdeck-v67";   // v67 (App v5.19.9): Passwort vergessen - Reset per E-Mail (Supabase) + Neu-Passwort-Flow
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

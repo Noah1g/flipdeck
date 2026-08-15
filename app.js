@@ -9,6 +9,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let sb = null;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
 catch(e){ console.error("Supabase konnte nicht geladen werden (Internet/CDN?):", e); }
+/* Passwort-Reset: klickt jemand den E-Mail-Link, meldet Supabase PASSWORD_RECOVERY -> Neu-Passwort-Fenster. */
+try{ if(sb && sb.auth && sb.auth.onAuthStateChange){ sb.auth.onAuthStateChange(function(event){ if(event==="PASSWORD_RECOVERY"){ try{ hideSplash(); }catch(e){} try{ openSetNewPassword(); }catch(e){} } }); } }catch(e){}
 
 const MAIL_DOMAIN  = 'flipgrid.app';
 const OWNER_EMAILS = ['admin@flipgrid.app', 'noah@flipgrid.app', 'noah1g@flipgrid.app'];
@@ -801,6 +803,49 @@ $("#username").addEventListener("keydown", e=>{ if(e.key==="Enter") authSubmit()
 $("#password").addEventListener("keydown", e=>{ if(e.key==="Enter") authSubmit(); });
 document.addEventListener("keydown", e=>{ if(e.key==="Enter" && e.target && e.target.id==="password2") doRegister(); });
 $("#logout-btn").addEventListener("click", async ()=>{ await sb.auth.signOut(); currentUser=null; showLogin(); });
+
+/* ===== Passwort vergessen · Reset per E-Mail (Supabase) ===== */
+function openPasswordReset(){
+  const pre = ($("#username")&&$("#username").value.trim())||"";
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:400px">
+    <div class="flex items-start justify-between gap-3 mb-2"><p class="font-bold text-[17px]">Passwort zurücksetzen</p><button id="pr-x" class="iconbtn" title="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <p class="c-sub text-[12.5px] leading-relaxed mb-3">Gib die <b>E-Mail</b> deines Kontos ein — wir schicken dir einen Link zum Zurücksetzen.</p>
+    <input id="pr-email" class="field" type="email" placeholder="deine@email.de" value="${attrEsc(pre.includes('@')?pre:'')}" autocomplete="email">
+    <button id="pr-send" class="btn-accent w-full" style="margin-top:14px">Reset-Link senden</button>
+    <p id="pr-msg" class="text-[12.5px] mt-3 leading-relaxed"></p>
+    <p class="c-sub text-[11px] mt-2 leading-relaxed">Funktioniert nur, wenn du dich mit einer <b>echten E-Mail</b> registriert hast. Hast du nur einen Benutzernamen genutzt, wende dich an den Betreiber.</p>
+  </div></div>`;
+  const close=()=>{ $("#modal-root").innerHTML=""; };
+  $("#pr-x").addEventListener("click",close); const ov=$("#ov"); if(ov) ov.addEventListener("click",e=>{ if(e.target===ov) close(); });
+  $("#pr-send").addEventListener("click",async()=>{ const em=$("#pr-email").value.trim(); if(!em||!em.includes("@")){ flashError($("#pr-email")); return; }
+    const btn=$("#pr-send"); btn.disabled=true; btn.textContent="Sende…";
+    try{ const { error } = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin+location.pathname });
+      if(error){ $("#pr-msg").innerHTML=`<span style="color:var(--danger)">${escapeHtml(error.message)}</span>`; btn.disabled=false; btn.textContent="Reset-Link senden"; }
+      else { $("#pr-msg").innerHTML=`<span style="color:var(--accent)">✓ Falls ein Konto mit dieser E-Mail existiert, ist ein Reset-Link unterwegs. Schau auch im Spam-Ordner.</span>`; btn.textContent="Gesendet ✓"; }
+    }catch(e){ $("#pr-msg").innerHTML=`<span style="color:var(--danger)">Fehler: ${escapeHtml(e&&e.message||"unbekannt")}</span>`; btn.disabled=false; btn.textContent="Reset-Link senden"; }
+  });
+}
+if($("#forgot-pw")) $("#forgot-pw").addEventListener("click", openPasswordReset);
+/* Nach Klick auf den Reset-Link: neues Passwort setzen (Supabase-Session ist im „recovery"-Modus). */
+function openSetNewPassword(){
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:400px">
+    <p class="font-bold text-[17px] mb-1">Neues Passwort festlegen</p>
+    <p class="c-sub text-[12.5px] leading-relaxed mb-3">Du bist über den Reset-Link angemeldet. Vergib jetzt ein neues Passwort.</p>
+    <input id="np-new" class="field" type="password" placeholder="Neues Passwort (min. 6 Zeichen)" autocomplete="new-password" style="margin-bottom:9px">
+    <input id="np-cf" class="field" type="password" placeholder="Wiederholen" autocomplete="new-password">
+    <button id="np-save" class="btn-accent w-full" style="margin-top:14px">Passwort speichern &amp; einloggen</button>
+    <p id="np-msg" class="text-[12.5px] mt-3"></p>
+  </div></div>`;
+  $("#np-save").addEventListener("click",async()=>{ const a=$("#np-new").value, b=$("#np-cf").value;
+    if(!a||a.length<6){ flashError($("#np-new")); $("#np-msg").innerHTML=`<span style="color:var(--danger)">Mindestens 6 Zeichen.</span>`; return; }
+    if(a!==b){ flashError($("#np-cf")); $("#np-msg").innerHTML=`<span style="color:var(--danger)">Passwörter stimmen nicht überein.</span>`; return; }
+    const btn=$("#np-save"); btn.disabled=true; btn.textContent="Speichere…";
+    try{ const { error } = await sb.auth.updateUser({ password:a }); if(error) throw error;
+      $("#modal-root").innerHTML=""; showToast("✓ Passwort geändert — du bist eingeloggt.");
+      try{ const { data:{ session } } = await sb.auth.getSession(); if(session) await handlePostAuth(session.user); else showLogin(); }catch(e){ showLogin(); }
+    }catch(e){ $("#np-msg").innerHTML=`<span style="color:var(--danger)">${escapeHtml(e&&e.message||"Fehler")}</span>`; btn.disabled=false; btn.textContent="Passwort speichern & einloggen"; }
+  });
+}
 /* Warte-Screen: erneut prüfen (Admin evtl. schon freigegeben) / abmelden */
 if($("#pending-logout")) $("#pending-logout").addEventListener("click", async ()=>{ try{ await sb.auth.signOut(); }catch(e){} currentUser=null; $("#pending-view").classList.add("hidden"); showLogin(); });
 if($("#pending-recheck")) $("#pending-recheck").addEventListener("click", async ()=>{
