@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v68";   // v68 (App v5.19.10): Login-Feld beschriftet als Benutzername oder E-Mail (Login mit Mail ging schon)
+const VERSION    = "flipdeck-v69";   // v69 (App v5.20.0): Signup mit Username + E-Mail (doppelt) + Passwort; Login per Username ODER E-Mail (RPC-Lookup); Anzeigename = Username
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

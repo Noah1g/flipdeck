@@ -44,6 +44,8 @@ const Store = (() => {
 })();
 let currentUser = null;
 const uKey = base => `fg_${base}_${currentUser ? currentUser.username : "guest"}`;
+/* Anzeigename: der gewählte Username (neue Konten) oder ersatzweise das Mail-Präfix (Alt-Konten). */
+function displayName(){ return (currentUser && (currentUser.uname || (currentUser.username||"").split("@")[0])) || ""; }
 /* Läuft die App in der neuen Desktop-Shell? Dann Titelleisten-Optik anpassen (Platz für Fenster-Buttons). */
 try{ if(/FlipdeckShell/i.test(navigator.userAgent)) document.documentElement.classList.add("is-electron"); }catch(e){}
 
@@ -142,7 +144,7 @@ async function dbSave(key, value){
    ===================================================================== */
 async function profileUpsert(){
   if(!sb || !currentUser || !currentUser.id) return;
-  const uname = (currentUser.username||'').split('@')[0];
+  const uname = currentUser.uname || (currentUser.username||'').split('@')[0];
   try{
     // Username anlegen/aktualisieren. Status/Rolle werden serverseitig (Trigger) verwaltet
     // -> neue Konten starten automatisch als 'pending'. Owner/Status kommen aus der DB.
@@ -173,7 +175,8 @@ async function setUserStatus(id, status){
 }
 /* zentrale Nach-Login-Weiche: freigegeben -> App, sonst -> Warte-Screen */
 async function handlePostAuth(user){
-  currentUser = { id:user.id, username:user.email, role:roleFor(user.email) };
+  const chosen = (user.user_metadata && user.user_metadata.username) || null;
+  currentUser = { id:user.id, username:user.email, uname:chosen, role:roleFor(user.email) };
   await profileUpsert();
   const prof = await fetchMyProfile();
   const dbRole   = (prof && prof.role) || currentUser.role;
@@ -666,7 +669,7 @@ function setLang(l){ lang=l; DB.setSetting("lang",l); applyI18n();
 let users = DB.getUsers();
 let avatarUrl = null;
 function renderAvatar(){
-  const uname = (currentUser.username||"").split("@")[0];
+  const uname = displayName();
   const init = uname.slice(0,2).toUpperCase();
   const inner = avatarUrl ? `<img src="${attrEsc(avatarUrl)}" alt="">` : `<span>${init}</span>`;
   $("#nav-avatar").innerHTML = inner;
@@ -739,36 +742,47 @@ function authErrorDE(msg){
 function showLoginErr(txt){ const e=$("#login-err"); e.textContent=txt; e.classList.remove("hidden"); }
 
 async function doLogin(){
-  const uname = $("#username").value.trim();
-  const pass  = $("#password").value;
+  const id   = $("#username").value.trim();
+  const pass = $("#password").value;
   $("#login-err").classList.add("hidden");
-  if(!uname || !pass){ showLoginErr("Bitte Username und Passwort eingeben."); return; }
+  if(!id || !pass){ showLoginErr("Bitte Benutzername/E-Mail und Passwort eingeben."); return; }
   if(!sb){ showLoginErr("Keine Verbindung zu Supabase (Internet/CDN?). Bitte online sein und neu laden."); return; }
   try{
-    const { data, error } = await sb.auth.signInWithPassword({ email: toEmail(uname), password: pass });
+    let email = id;
+    if(!id.includes("@")){
+      // Username eingegeben -> passende E-Mail per RPC holen; klappt das nicht (RPC fehlt / Alt-Konto), Fallback aufs alte Schema.
+      try{ const { data, error } = await sb.rpc("email_for_username", { uname: id }); email = (!error && data) ? data : toEmail(id); }
+      catch(e){ email = toEmail(id); }
+    }
+    const { data, error } = await sb.auth.signInWithPassword({ email: email, password: pass });
     if(error){ console.warn("[login]", error.message); showLoginErr(authErrorDE(error.message)); return; }
     await handlePostAuth(data.user);
   }catch(e){ console.error("[login] Crash:", e); showLoginErr("Technischer Fehler — Konsole prüfen (F12)."); }
 }
 
 async function doRegister(){
-  const uname = $("#username").value.trim();
-  const pass  = $("#password").value;
-  const pass2 = $("#password2") ? $("#password2").value : "";
+  const uname  = $("#username").value.trim();
+  const email  = $("#signup-email")  ? $("#signup-email").value.trim()  : "";
+  const email2 = $("#signup-email2") ? $("#signup-email2").value.trim() : "";
+  const pass   = $("#password").value;
+  const pass2  = $("#password2") ? $("#password2").value : "";
   $("#login-err").classList.add("hidden"); $("#login-ok").classList.add("hidden");
-  if(!uname || !pass){ showLoginErr("Bitte Username und Passwort eingeben."); return; }
+  if(!uname){ showLoginErr("Bitte einen Benutzernamen wählen."); return; }
+  if(uname.includes("@")){ showLoginErr("Der Benutzername darf kein @ enthalten — die E-Mail gibst du separat ein."); return; }
+  if(!email || !email.includes("@") || email.lastIndexOf(".")<email.indexOf("@")){ showLoginErr("Bitte eine gültige E-Mail-Adresse eingeben."); return; }
+  if(email.toLowerCase()!==email2.toLowerCase()){ showLoginErr("Die beiden E-Mail-Adressen stimmen nicht überein."); return; }
   if(pass.length < 6){ showLoginErr("Passwort muss mindestens 6 Zeichen haben."); return; }
   if(pass !== pass2){ showLoginErr("Die beiden Passwörter stimmen nicht überein."); return; }
   if(!sb){ showLoginErr("Keine Verbindung zu Supabase (Internet/CDN?). Bitte online sein und neu laden."); return; }
   const btn=$("#register-btn"); const ol=btn.textContent; btn.disabled=true; btn.textContent="Wird erstellt…";
   try{
-    const { data, error } = await sb.auth.signUp({ email: toEmail(uname), password: pass });
+    const { data, error } = await sb.auth.signUp({ email: email, password: pass, options:{ data:{ username: uname } } });
     if(error){ console.warn("[register]", error.message); showLoginErr(authErrorDE(error.message)); return; }
     // Falls sofort eine Session entstand (E-Mail-Bestätigung AUS): wieder abmelden -> sauber zum Login
     if(data.session){ try{ await sb.auth.signOut(); }catch(e){} }
     // Erfolg -> zurück in den Login-Modus, Username vorausfüllen
     if(typeof setAuthMode==="function") setAuthMode("login");
-    $("#password").value=""; if($("#password2")) $("#password2").value=""; $("#username").value=uname;
+    $("#password").value=""; if($("#password2")) $("#password2").value=""; if($("#signup-email")) $("#signup-email").value=""; if($("#signup-email2")) $("#signup-email2").value=""; $("#username").value=uname;
     const okEl=$("#login-ok");
     okEl.textContent = "✓ Registrierung eingegangen. Ein Admin muss dein Konto noch freigeben — danach kannst du dich anmelden.";
     okEl.classList.remove("hidden");
@@ -1262,7 +1276,7 @@ function renderGreeting(){
   const h=$("#dash-greeting"), d=$("#dash-date"); if(!h||!d) return;
   const hr=new Date().getHours();
   const salut = hr<5 ? "Noch wach" : hr<11 ? "Guten Morgen" : hr<18 ? "Guten Tag" : hr<22 ? "Guten Abend" : "Noch wach";
-  const uname = currentUser ? (currentUser.username||"").split("@")[0] : "";
+  const uname = displayName();
   h.textContent = uname ? `${salut}, ${uname}` : salut;
   d.textContent = new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 }
@@ -4103,7 +4117,7 @@ async function renderAdmin(){
   try{ list = await profileList(); }
   catch(e){
     console.warn("[admin] profiles fehlt:", e && e.message);
-    box.innerHTML=`<div class="rounded-[14px] p-3" style="background:var(--cell-2)"><div class="flex items-center gap-2"><p class="font-semibold text-[14px] truncate">${escapeHtml((currentUser&&currentUser.username||"").split("@")[0])}</p><span class="pill pill-accent">Owner · du</span></div></div>`;
+    box.innerHTML=`<div class="rounded-[14px] p-3" style="background:var(--cell-2)"><div class="flex items-center gap-2"><p class="font-semibold text-[14px] truncate">${escapeHtml(displayName())}</p><span class="pill pill-accent">Owner · du</span></div></div>`;
     $("#a-count").textContent="1"; adminSetupHint(); return;
   }
   $("#a-count").textContent=String(list.length);
@@ -4265,7 +4279,7 @@ if($("#fb-refresh")) $("#fb-refresh").addEventListener("click",()=>renderFeedbac
 
 /* ===== 12 · PROFIL ===== */
 function renderProfil(){ if(!currentUser) return; renderAvatar();
-  $("#profil-name").textContent=(currentUser.username||"").split("@")[0]; $("#profil-role").textContent=currentUser.role==="owner"?"Owner / Admin":"User";
+  $("#profil-name").textContent=displayName(); $("#profil-role").textContent=currentUser.role==="owner"?"Owner / Admin":"User";
   $$("#mode-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mode===themeMode));
   $$("#lang-seg button").forEach(b=>b.setAttribute("aria-selected", b.dataset.lang===lang));
   if(document.activeElement!==$("#stale-input")) $("#stale-input").value=staleDays;
