@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v77";   // v77 (App v5.20.8): Ziehstreifen auf Anmeldemaske (Desktop-Fenster verschiebbar)
+const VERSION    = "flipdeck-v78";   // v78 (App v5.20.9): Fehlermeldung E-Mail-Dublette professioneller, korrekter Reiter-Hinweis
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

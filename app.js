@@ -734,7 +734,7 @@ function authErrorDE(msg){
   const m = (msg||"").toLowerCase();
   if(m.includes("invalid login")) return "Username oder Passwort falsch.";
   if(m.includes("email not confirmed")) return "Konto noch nicht bestätigt — in Supabase die E-Mail-Bestätigung ausschalten (siehe Anleitung).";
-  if(m.includes("already registered") || m.includes("already been registered")) return "Für diese E-Mail existiert bereits ein Konto — einfach unten auf „Anmelden“.";
+  if(m.includes("already registered") || m.includes("already been registered")) return "Für diese E-Mail existiert bereits ein Konto. Wechsle oben auf „Anmelden“ oder setze dein Passwort zurück.";
   // Greift der DB-Constraint (doppelter Benutzername), meldet Supabase meist generisch:
   if(m.includes("username") && m.includes("taken")) return "Dieser Benutzername ist bereits vergeben. Bitte einen anderen wählen.";
   if(m.includes("duplicate key") || m.includes("unique constraint") || m.includes("database error saving new user"))
