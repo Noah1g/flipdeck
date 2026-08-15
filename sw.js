@@ -6,12 +6,12 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v63";   // v63 (App v5.19.5): automatisches Wochen-Datei-Backup jetzt Standard AUS (kein Download-Popup mehr bei Login)
+const VERSION    = "flipdeck-v64";   // v64 (App v5.19.6): PERFORMANCE - Tailwind vorkompiliert (Laufzeit-Compiler raus); tailwind.css im Cache
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
 
-const SHELL_FILES = ["./", "./index.html", "./app.js"];
+const SHELL_FILES = ["./", "./index.html", "./app.js", "./tailwind.css"];
 
 self.addEventListener("install", e => {
   e.waitUntil(
