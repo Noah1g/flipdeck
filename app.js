@@ -2807,7 +2807,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
           <button type="button" data-region="de" role="tab" aria-selected="true">DE &amp; West-EU</button>
           <button type="button" data-region="pl" role="tab" aria-selected="false">Polen (PL)</button>
         </div>
-        <p class="c-sub text-[11px] mt-1.5">Bestimmt die Verkaufsprovision für diesen Verkauf. „Bewerben %" kommt on top.</p>
+        <p class="c-sub text-[11px] mt-1.5">Bestimmt die Verkaufsprovision für diesen Verkauf.</p>
       </div>
       <div id="sell-ebp" class="hidden">
         <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">eBay-Gebühr (Privatverkäufer)</span><span class="ms-sec-line"></span></div>
