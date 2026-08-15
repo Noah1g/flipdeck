@@ -3704,20 +3704,59 @@ function parseCSV(text){ text=String(text||"").replace(/^﻿/,"");
   return rows.map(r=>r.map(c=>c.trim())).filter(r=>r.some(c=>c!=="")); }
 const CSV_TEMPLATE = "Produkt;Menge;Verkaufspreis;Einkaufspreis;Versand;Marktplatz;Datum;EAN\nBeispiel-Artikel;1;49,99;20,00;4,99;eBay;15.08.2026;\n";
 const CSV_FIELDS = [
-  {key:"name",     label:"Produkt", req:true,  kw:["produkt","artikel","name","title","bezeichnung","item"]},
-  {key:"qty",      label:"Menge",   kw:["menge","anzahl","qty","quantity","stück","stk"]},
-  {key:"payout",   label:"Verkaufspreis / Auszahlung", req:true, kw:["auszahlung","verkaufspreis","erlös","payout","umsatz","sold","betrag","preis"]},
-  {key:"ek",       label:"Einkaufspreis", kw:["einkaufspreis","einkauf","kosten","cost","buy","ek"]},
-  {key:"ship",     label:"Versand", kw:["versand","porto","shipping","ship"]},
-  {key:"platform", label:"Marktplatz", kw:["marktplatz","plattform","platform","kanal","channel","market"]},
-  {key:"date",     label:"Datum",   kw:["datum","date","verkauft"]},
+  {key:"name",     label:"Produkt", req:true,  kw:["produkt","artikel","gegenstand","name","title","titel","bezeichnung","item","listing","description","beschreibung"]},
+  {key:"qty",      label:"Menge",   kw:["menge","anzahl","stückzahl","qty","quantity","stück","stk"]},
+  {key:"payout",   label:"Verkaufspreis / Auszahlung", req:true, kw:["auszahlung","verkaufspreis","gesamtpreis","erlös","erlöse","einnahmen","payout","umsatz","total","gesamt","sold","betrag","preis","price"]},
+  {key:"ek",       label:"Einkaufspreis", kw:["einkaufspreis","einkauf","kosten","cost","buy","ek","wareneinsatz"]},
+  {key:"ship",     label:"Versand", kw:["versand","porto","shipping","ship","versandkosten"]},
+  {key:"platform", label:"Marktplatz", kw:["marktplatz","plattform","platform","kanal","channel","market","börse","site"]},
+  {key:"date",     label:"Datum",   kw:["datum","date","verkauft","verkaufsdatum","bestelldatum","order date","sale date"]},
   {key:"ean",      label:"EAN",     kw:["ean","gtin","barcode","upc"]}
 ];
 function csvGuess(headers, kw){ const low=headers.map(h=>String(h).toLowerCase());
   for(const k of kw){ const i=low.findIndex(h=>h.includes(k)); if(i>-1) return i; } return -1; }
+/* Intelligente Auto-Zuordnung: erst Spaltennamen, dann — wenn noch offen — die INHALTE
+   analysieren (Datum? Geldbetrag? EAN? längster Text = Produktname?). Damit mappen sich
+   auch fremde Exporte (eBay, Excel …) meist von allein; die Dropdowns sind nur Korrektur. */
+function csvAutoMap(headers, data){
+  const sample=data.slice(0,50);
+  const colVals=i=>sample.map(r=>(i<r.length?r[i]:"")).map(v=>String(v).trim()).filter(v=>v!=="");
+  const stats=headers.map((h,i)=>{ const vals=colVals(i), cnt=vals.length||1;
+    let numeric=0,dates=0,longdig=0,smallint=0,plat=0,textLen=0,textCnt=0,sumNum=0;
+    vals.forEach(v=>{ const isNum=/^\s*-?[\d.,\s€$£]+\s*$/.test(v) && /\d/.test(v); const nv=impNum(v);
+      if(isNum){ numeric++; sumNum+=nv; if(Math.abs(nv)<=20 && Math.abs(nv-Math.round(nv))<1e-9) smallint++; }
+      else { textLen+=v.length; textCnt++; }
+      if(csvDate(v)) dates++;
+      const dg=v.replace(/\D/g,""); if(dg.length>=12&&dg.length<=14) longdig++;
+      if(csvPlatform(v)!=="kein") plat++;
+    });
+    return { i, hdr:String(h||"").toLowerCase(), fNum:numeric/cnt, fDate:dates/cnt, fLong:longdig/cnt, fInt:smallint/cnt, fPlat:plat/cnt, avg:numeric?sumNum/numeric:0, avgText:textCnt?textLen/textCnt:0 };
+  });
+  const used=new Set(), map={};
+  const take=(key,i)=>{ if(i>=0 && !used.has(i)){ map[key]=i; used.add(i); } };
+  // 1) starke Signale: Spaltennamen
+  CSV_FIELDS.forEach(f=>{ if(map[f.key]!=null) return; const s=stats.find(s=>!used.has(s.i)&&f.kw.some(k=>s.hdr.includes(k))); if(s) take(f.key,s.i); });
+  // 2) Inhalts-Analyse für den Rest
+  const rem=()=>stats.filter(s=>!used.has(s.i));
+  const pick=(pred,score)=>{ const c=rem().filter(pred); if(!c.length) return -1; c.sort((a,b)=>score(b)-score(a)); return c[0].i; };
+  if(map.date==null)     take("date",     pick(s=>s.fDate>0.5, s=>s.fDate));
+  if(map.ean==null)      take("ean",      pick(s=>s.fLong>0.6, s=>s.fLong));
+  if(map.platform==null) take("platform", pick(s=>s.fPlat>0.5, s=>s.fPlat));
+  if(map.qty==null)      take("qty",      pick(s=>s.fInt>0.6 && s.fNum>0.8, s=>s.fInt));
+  if(map.name==null)     take("name",     pick(s=>s.fNum<0.4 && s.avgText>=3, s=>s.avgText));
+  // Geld-Spalten nach Höhe: größter Ø = Verkaufspreis, dann EK, kleinster = Versand
+  let money=rem().filter(s=>s.fNum>0.6).sort((a,b)=>b.avg-a.avg);
+  if(map.payout==null && money.length) take("payout", money.shift().i);
+  money=rem().filter(s=>s.fNum>0.6).sort((a,b)=>b.avg-a.avg);
+  if(map.ek==null && money.length) take("ek", money[0].i);
+  money=rem().filter(s=>s.fNum>0.6).sort((a,b)=>a.avg-b.avg);
+  if(map.ship==null && money.length) take("ship", money[0].i);
+  CSV_FIELDS.forEach(f=>{ if(map[f.key]==null) map[f.key]=-1; });
+  return map;
+}
 function openCsvImportModal(rows){
   const headers=rows[0], data=rows.slice(1);
-  const map={}; CSV_FIELDS.forEach(f=>map[f.key]=csvGuess(headers,f.kw));
+  const map=csvAutoMap(headers, data);
   const opts=sel=>`<option value="-1">— nicht zuordnen —</option>`+headers.map((h,i)=>`<option value="${i}"${i===sel?" selected":""}>${escapeHtml(h||("Spalte "+(i+1)))}</option>`).join("");
   const build=r=>{ const g=k=>{ const i=map[k]; return (i>=0&&i<r.length)?r[i]:""; };
     return { name:g("name").trim(), qty:Math.max(1,parseInt(impNum(g("qty")))||1), payout:impNum(g("payout")), ek:impNum(g("ek")), ship:impNum(g("ship")), platform:csvPlatform(g("platform")), date:csvDate(g("date")), ean:g("ean").trim() }; };
@@ -3727,7 +3766,7 @@ function openCsvImportModal(rows){
     const prev=valid.slice(0,4).map(x=>{ const p=(x.payout-x.ek-x.ship)*x.qty, pp=p>=0;
       return `<div style="display:flex;align-items:center;gap:10px;padding:7px 2px;border-top:1px solid var(--line)"><span style="flex:1;min-width:0" class="truncate text-[13px]">${escapeHtml(x.name)}</span><span class="c-sub text-[11.5px]">${x.qty}×</span><span class="mono text-[12.5px]">${eur(x.payout)}</span><span class="mono text-[12.5px]" style="font-weight:700;color:${pp?'var(--accent)':'var(--danger)'}">${pp?'+':''}${eur(p)}</span></div>`; }).join("");
     $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:560px;max-height:90vh;overflow:auto">
-      <div class="flex items-start justify-between gap-3 mb-1"><div><p class="font-bold text-[18px]">Verkäufe importieren</p><p class="c-sub text-[12.5px] mt-0.5">${data.length} Zeilen erkannt · Spalten zuordnen. Preise <b>pro Stück</b>.</p></div><button id="csv-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+      <div class="flex items-start justify-between gap-3 mb-1"><div><p class="font-bold text-[18px]">Verkäufe importieren</p><p class="c-sub text-[12.5px] mt-0.5">${data.length} Zeilen · Spalten <b>automatisch zugeordnet</b> — nur kurz prüfen &amp; ggf. korrigieren. Preise pro Stück.</p></div><button id="csv-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">${fieldsHTML}</div>
       <p class="label mb-1">Vorschau <span class="c-sub" style="font-weight:400">(${valid.length} importierbar)</span></p>
       <div style="background:var(--cell-2);border:1px solid var(--line);border-radius:12px;padding:2px 12px 8px">${prev||'<p class="c-sub text-[12px] py-3">Keine Zeile mit Produktname erkannt — bitte Spalte „Produkt" zuordnen.</p>'}</div>

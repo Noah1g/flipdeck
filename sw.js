@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v56";   // v56 (App v5.18.0): CSV-Import fuer Verkaeufe (Spalten-Mapping, Vorlage, Vorschau) - Umstieg von eBay/Excel
+const VERSION    = "flipdeck-v57";   // v57 (App v5.18.1): CSV-Import - intelligente Auto-Zuordnung per Inhalts-Analyse (Datum/Geld/EAN/Text)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
