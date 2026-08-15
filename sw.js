@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v91";   // v91 (App v5.21.11): Bestand - Tags-Feld in Notizen umbenannt
+const VERSION    = "flipdeck-v92";   // v92 (App v5.21.12): passive Aktivitaets-Anzeige (last_seen) im Admin-Tab
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

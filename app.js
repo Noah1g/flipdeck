@@ -145,10 +145,16 @@ async function dbSave(key, value){
 async function profileUpsert(){
   if(!sb || !currentUser || !currentUser.id) return;
   const uname = currentUser.uname || (currentUser.username||'').split('@')[0];
+  const nowIso = new Date().toISOString();
   try{
     // Username anlegen/aktualisieren. Status/Rolle werden serverseitig (Trigger) verwaltet
     // -> neue Konten starten automatisch als 'pending'. Owner/Status kommen aus der DB.
-    await sb.from('profiles').upsert({ id: currentUser.id, username: uname }, { onConflict:'id' });
+    // last_seen = passive Aktivitäts-Anzeige für den Owner (Admin-Tab). Fehlt die Spalte
+    // (SQL noch nicht eingespielt), wird ohne sie gespeichert -> sauberer Fallback.
+    const { error } = await sb.from('profiles').upsert({ id: currentUser.id, username: uname, last_seen: nowIso }, { onConflict:'id' });
+    if(error && /last_seen|column/.test(((error.message)||'').toLowerCase())){
+      await sb.from('profiles').upsert({ id: currentUser.id, username: uname }, { onConflict:'id' });
+    }
   }catch(e){ console.warn('[profiles upsert]', e && e.message); }
 }
 /* Eigenes Profil lesen (status/role). Fehlt die status-Spalte (SQL noch nicht
@@ -160,7 +166,8 @@ async function fetchMyProfile(){
   catch(e){ return null; }
 }
 async function profileList(){
-  let r = await sb.from('profiles').select('id,username,role,status,created_at').order('created_at',{ascending:true});
+  let r = await sb.from('profiles').select('id,username,role,status,created_at,last_seen').order('created_at',{ascending:true});
+  if(r.error) r = await sb.from('profiles').select('id,username,role,status,created_at').order('created_at',{ascending:true});  // Fallback ohne last_seen-Spalte
   if(r.error) r = await sb.from('profiles').select('id,username,role,created_at').order('created_at',{ascending:true});  // Fallback ohne status-Spalte
   if(r.error) throw r.error;
   return (r.data||[]).map(u=>Object.assign({ status:'approved' }, u));   // ohne status-Spalte gilt: freigegeben
@@ -4194,6 +4201,17 @@ create policy "p_owner_upd" on public.profiles for update using (public.is_owner
   </div>`;
   const cp=$("#a-sql-copy"); if(cp) cp.addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(sql); showToast("✓ SQL kopiert"); }catch(e){ showToast("Kopieren nicht möglich"); } });
 }
+/* Passive Aktivitäts-Anzeige: „zuletzt aktiv vor …" aus last_seen. */
+function relSeen(iso){
+  if(!iso) return "";
+  const d=Date.now()-Date.parse(iso); if(!isFinite(d)) return "";
+  const min=Math.floor(d/60000), h=Math.floor(min/60), days=Math.floor(h/24);
+  if(min<2) return "gerade aktiv";
+  if(min<60) return `zuletzt aktiv vor ${min} Min`;
+  if(h<24) return `zuletzt aktiv vor ${h} Std`;
+  if(days<30) return `zuletzt aktiv vor ${days} Tag${days===1?"":"en"}`;
+  const mon=Math.floor(days/30); return `zuletzt aktiv vor ${mon} Mon`;
+}
 async function renderAdmin(){
   const box=$("#a-list"); const setup=$("#a-setup"); if(!box) return;
   setup.classList.add("hidden"); setup.innerHTML="";
@@ -4231,7 +4249,8 @@ async function renderAdmin(){
     const btn = isMe ? `<span class="c-sub text-[11px]">du</span>`
       : rejected ? `<button class="btn-ghost a-approve" data-id="${u.id}" style="padding:7px 12px;flex:0 0 auto;font-size:12.5px">Doch freigeben</button>`
       : `<button class="btn-ghost a-role" data-id="${u.id}" data-role="${isOwner?'user':'owner'}" style="padding:7px 11px;flex:0 0 auto;font-size:12.5px">${isOwner?'Admin entziehen':'Admin geben'}</button>`;
-    el.innerHTML=`<div class="min-w-0"><div class="flex items-center gap-2"><p class="font-semibold text-[14px] truncate">${escapeHtml(u.username||"—")}</p>${isOwner?`<span class="pill pill-accent">Owner</span>`:`<span class="pill pill-mut">User</span>`}${rejected?`<span class="pill pill-warn">abgelehnt</span>`:""}${isMe?`<span class="c-sub text-[11px]">(du)</span>`:""}</div></div>${btn}`;
+    const seen=relSeen(u.last_seen);
+    el.innerHTML=`<div class="min-w-0"><div class="flex items-center gap-2"><p class="font-semibold text-[14px] truncate">${escapeHtml(u.username||"—")}</p>${isOwner?`<span class="pill pill-accent">Owner</span>`:`<span class="pill pill-mut">User</span>`}${rejected?`<span class="pill pill-warn">abgelehnt</span>`:""}${isMe?`<span class="c-sub text-[11px]">(du)</span>`:""}</div>${seen?`<p class="c-sub text-[11px] mt-0.5">${seen}</p>`:`<p class="c-sub text-[11px] mt-0.5" style="opacity:.6">noch keine Aktivität erfasst</p>`}</div>${btn}`;
     box.appendChild(el);
   });
 
