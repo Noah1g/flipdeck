@@ -175,6 +175,9 @@ async function setUserStatus(id, status){
 }
 /* zentrale Nach-Login-Weiche: freigegeben -> App, sonst -> Warte-Screen */
 async function handlePostAuth(user){
+  // Frische Kontodaten vom Server holen — eine gespeicherte Sitzung (Desktop!) kann
+  // veraltete user_metadata enthalten (z.B. nachträglich gesetzter Username). Offline: Fallback auf die Sitzung.
+  try{ const { data:{ user: fresh } } = await sb.auth.getUser(); if(fresh) user = fresh; }catch(e){}
   const chosen = (user.user_metadata && user.user_metadata.username) || null;
   currentUser = { id:user.id, username:user.email, uname:chosen, role:roleFor(user.email) };
   await profileUpsert();

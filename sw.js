@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v78";   // v78 (App v5.20.9): Fehlermeldung E-Mail-Dublette professioneller, korrekter Reiter-Hinweis
+const VERSION    = "flipdeck-v79";   // v79 (App v5.20.10): Kontodaten beim Start frisch vom Server (Username-Anzeige aktuell)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
