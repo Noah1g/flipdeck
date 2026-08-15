@@ -4281,12 +4281,16 @@ $("#pw-save").addEventListener("click", async ()=>{
     // Persistente Session: supabase-js hält die Session automatisch im localStorage.
     try {
         if(!sb){ showLogin(); return; }
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) {
-            await handlePostAuth(session.user);
-        } else {
-            showLogin();
-        }
+        // Failsafe: nie ewig auf „Lädt…" hängen (blockierter Storage / hängendes Netz in manchen Browsern).
+        setTimeout(function(){ var s=document.getElementById("boot-splash"); if(s && !s.classList.contains("hidden")){ console.warn("[boot] Failsafe nach 12s -> Login"); s.classList.add("hidden"); var lv=document.getElementById("login-view"); if(lv) lv.classList.remove("hidden"); } }, 12000);
+        // getSession darf den Boot nicht blockieren -> nach 7s als „keine Session" behandeln.
+        var gs = await Promise.race([
+            sb.auth.getSession().then(function(r){ return (r && r.data && r.data.session) || null; }).catch(function(){ return null; }),
+            new Promise(function(res){ setTimeout(function(){ res("__timeout__"); }, 7000); })
+        ]);
+        if (gs === "__timeout__") { console.warn("[boot] getSession Timeout -> Login"); showLogin(); }
+        else if (gs) { await handlePostAuth(gs.user); }
+        else { showLogin(); }
     } catch (e) {
         console.error("[boot] Session-/Verbindungsfehler:", e);
         showLogin();

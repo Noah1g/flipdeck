@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v59";   // v59 (App v5.19.1): UI-Feinschliff - Bestand entrauscht (kein Gesund-Pill, Mindest-VK neutral, Pills leiser)
+const VERSION    = "flipdeck-v60";   // v60 (App v5.19.2): gebrandeter Lade-Screen (Flipdeck-Emblem) + Boot-Failsafe gegen ewiges Laedt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
