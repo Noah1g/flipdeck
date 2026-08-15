@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v75";   // v75 (App v5.20.6): DB-seitige Benutzernamen-Sperre - passende Fehlermeldung
+const VERSION    = "flipdeck-v76";   // v76 (App v5.20.7): Benutzername vor Signup reservieren (public.usernames Unique)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

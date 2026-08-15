@@ -780,12 +780,22 @@ async function doRegister(){
   if(!sb){ showLoginErr("Keine Verbindung zu Supabase (Internet/CDN?). Bitte online sein und neu laden."); return; }
   const btn=$("#register-btn"); const ol=btn.textContent; btn.disabled=true; btn.textContent="Wird erstellt…";
   try{
-    // 1) Doppelten Benutzernamen verhindern (sonst wäre der Username-Login mehrdeutig).
-    //    Nutzt die vorhandene RPC: liefert sie schon eine E-Mail zurück, ist der Name vergeben.
+    // 1) Benutzernamen VOR der Konto-Erstellung reservieren -> harte DB-Garantie
+    //    gegen Doppelvergabe (Unique-Constraint in public.usernames), atomar + ohne
+    //    halbe Konten. Die RPC gibt 'ok' oder 'taken' zurück.
+    let reserved = null;
     try{
-      const { data: taken, error: takenErr } = await sb.rpc("email_for_username", { uname });
-      if(!takenErr && taken){ showLoginErr("Dieser Benutzername ist bereits vergeben. Bitte einen anderen wählen."); return; }
-    }catch(e){ /* RPC fehlt (alte Einrichtung) -> Prüfung überspringen, Supabase fängt die E-Mail-Dublette ab */ }
+      const { data: rr, error: re } = await sb.rpc("reserve_username", { p_username: uname, p_email: email });
+      if(!re) reserved = rr;
+    }catch(e){ /* RPC noch nicht angelegt -> weiche Prüfung unten */ }
+    if(reserved === "taken"){ showLoginErr("Dieser Benutzername ist bereits vergeben. Bitte einen anderen wählen."); return; }
+    if(reserved === null){
+      // Fallback (RPC fehlt noch): weiche Prüfung über die vorhandene email_for_username-RPC
+      try{
+        const { data: taken, error: takenErr } = await sb.rpc("email_for_username", { uname });
+        if(!takenErr && taken){ showLoginErr("Dieser Benutzername ist bereits vergeben. Bitte einen anderen wählen."); return; }
+      }catch(e){ /* auch die fehlt -> Supabase fängt zumindest die E-Mail-Dublette ab */ }
+    }
     const { data, error } = await sb.auth.signUp({ email: email, password: pass, options:{ data:{ username: uname } } });
     if(error){ console.warn("[register]", error.message); showLoginErr(authErrorDE(error.message)); return; }
     // 2) Doppelte E-Mail: Supabase legt kein zweites Konto an, meldet aber (Enumeration-Schutz)
