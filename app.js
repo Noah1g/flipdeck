@@ -1915,10 +1915,17 @@ function platformIcon(key){
   return `<span class="plat-ic" style="background:${p.tile};color:${p.fg}">${inner}</span>`;
 }
 /* Welche Marktplätze im Verkauf-Dropdown erscheinen (im Profil einstellbar) */
-const DEFAULT_ENABLED_PLATFORMS = ["ebay","ebay_privat","kleinanzeigen","vinted","amazon","kaufland","privat","kein"];
+/* Standard-Marktplätze je Kontotyp. Amazon ist bewusst NICHT dabei (eigener Workflow,
+   dafür ist Flipdeck aktuell nicht ausgelegt); „eBay Privat" nur bei Privat-Konten,
+   das gewerbliche eBay nur bei gewerblichen. Alles jederzeit in den Einstellungen zuschaltbar. */
+function defaultEnabledPlatforms(){
+  return acctType==="privat"
+    ? ["ebay_privat","kleinanzeigen","vinted","privat","kein"]
+    : ["ebay","kleinanzeigen","vinted","kaufland","privat","kein"];
+}
 function getEnabledPlatforms(){
   let arr=null; try{ arr=JSON.parse(Store.get(uKey("platforms_enabled"))||"null"); }catch(e){}
-  if(!Array.isArray(arr) || !arr.length) arr = DEFAULT_ENABLED_PLATFORMS.slice();
+  if(!Array.isArray(arr) || !arr.length) arr = defaultEnabledPlatforms();
   arr = arr.filter(k=>PLATFORMS[k]);
   return arr.length ? arr : ["ebay"];
 }
