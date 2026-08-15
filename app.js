@@ -2143,12 +2143,28 @@ function dealScoreInfoHTML(ds){
   const acc="var(--accent)", warn="#f5a524", dng="var(--danger)";
   const row=(g,txt,col)=>`<div style="display:flex;align-items:center;gap:9px;margin:6px 0"><span class="pill" style="border:1px solid color-mix(in srgb,${col} 45%,var(--line));color:${col};background:color-mix(in srgb,${col} 12%,transparent);font-weight:800;min-width:28px;text-align:center">${g}</span><span class="c-sub" style="color:var(--text)">${txt}</span></div>`;
   const cur = ds ? `<div class="rounded-[12px] p-3 mb-3" style="background:color-mix(in srgb,${ds.col} 12%,transparent);border:1px solid color-mix(in srgb,${ds.col} 35%,var(--line))"><b style="color:${ds.col}">Dieser Deal: ${escapeHtml(ds.g)}</b> · ROI ${pct(isFinite(ds.roi)?ds.roi:0)}</div>` : "";
-  return `${cur}<p class="mb-3 c-sub" style="color:var(--text)">Der <b>Deal-Score</b> zeigt auf einen Blick, wie profitabel ein Verkauf war — gemessen am <b>ROI</b> (Rendite): <b>Gewinn ÷ Einkaufspreis</b>. Beispiel: 30 € Gewinn auf 60 € Einkauf = 50 % ROI.</p>
+  // Marktplatz-Aufschlüsselung: derselbe Artikel schneidet je nach Verkaufsort anders ab
+  let comp="";
+  if(ds && isFinite(ds.vk) && ds.vk>0 && isFinite(ds.ek)){
+    const V=vatF(), vk=ds.vk, ek=ds.ek, ship=ds.ship||0, comb=isFinite(ds.comb)?ds.comb:0;
+    const mk=profit=>dealGrade(profit, ek);
+    const eComm = mk(vk - (transFee(vk)+vk*comb/100*V) - ek - ship);
+    const ePriv = mk(vk - ek - ship);                 // eBay Privat, Inland = 0 Gebühr
+    const kfld  = mk(vk - vk*13/100*V - ek - ship);   // Kaufland Standard 13 %
+    const cline=(label,r)=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:9px;margin:6px 0"><span style="color:var(--text)">${label}</span><span style="display:inline-flex;align-items:center;gap:8px"><span class="c-sub" style="font-size:12px">ROI ${pct(r.roi)}</span><span class="pill" style="border:1px solid color-mix(in srgb,${r.col} 45%,var(--line));color:${r.col};background:color-mix(in srgb,${r.col} 12%,transparent);font-weight:800;min-width:26px;text-align:center">${r.g}</span></span></div>`;
+    comp = `<div style="border-top:1px solid var(--line);margin-top:14px;padding-top:12px">
+      <p style="font-weight:600" class="mb-1">Je nach Marktplatz <span class="c-sub" style="font-weight:400">· bei VK ${eur(vk)}</span></p>
+      ${cline("eBay gewerblich", eComm)}
+      ${cline("eBay Privat (Inland)", ePriv)}
+      ${cline("Kaufland (Standard 13 %)", kfld)}
+      <p class="c-sub text-[11px] mt-2 leading-relaxed">Der ◆-Score auf der Karte ist die Schätzung für <b>eBay gewerblich</b>. Beim Verkauf-Eintragen zählt der real gewählte Marktplatz.</p></div>`;
+  }
+  return `${cur}<p class="mb-3" style="color:var(--text)">Der <b>Deal-Score</b> zeigt auf einen Blick, wie profitabel ein Verkauf ist — gemessen am <b>ROI</b> (Rendite): <b>Gewinn ÷ Einkaufspreis</b>. Beispiel: 30 € Gewinn auf 60 € Einkauf = 50 % ROI.</p>
     ${row("A","ROI ≥ 50 % — Top-Deal",acc)}
     ${row("B","ROI ≥ 30 % — stark",acc)}
     ${row("C","ROI ≥ 15 % — solide",warn)}
     ${row("D","ROI ≥ 5 % — dünn",warn)}
-    ${row("E","darunter oder Verlust",dng)}`;
+    ${row("E","darunter oder Verlust",dng)}${comp}`;
 }
 /* Info-„i" überall antippbar machen — der reine Hover-Tooltip funktioniert am
    Handy nicht. Tippen öffnet die Erklärung als Fenster (Zweck + Rechenweg). */
@@ -2615,7 +2631,7 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleC
     const wfBadge=`<button type="button" class="pill inv-status" data-id="${it.id}" ${canAdv?'title="Klick: nächster Status"':''} style="border:1px solid ${stMeta.ring};color:${stMeta.col};background:color-mix(in srgb,${stMeta.col} 13%,transparent);${canAdv?'cursor:pointer':'cursor:default'}">${lang==="en"?stMeta.en:stMeta.de}${canAdv?' →':''}</button>`;
     const healthPill = st==="returned" ? "" : (loss?`<span class="pill pill-warn">⚠ ${lang==="en"?"Loss":"Verlust"}</span>`:(!healthy?`<span class="pill pill-warn">⚠ ${lang==="en"?"Below target":"Unter Ziel"}</span>`:`<span class="pill pill-accent">${lang==="en"?"Healthy":"Gesund"}</span>`));
     const _ds = st==="returned" ? null : dealGrade(ev.profit, it.ek);
-    const scorePill = _ds ? `<button type="button" class="pill deal-pill" data-roi="${_ds.roi}" data-grade="${_ds.g}" data-col="${attrEsc(_ds.col)}" style="border:1px solid color-mix(in srgb,${_ds.col} 45%,var(--line));color:${_ds.col};background:color-mix(in srgb,${_ds.col} 12%,transparent);font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px" title="Antippen: So wird der Deal-Score berechnet">◆ Deal ${_ds.g}<span style="opacity:.75;font-weight:600">ⓘ</span></button>` : "";
+    const scorePill = _ds ? `<button type="button" class="pill deal-pill" data-roi="${_ds.roi}" data-grade="${_ds.g}" data-col="${attrEsc(_ds.col)}" data-vk="${it.vk}" data-ek="${it.ek}" data-ship="${it.ship}" data-comb="${it.catPct+it.adPct+it.regionPct}" style="border:1px solid color-mix(in srgb,${_ds.col} 45%,var(--line));color:${_ds.col};background:color-mix(in srgb,${_ds.col} 12%,transparent);font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px" title="Antippen: So wird der Deal-Score berechnet">◆ Deal ${_ds.g}<span style="opacity:.75;font-weight:600">ⓘ</span></button>` : "";
     const stalePill = st==="returned" ? "" : (ageDays>=staleDays*2 ? `<span class="pill pill-stale-red">⏳ ${ageDays} T</span>` : (ageDays>=staleDays ? `<span class="pill pill-stale">⏳ ${ageDays} T</span>` : ""));
     const floorPill = st==="returned" ? "" : `<span class="pill pill-floor" title="${lang==="en"?"Floor price – never sell below":"Mindest-VK – niemals darunter verkaufen"}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="pf-label">${lang==="en"?"Floor":"Min-VK"}</span> ${minVK===Infinity?"—":eur(minVK)}</span>`;
     const dlPill = dl ? `<span class="pill" style="border:1px solid color-mix(in srgb,${dl.col} 40%,var(--line));color:${dl.col};background:color-mix(in srgb,${dl.col} 12%,transparent)">${dl.urgent?'⏰ ':''}${dl.txt}</span>` : "";
@@ -2686,7 +2702,7 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleC
     b.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggleHead(b); } });
   });
   $$("#inv-list .deal-pill").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation();
-    openInfoModal("Deal-Score", dealScoreInfoHTML({ g:b.dataset.grade, roi:parseFloat(b.dataset.roi), col:b.dataset.col })); }));
+    openInfoModal("Deal-Score", dealScoreInfoHTML({ g:b.dataset.grade, roi:parseFloat(b.dataset.roi), col:b.dataset.col, vk:parseFloat(b.dataset.vk), ek:parseFloat(b.dataset.ek), ship:parseFloat(b.dataset.ship), comb:parseFloat(b.dataset.comb) })); }));
   $$("#inv-list .inv-status").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation();
     const it=inventory.find(x=>x.id===b.dataset.id); if(!it) return; const s=invStatus(it);
     if(s==="ordered"||s==="transit"){ it.status=nextStatusOf(s); it.touchedAt=new Date().toISOString(); DB.saveInventory(inventory); renderInventory(); renderDashboard&&renderDashboard(); showToast(`Status: ${INV_STATUS[it.status].de}`); } }));

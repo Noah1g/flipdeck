@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v48";   // v48 (App v5.16.3): Marktplatz eBay-Privat (innerdeutsch gebuehrenfrei, Ausland 5%)
+const VERSION    = "flipdeck-v49";   // v49 (App v5.16.4): Deal-Score-Tipp zeigt Marktplatz-Aufschluesselung (eBay gewerbl./Privat/Kaufland)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
