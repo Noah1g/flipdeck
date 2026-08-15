@@ -2722,11 +2722,6 @@ function openAccountSetup(){
       <select id="as-rate" class="field"><option value="19"${defaultUstRate===19?" selected":""}>19 % (Regelsteuersatz)</option><option value="7"${defaultUstRate===7?" selected":""}>7 % (Ermäßigt)</option><option value="0"${defaultUstRate===0?" selected":""}>0 % (Steuerbefreit)</option></select>
     </div>
     </div>
-    <div class="mb-4">
-      <label class="label mb-2" for="as-platform">Standard-Verkaufsplattform</label>
-      <select id="as-platform" class="field">${platformOptions(defaultPlatform)}</select>
-      <p class="c-sub text-[11.5px] mt-1.5">Wird im Verkaufs-Dialog vorausgewählt — bei gebührenfreien Plattformen wird „Ohne Marktplatz-Gebühren" automatisch gesetzt.</p>
-    </div>
     <button id="as-save" class="btn-accent w-full">Fertig ↗</button>
   </div></div>`;
   const syncKuButtons=on=>{ $("#as-ku").setAttribute("aria-selected",on?"true":"false"); $("#as-reg").setAttribute("aria-selected",on?"false":"true"); $("#as-rate-wrap").classList.toggle("hidden",on); };
@@ -2740,7 +2735,9 @@ function openAccountSetup(){
     acctType = $("#as-priv").getAttribute("aria-selected")==="true" ? "privat" : "gewerblich";
     if(acctType==="privat"){ kuMode = true; defaultUstRate = 0; }   // Privat: keine Umsatzsteuer (MwSt-freier Modus)
     else { kuMode = $("#as-ku").getAttribute("aria-selected")==="true"; defaultUstRate = num($("#as-rate").value); }
-    defaultPlatform = $("#as-platform").value||"ebay";
+    // Standard-Marktplatz wird jetzt im Marktplätze-Tab gewählt — hier nur absichern,
+    // dass der Standard zum Kontotyp/aktivierten Set passt (relevant beim Erst-Login).
+    if(!getEnabledPlatforms().includes(defaultPlatform)) defaultPlatform = getEnabledPlatforms()[0] || "ebay";
     Store.set("fg_ku", kuMode?"1":"0");
     Store.set(uKey("ustrate"), String(defaultUstRate));
     Store.set(uKey("platform"), defaultPlatform);

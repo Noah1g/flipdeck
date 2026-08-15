@@ -160,7 +160,7 @@ input[type=date].field::-webkit-calendar-picker-indicator{ filter:invert(.6); cu
 .months button:not([aria-selected="true"]):hover{ color:var(--text); border-color:color-mix(in srgb,var(--brand) 40%,transparent); background:color-mix(in srgb,var(--brand) 10%,transparent); transform:translateY(-1px); }
 .months button[aria-selected="true"]{ background:color-mix(in srgb,var(--brand) 14%,transparent); border-color:color-mix(in srgb,var(--brand) 45%,transparent); color:var(--brand); }
 
-.region{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.region{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
 .region button{ background:color-mix(in srgb,var(--cell-2) 55%,transparent); border:1px solid var(--line); border-radius:14px; padding:11px 6px; cursor:pointer; color:var(--sub); transition:all .18s ease; text-align:center; }
 .region button:hover{ border-color:rgba(255,255,255,.16); transform:translateY(-1px); }
 .region button .r-name{ display:block; font-size:14px; font-weight:700; color:var(--text); }
@@ -829,7 +829,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.21.4</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.21.5</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -882,7 +882,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.21.4</span>
+        <span class="nav-ver">v5.21.5</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1262,6 +1262,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
             <button data-pct="0" aria-selected="true"><span class="r-name">EU</span><span class="r-pct c-sub">0 %</span></button>
             <button data-pct="1.2" aria-selected="false"><span class="r-name">UK</span><span class="r-pct c-sub">1,2 %</span></button>
             <button data-pct="1.6" aria-selected="false"><span class="r-name">USA / CA</span><span class="r-pct c-sub">1,6 %</span></button>
+            <button data-pct="3.3" aria-selected="false"><span class="r-name">Sonstige</span><span class="r-pct c-sub">3,3 %</span></button>
           </div>
         </div>
         <!-- Verpackungs-Pauschale: 1 € für Karton/Klebeband vom Gewinn abziehen -->
@@ -1467,7 +1468,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
         </div>
         <div><label class="label" for="iv-ad">Bewerben %</label><input id="iv-ad" class="field tnum" inputmode="decimal" value="0" /></div>
         <div class="col-span-2"><label class="label" for="iv-region">Ausland</label>
-          <select id="iv-region" class="field"><option value="0">EU · 0 %</option><option value="1.2">UK · 1,2 %</option><option value="1.6">USA / CA · 1,6 %</option></select>
+          <select id="iv-region" class="field"><option value="0">EU · 0 %</option><option value="1.2">UK · 1,2 %</option><option value="1.6">USA / CA · 1,6 %</option><option value="3.3">Sonstige Länder · 3,3 %</option></select>
         </div>
           </div>
         </details>
@@ -2030,7 +2031,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.21.4 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.21.5 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
