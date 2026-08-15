@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v73";   // v73 (App v5.20.4): Signup-Platzhalter Beispiel Noah1g
+const VERSION    = "flipdeck-v74";   // v74 (App v5.20.5): Registrierung - doppelte Benutzernamen und E-Mails verhindern
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

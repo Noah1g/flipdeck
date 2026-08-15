@@ -776,8 +776,19 @@ async function doRegister(){
   if(!sb){ showLoginErr("Keine Verbindung zu Supabase (Internet/CDN?). Bitte online sein und neu laden."); return; }
   const btn=$("#register-btn"); const ol=btn.textContent; btn.disabled=true; btn.textContent="Wird erstellt…";
   try{
+    // 1) Doppelten Benutzernamen verhindern (sonst wäre der Username-Login mehrdeutig).
+    //    Nutzt die vorhandene RPC: liefert sie schon eine E-Mail zurück, ist der Name vergeben.
+    try{
+      const { data: taken, error: takenErr } = await sb.rpc("email_for_username", { uname });
+      if(!takenErr && taken){ showLoginErr("Dieser Benutzername ist bereits vergeben. Bitte einen anderen wählen."); return; }
+    }catch(e){ /* RPC fehlt (alte Einrichtung) -> Prüfung überspringen, Supabase fängt die E-Mail-Dublette ab */ }
     const { data, error } = await sb.auth.signUp({ email: email, password: pass, options:{ data:{ username: uname } } });
     if(error){ console.warn("[register]", error.message); showLoginErr(authErrorDE(error.message)); return; }
+    // 2) Doppelte E-Mail: Supabase legt kein zweites Konto an, meldet aber (Enumeration-Schutz)
+    //    einen "Erfolg" ohne neue Identität zurück -> daran erkennen und klar sagen.
+    if(data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0){
+      showLoginErr("Für diese E-Mail existiert bereits ein Konto. Bitte anmelden oder Passwort zurücksetzen."); return;
+    }
     // Falls sofort eine Session entstand (E-Mail-Bestätigung AUS): wieder abmelden -> sauber zum Login
     if(data.session){ try{ await sb.auth.signOut(); }catch(e){} }
     // Erfolg -> zurück in den Login-Modus, Username vorausfüllen
