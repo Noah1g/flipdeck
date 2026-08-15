@@ -822,19 +822,21 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.20.2</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.20.3</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
         <button type="button" id="auth-tab-login" aria-selected="true" style="flex:1">Anmelden</button>
         <button type="button" id="auth-tab-signup" aria-selected="false" style="flex:1">Neues Konto</button>
       </div>
-      <div class="mb-4"><label class="label" for="username" data-i18n="login.user">Benutzername oder E-Mail</label><input id="username" class="field" autocomplete="username" placeholder="Name oder deine@email.de" /></div>
+      <div class="mb-3.5"><label id="user-label" class="label" for="username" data-i18n="login.user">Benutzername oder E-Mail</label><input id="username" class="field" autocomplete="username" placeholder="Name oder deine@email.de" /></div>
+      <div id="signup-emails" class="hidden">
+        <div class="mb-3.5"><label class="label" for="signup-email">E-Mail</label><input id="signup-email" class="field" type="email" autocomplete="email" placeholder="deine@email.de" /></div>
+        <div class="mb-3.5"><label class="label" for="signup-email2">E-Mail wiederholen</label><input id="signup-email2" class="field" type="email" autocomplete="email" placeholder="deine@email.de" /></div>
+      </div>
       <div class="mb-2"><label class="label" for="password" data-i18n="login.pass">Passwort</label><input id="password" class="field" type="password" autocomplete="current-password" placeholder="••••••••" /></div>
       <div id="signup-extra" class="hidden">
-        <div class="mb-2 mt-2"><label class="label" for="signup-email">E-Mail</label><input id="signup-email" class="field" type="email" autocomplete="email" placeholder="deine@email.de" /></div>
-        <div class="mb-2"><label class="label" for="signup-email2">E-Mail wiederholen</label><input id="signup-email2" class="field" type="email" autocomplete="email" placeholder="deine@email.de" /></div>
-        <div class="mb-2"><label class="label" for="password2">Passwort wiederholen</label><input id="password2" class="field" type="password" autocomplete="new-password" placeholder="••••••••" /></div>
+        <div class="mb-2 mt-3.5"><label class="label" for="password2">Passwort wiederholen</label><input id="password2" class="field" type="password" autocomplete="new-password" placeholder="••••••••" /></div>
         <p class="c-sub text-[12px] mt-2 leading-relaxed">Passwort mind. 6 Zeichen. Anmelden später mit Benutzername oder E-Mail.</p>
       </div>
       <label id="remember-row" class="flex items-center gap-2.5 my-4 cursor-pointer select-none"><input id="remember" type="checkbox" checked style="width:18px;height:18px;accent-color:var(--brand);" /><span class="text-sm c-sub" data-i18n="login.remember">Angemeldet bleiben</span></label>
@@ -873,7 +875,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.20.2</span>
+        <span class="nav-ver">v5.20.3</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -2010,7 +2012,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.20.2 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.20.3 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 

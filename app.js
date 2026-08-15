@@ -798,12 +798,19 @@ function setAuthMode(mode){
   const signup = mode === "signup";
   $("#auth-tab-login").setAttribute("aria-selected", signup ? "false" : "true");
   $("#auth-tab-signup").setAttribute("aria-selected", signup ? "true" : "false");
+  $("#signup-emails").classList.toggle("hidden", !signup);
   $("#signup-extra").classList.toggle("hidden", !signup);
   $("#remember-row").classList.toggle("hidden", signup);
   $("#login-btn").classList.toggle("hidden", signup);
   $("#register-btn").classList.toggle("hidden", !signup);
+  $("#forgot-row") && $("#forgot-row").classList.toggle("hidden", signup);
   $("#login-err").classList.add("hidden"); $("#login-ok").classList.add("hidden");
   $("#password").setAttribute("autocomplete", signup ? "new-password" : "current-password");
+  // Feld-Label & Platzhalter passend zum Modus (im Signup ist es klar der neue Username)
+  const ul=$("#user-label"); if(ul) ul.textContent = signup ? "Benutzername" : "Benutzername oder E-Mail";
+  const uin=$("#username"); if(uin) uin.setAttribute("placeholder", signup ? "z. B. flipking" : "Name oder deine@email.de");
+  // Desktop-Download-Zeile stört das lange Signup-Formular -> nur im Login zeigen
+  document.querySelectorAll(".desktop-dl").forEach(el => el.classList.toggle("hidden", signup));
   const hint=$("#login-hint"); if(hint) hint.textContent = signup
     ? "Username & Passwort einmalig festlegen. Nach dem Erstellen meldest du dich damit an."
     : "Noch kein Konto? Oben auf „Neues Konto“ wechseln, Daten vergeben und erstellen.";
