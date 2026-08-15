@@ -1,0 +1,56 @@
+{
+  "name": "flipdeck-desktop",
+  "version": "1.1.0",
+  "description": "Flipdeck als Windows-Desktop-App mit Discord Rich Presence",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "release": "electron-builder --win --publish always",
+    "build:mac": "electron-builder --mac",
+    "release:mac": "electron-builder --mac --publish always"
+  },
+  "author": "Noah",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "@xhayper/discord-rpc": "^1.2.0",
+    "electron-updater": "^6.3.9"
+  },
+  "build": {
+    "appId": "com.noah.flipdeck",
+    "productName": "Flipdeck",
+    "artifactName": "Flipdeck-Setup.${ext}",
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": "universal" }
+      ],
+      "category": "public.app-category.business"
+    },
+    "dmg": {
+      "title": "Flipdeck"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "files": [
+      "main.js",
+      "package.json"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "Noah1g",
+      "repo": "flipdeck",
+      "releaseType": "release"
+    }
+  }
+}

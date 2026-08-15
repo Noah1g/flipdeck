@@ -1,0 +1,35 @@
+name: Build macOS App (Flipdeck)
+
+# Manuell auslösbar: GitHub → Actions → "Build macOS App (Flipdeck)" → Run workflow.
+# Baut die Mac-App auf einem echten macOS-Runner (nicht auf deinem Windows-PC möglich)
+# und lädt die .dmg als Release-Asset hoch (Version aus desktop/package.json).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: desktop
+        run: npm install
+
+      - name: Build & publish macOS (.dmg)
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Kein Apple-Code-Signing (kein Developer-Account nötig). Die App ist damit
+          # "unsigniert" – siehe Hinweis in der README zum ersten Öffnen auf dem Mac.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --mac --publish always
