@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v65";   // v65 (App v5.19.7): oeffentlicher Download-Dialog (Windows .exe + Mac .dmg x64/arm64) mit OS-Erkennung, GitHub-Release-Links
+const VERSION    = "flipdeck-v66";   // v66 (App v5.19.8): Download-Dialog verlinkt Dateien direkt auf ihr Release (exe in v1.1.0, dmgs in desktop-v1.1.0)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
