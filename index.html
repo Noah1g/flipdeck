@@ -658,6 +658,7 @@ html{ scroll-padding-top:96px; }
 .auth-emblem::after{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
   background:linear-gradient(160deg, rgba(255,255,255,.6), transparent 55%);
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+.app-icon-img{ width:66px; height:66px; border-radius:16px; display:block; box-shadow:0 22px 48px -16px color-mix(in srgb,var(--brand) 55%, rgba(0,0,0,.7)); }
 .boot-emblem{ margin-bottom:0; animation:bootPulse 1.7s ease-in-out infinite; }
 @keyframes bootPulse{ 0%,100%{ transform:scale(1); opacity:.9; } 50%{ transform:scale(1.06); opacity:1; } }
 .auth-tag{ display:flex; align-items:center; gap:8px; margin-top:11px; }
@@ -810,7 +811,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
 <!-- Neutraler Startzustand: verhindert, dass die Anmeldemaske kurz aufblitzt,
      wenn bereits eine Sitzung besteht. Wird von showLogin()/enterApp() ausgeblendet. -->
 <div id="boot-splash" class="relative z-10 min-h-screen flex flex-col items-center justify-center" style="gap:16px">
-  <span class="auth-emblem boot-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
+  <img class="app-icon-img boot-emblem" src="./logos/appicon.png" alt="Flipdeck" />
   <span class="wordmark" style="font-size:32px">Flip<span class="g">deck</span></span>
   <p class="c-sub text-sm" style="margin-top:-4px">Lädt…</p>
 </div>
@@ -818,9 +819,9 @@ body.no-images .ms-head .thumb{ display:none !important; }
 <main id="login-view" class="hidden relative z-10 min-h-screen flex items-center justify-center px-6">
   <div class="w-full max-w-sm view-enter">
     <div class="auth-brand">
-      <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
+      <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.19.2</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.19.3</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -868,7 +869,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.19.2</span>
+        <span class="nav-ver">v5.19.3</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -2005,7 +2006,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.19.2 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.19.3 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
