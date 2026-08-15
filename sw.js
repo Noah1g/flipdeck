@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v52";   // v52 (App v5.16.7): Verkaeufe-Tab - Ansicht Karten vs Nach Produkt (gestapelt, aufklappbar mit Einzelverkaeufen)
+const VERSION    = "flipdeck-v53";   // v53 (App v5.16.8): Fixkosten Startdatum-Feld + naechste Faelligkeit strikt in Zukunft (kein heute-faellig beim Anlegen)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

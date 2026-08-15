@@ -2094,11 +2094,13 @@ function fixIntervalLabel(f){ const iv=f&&f.interval;
 function fixNextDue(f){ if(!f||!f.anchor) return null;
   const today=new Date(); today.setHours(0,0,0,0);
   let d=new Date(f.anchor+"T00:00:00"); if(isNaN(d)) return null;
+  // Nächste Fälligkeit liegt STRIKT in der Zukunft: das Startdatum / die letzte Zahlung
+  // gilt als erledigt, also mindestens ein Intervall weiter (kein „heute fällig" beim Anlegen).
   const iv=f.interval;
-  if(!iv||iv==="month"){ while(d<today) d.setMonth(d.getMonth()+1); }
-  else if(iv==="year"){ while(d<today) d.setFullYear(d.getFullYear()+1); }
-  else { const step=Math.round(fixIntervalDays(f))||1;
-    if(d<today){ const diff=Math.ceil((today-d)/86400000/step); d=new Date(d.getTime()+diff*step*86400000); } }
+  if(!iv||iv==="month"){ while(d<=today) d.setMonth(d.getMonth()+1); }
+  else if(iv==="year"){ while(d<=today) d.setFullYear(d.getFullYear()+1); }
+  else { const step=Math.round(fixIntervalDays(f))||1, ms=step*86400000;
+    if(d.getTime()<=today.getTime()){ const n=Math.floor((today.getTime()-d.getTime())/ms)+1; d=new Date(d.getTime()+n*ms); } }
   return d; }
 function fixNextDueTxt(f){ const nd=fixNextDue(f); if(!nd) return "";
   const today=new Date(); today.setHours(0,0,0,0);
@@ -2994,9 +2996,10 @@ if($("#ec-new")) $("#ec-new").addEventListener("click",()=>openExpenseCatModal()
 if($("#fx-cat")) $("#fx-cat").addEventListener("change",()=>{ if($("#fx-cat").value==="__new__"){ const first=getExpenseCats()[0]; $("#fx-cat").value=first?first.id:""; openExpenseCatModal(); } });
 /* Collapsible Ausgaben-Formular */
 function setFixForm(open){ fxFormOpen=open; $("#fx-form").classList.toggle("hidden",!open);
+  if(open && $("#fx-anchor") && !$("#fx-anchor").value) $("#fx-anchor").value=fixTodayISO();
   $("#fx-toggle-ic").style.transform=open?"rotate(45deg)":"rotate(0deg)";
   $("#fx-toggle").querySelector("span").textContent= open ? (lang==="en"?"Close":"Schließen") : t("fix.add");
-  if(!open){ editingFixId=null; $("#fx-name").value=""; $("#fx-amount").value=""; if($("#fx-interval")) $("#fx-interval").value="month"; if($("#fx-interval-days")){ $("#fx-interval-days").value=""; $("#fx-interval-days").classList.add("hidden"); } refreshFixCatSelect(); const first=getExpenseCats()[0]; if($("#fx-cat")) $("#fx-cat").value=first?first.id:""; refreshPaySelects(); if($("#fx-paymethod")) $("#fx-paymethod").value=""; $("#fx-add").textContent=t("btn.add"); } }
+  if(!open){ editingFixId=null; $("#fx-name").value=""; $("#fx-amount").value=""; if($("#fx-interval")) $("#fx-interval").value="month"; if($("#fx-interval-days")){ $("#fx-interval-days").value=""; $("#fx-interval-days").classList.add("hidden"); } if($("#fx-anchor")) $("#fx-anchor").value=fixTodayISO(); refreshFixCatSelect(); const first=getExpenseCats()[0]; if($("#fx-cat")) $("#fx-cat").value=first?first.id:""; refreshPaySelects(); if($("#fx-paymethod")) $("#fx-paymethod").value=""; $("#fx-add").textContent=t("btn.add"); } }
 $("#fx-toggle").addEventListener("click",()=>setFixForm(!fxFormOpen));
 $("#fx-cancel").addEventListener("click",()=>setFixForm(false));
 $("#fx-add").addEventListener("click",()=>{ const name=$("#fx-name").value.trim(), amount=num($("#fx-amount").value); const sc=$("#fx-cat"); let catId=sc?sc.value:""; if(catId==="__new__") catId="";
@@ -3004,15 +3007,17 @@ $("#fx-add").addEventListener("click",()=>{ const name=$("#fx-name").value.trim(
   const iv=$("#fx-interval")?$("#fx-interval").value:"month"; const ivDays=iv==="custom"?Math.max(1,parseInt($("#fx-interval-days").value)||0):null;
   if(!name){ flashError($("#fx-name")); return; } if(amount<=0){ flashError($("#fx-amount")); return; }
   if(iv==="custom" && (!ivDays||ivDays<1)){ flashError($("#fx-interval-days")); return; }
-  const patch={name,amount,catId,payMethodId,interval:iv,intervalDays:ivDays};
-  if(editingFixId){ const f=fixed.find(x=>x.id===editingFixId); if(f){ Object.assign(f,patch); if(!f.anchor) f.anchor=fixTodayISO(); delete f.cat; } }
-  else fixed.unshift(Object.assign({id:"fx"+Date.now(),anchor:fixTodayISO()},patch));
+  const anchor=($("#fx-anchor")&&$("#fx-anchor").value)||fixTodayISO();
+  const patch={name,amount,catId,payMethodId,interval:iv,intervalDays:ivDays,anchor};
+  if(editingFixId){ const f=fixed.find(x=>x.id===editingFixId); if(f){ Object.assign(f,patch); delete f.cat; } }
+  else fixed.unshift(Object.assign({id:"fx"+Date.now()},patch));
   DB.saveFixed(fixed); setFixForm(false); renderFixed(); renderInventory(); showToast(t("toast.saved")); });
 if($("#fx-interval")) $("#fx-interval").addEventListener("change",()=>{ const c=$("#fx-interval").value==="custom"; if($("#fx-interval-days")) $("#fx-interval-days").classList.toggle("hidden",!c); });
 function openFixEdit(id){ const f=fixed.find(x=>x.id===id); if(!f) return; editingFixId=id;
   $("#fx-name").value=f.name; $("#fx-amount").value=String(f.amount).replace(".",","); refreshFixCatSelect();
   if($("#fx-interval")) $("#fx-interval").value=f.interval||"month";
   if($("#fx-interval-days")){ $("#fx-interval-days").value=f.intervalDays||""; $("#fx-interval-days").classList.toggle("hidden",(f.interval||"month")!=="custom"); }
+  if($("#fx-anchor")) $("#fx-anchor").value=f.anchor||fixTodayISO();
   refreshPaySelects(); if($("#fx-paymethod")) $("#fx-paymethod").value=(f.payMethodId && payMethodById(f.payMethodId))?f.payMethodId:"";
   const sc=$("#fx-cat"); if(sc){ if(f.catId && getExpenseCats().some(c=>c.id===f.catId)) sc.value=f.catId; else { const first=getExpenseCats()[0]; sc.value=first?first.id:""; } }
   $("#fx-add").textContent=t("btn.save"); fxFormOpen=true; $("#fx-form").classList.remove("hidden"); $("#fx-toggle-ic").style.transform="rotate(45deg)"; $("#fx-toggle").querySelector("span").textContent=(lang==="en"?"Close":"Schließen"); }
