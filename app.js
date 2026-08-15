@@ -2467,6 +2467,22 @@ function mpEval(platKey, vk, ek, ship, item){
   const payout=vk-fees, profit=payout-ek-ship;
   return {fees,payout,profit,margin:vk>0?profit/vk*100:0};
 }
+/* Marktplatz-Vergleich (nur Gewerblich-Konten): Gewinn/Stück je aktiviertem Marktplatz,
+   damit man auf einen Blick sieht, wo sich der Verkauf am meisten lohnt.
+   „Privat/Freunde", „Ohne Gebühren", eigene Marktplätze und eBay-Privat werden ausgelassen. */
+function mpCompareHTML(it, st){
+  if(st==="returned" || acctType!=="gewerblich") return "";
+  const skip=new Set(["privat","kein","sonstige","ebay_privat"]);
+  const plats=getEnabledPlatforms().filter(k=>{ const p=PLATFORMS[k]; return p && !p.custom && !skip.has(k); });
+  if(plats.length<2) return "";
+  const rows=plats.map(k=>({ label:PLATFORMS[k].label, profit:mpEval(k,it.vk,it.ek,it.ship,it).profit }))
+                  .sort((a,b)=>b.profit-a.profit);
+  const body=rows.map((r,i)=>`<div class="flex items-center justify-between" style="padding:5px 0${i>0?";border-top:1px solid var(--line)":""}">
+      <span class="text-[12.5px]${i===0?" font-semibold":""}"${i===0?' style="color:var(--accent)"':""}>${i===0?"◆ ":""}${escapeHtml(r.label)}</span>
+      <span class="mono text-[12.5px]${i===0?" font-semibold":""}" style="color:${r.profit<0?"var(--danger)":(i===0?"var(--accent)":"var(--text)")}">${r.profit>=0?"+":""}${eur(r.profit)}</span></div>`).join("");
+  return `<div class="rounded-[15px] p-3 mb-3" style="background:var(--cell-2);border:1px solid var(--line)">
+      <p class="text-[10px] font-semibold uppercase tracking-wider c-sub mb-1.5">Wo am meisten Gewinn? · pro Stück</p>${body}</div>`;
+}
 /* Deal-Score: kompakte Note A–E aus dem ROI (Gewinn/Einsatz) — gute Deals auf einen Blick */
 function dealGrade(profit, ek){ const roi = ek>0 ? profit/ek*100 : (profit>0?200:-1);
   if(profit<0) return {g:"E", col:"var(--danger)", roi};
@@ -3065,6 +3081,7 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleC
             <div class="rounded-[15px] p-3" style="background:var(--accent-soft);border:1px solid var(--line)"><div class="flex items-center gap-1.5 mb-1"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg><span class="text-[10px] font-semibold uppercase tracking-wider c-accent">${lang==="en"?"Target":"Ziel-VK"} · ${pct(goalPct)}</span></div><p class="mono font-bold text-[19px] c-accent">${tgtVK===Infinity?"—":eur(tgtVK)}</p><p class="c-sub text-[10.5px] mt-0.5">${lang==="en"?"fixed target margin":"feste Zielmarge"}</p></div>
           </div>
           <p class="c-sub text-[11.5px] mono mb-3">${lang==="en"?"Ship":"Versand"} ${eur(it.ship)} · ${lang==="en"?"Fees":"Gebühren"} ${combined.toLocaleString("de-DE")} % · ${lang==="en"?"Capital":"Kapital"} ${eur(it.ek*it.qty)}${it.orderDate?` · Bestellt ${new Date(it.orderDate).toLocaleDateString("de-DE")}`:""}</p>
+          ${mpCompareHTML(it, st)}
           ${ trackUrl(it.buyCarrier,it.buyTracking) ? `<div class="mb-3">${trackLinkHTML(it.buyCarrier,it.buyTracking,"Einkauf verfolgen")}</div>` : "" }
           <div class="mb-3">${researchHTML(it.name,it.ean)}</div>
           ${salesHistoryHTML(it)}
