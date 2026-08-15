@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v64";   // v64 (App v5.19.6): PERFORMANCE - Tailwind vorkompiliert (Laufzeit-Compiler raus); tailwind.css im Cache
+const VERSION    = "flipdeck-v65";   // v65 (App v5.19.7): oeffentlicher Download-Dialog (Windows .exe + Mac .dmg x64/arm64) mit OS-Erkennung, GitHub-Release-Links
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

@@ -2339,6 +2339,28 @@ function dealGrade(profit, ek){ const roi = ek>0 ? profit/ek*100 : (profit>0?200
   if(roi>=5)  return {g:"D", col:"#f5a524", roi};
   return {g:"E", col:"var(--danger)", roi}; }
 /* Wiederverwendbares Erklär-Fenster: „wofür ist das + wie wird gerechnet". */
+/* ===== App-Download (öffentlich, für alle) · GitHub-Release-Assets (kein Größenlimit) ===== */
+function downloadBase(){ return "https://github.com/Noah1g/flipdeck/releases/latest/download/"; }
+function openDownloadModal(){
+  const ua=navigator.userAgent||""; const isMac=/Mac/i.test(ua)&&!/iPhone|iPad|iPod/i.test(ua); const isWin=/Win/i.test(ua);
+  const b=downloadBase();
+  const opt=(rec,icon,title,sub,file)=>`<a href="${b}${file}" target="_blank" rel="noopener noreferrer" class="dl-opt" style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:13px;border:1px solid ${rec?'color-mix(in srgb,var(--brand) 45%,var(--line))':'var(--line)'};background:${rec?'color-mix(in srgb,var(--brand) 10%,transparent)':'color-mix(in srgb,var(--cell-2) 60%,transparent)'};text-decoration:none;color:var(--text);margin-bottom:10px">
+      <span style="font-size:22px;flex:0 0 auto;line-height:1">${icon}</span>
+      <span style="flex:1;min-width:0"><span class="font-semibold text-[14px]" style="display:block">${title}${rec?' <span class="pill pill-accent" style="font-size:10px">dein System</span>':''}</span><span class="c-sub text-[12px]">${sub}</span></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    </a>`;
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:430px">
+    <div class="flex items-start justify-between gap-3 mb-3"><div><p class="font-bold text-[18px]">Flipdeck-App laden</p><p class="c-sub text-[12.5px] mt-0.5">Wähle dein System — der Rest läuft im Browser weiter.</p></div><button id="dl-x" class="iconbtn" title="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    ${opt(isWin,"🪟","Windows","Installations-Datei (.exe)","Flipdeck-Setup.exe")}
+    ${opt(isMac,"💻","macOS · Apple Silicon","M1/M2/M3/M4 (.dmg)","Flipdeck-mac-arm64.dmg")}
+    ${opt(false,"💻","macOS · Intel","ältere Intel-Macs (.dmg)","Flipdeck-mac-x64.dmg")}
+    <p class="c-sub text-[11px] leading-relaxed mt-1">Am <b>Mac</b> beim ersten Start: Rechtsklick auf die App → „Öffnen" (einmalig). <b>Windows</b>: .exe ausführen.</p>
+  </div></div>`;
+  const close=()=>{ $("#modal-root").innerHTML=""; };
+  $("#dl-x").addEventListener("click",close); const ov=$("#ov"); if(ov) ov.addEventListener("click",e=>{ if(e.target===ov) close(); });
+}
+document.addEventListener("click", function(e){ const a=e.target.closest && e.target.closest(".js-dl"); if(!a) return; e.preventDefault(); openDownloadModal(); });
+
 function openInfoModal(title, bodyHTML){
   $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:420px">
     <div class="flex items-start justify-between gap-3 mb-3">
