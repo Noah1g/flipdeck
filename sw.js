@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v61";   // v61 (App v5.19.3): echtes App-Icon (statt Wuerfel-SVG) in Login- und Lade-Screen
+const VERSION    = "flipdeck-v62";   // v62 (App v5.19.4): Tour nur 1x pro Konto - saveTaxCfg merged jetzt (tourDone geht nie verloren) + Direkt-Check gegen taxCfg.tourDone
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

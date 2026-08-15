@@ -206,6 +206,10 @@ async function refreshPendingBadge(showNote){
   return total;
 }
 
+/* Konto-weite Steuer-/Onboarding-Konfig (kuMode, Standard-Plattform, onboarded, tourDone …).
+   MODUL-GLOBAL, damit saveTaxCfg mergen kann und kein Feld (z. B. tourDone) verloren geht. */
+let taxCfg = null;
+
 const DB = {
   /* ---- USERS (nur kosmetische Liste für Admin-Tab) + UI-Settings: bleiben LOKAL ---- */
   getUsers(){ try { const u=JSON.parse(Store.get("fg_users")||"null"); if(u&&u.length) return u; } catch(e){} return []; },
@@ -222,7 +226,7 @@ const DB = {
   getShipCfg(){ return dbLoad('shipcfg'); },      saveShipCfg(o){ return dbSave('shipcfg', o); },
   getBackups(){ return dbLoad('backups'); },      saveBackups(a){ return dbSave('backups', a); },
   getAvatar(){ return dbLoad('avatar'); },       setAvatar(d){ return dbSave('avatar', d); },
-  getTaxCfg(){ return dbLoad('taxcfg'); },       saveTaxCfg(o){ return dbSave('taxcfg', o); },
+  getTaxCfg(){ return dbLoad('taxcfg'); },       saveTaxCfg(o){ taxCfg = Object.assign({}, taxCfg||{}, o||{}); return dbSave('taxcfg', taxCfg); },
 
   /* ---- APP-SETTINGS (Theme, Mode, Sprache, Stale): pro Gerät LOKAL ---- */
   getSetting(k,def){ const v=Store.get("fg_"+k); return v===null?def:v; },
@@ -687,7 +691,7 @@ async function enterApp(){
   await profileUpsert();
 
   renderShipPresets(); initShipDropdowns(); applyShipDefaults();
-  let taxCfg=null; try{ taxCfg = await DB.getTaxCfg(); }catch(e){ console.warn("[taxcfg load]", e); }
+  try{ taxCfg = await DB.getTaxCfg() || null; }catch(e){ console.warn("[taxcfg load]", e); }
   if(taxCfg && typeof taxCfg==="object"){
     kuMode = !!taxCfg.kuMode;
     defaultUstRate = taxCfg.defaultUstRate || 19;
@@ -3469,7 +3473,9 @@ function positionTour(){ if(!_tourActive||!_tourTip) return; const step=TOUR_STE
     let left=Math.min(Math.max(12, r.left+r.width/2-tipW/2), innerWidth-tipW-12);
     _tourTip.style.transform=""; _tourTip.style.left=left+"px"; _tourTip.style.top=top+"px";
   } else { _tourHole.style.display="none"; _tourTip.style.left="50%"; _tourTip.style.top="50%"; _tourTip.style.transform="translate(-50%,-50%)"; } }
-function startTourIfNew(){ if(_tourActive) return; try{ if(Store.get(uKey("tourdone"))==="1") return; }catch(e){ return; }
+function startTourIfNew(){ if(_tourActive) return;
+  try{ if(Store.get(uKey("tourdone"))==="1") return; }catch(e){}
+  if(taxCfg && taxCfg.tourDone) return;   // konto-weit schon gesehen -> nie wieder, auch auf neuem Gerät
   setTimeout(()=>{ if(_tourActive) return; const mr=$("#modal-root"); if(mr && mr.firstChild) return; startTour(); }, 800); }
 if($("#menu-tour")) $("#menu-tour").addEventListener("click",()=>{ if($("#profile-menu")) $("#profile-menu").classList.add("hidden"); if($("#profile-btn")) $("#profile-btn").setAttribute("aria-expanded","false"); startTour(); });
 
