@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v49";   // v49 (App v5.16.4): Deal-Score-Tipp zeigt Marktplatz-Aufschluesselung (eBay gewerbl./Privat/Kaufland)
+const VERSION    = "flipdeck-v50";   // v50 (App v5.16.5): Deal-Score folgt Standard-Marktplatz; Kaufland-Fee aus eBay-Kategorie; Modal-X-Hitbox-Fix (Electron Fenstermodus)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
