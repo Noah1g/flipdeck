@@ -1536,6 +1536,34 @@ function inPeriod(iso, p){
   if(p==="ty"){ return t.getFullYear()===now.getFullYear(); }
   return true;
 }
+/* Verkäufe-Ansicht: „cards" (chronologische Kacheln) oder „grouped" (nach Produkt gestapelt). */
+let trackView = Store.get("fg_trackview")==="grouped" ? "grouped" : "cards";
+let trackGrpExpanded = new Set();
+function groupedTrackerHTML(list){
+  const groups=new Map();
+  list.forEach(f=>{ const key=((f.ean||"").trim()) || (f.name||"").trim().toLowerCase() || f.id;
+    if(!groups.has(key)) groups.set(key,{key, name:f.name, img:null, sales:[], units:0, profit:0, last:0});
+    const g=groups.get(key); g.sales.push(f); g.units+=(f.qty||1); g.profit+=flipProfit(f);
+    const t=new Date(f.date).getTime(); if(t>g.last) g.last=t; if(!g.img && f.img) g.img=f.img; if(!g.name) g.name=f.name; });
+  return [...groups.values()].sort((a,b)=>b.last-a.last).map(g=>{
+    const open=trackGrpExpanded.has(g.key), pos=g.profit>=0;
+    const rows=g.sales.map(f=>{ const p=flipProfit(f), pp=p>=0, plat=PLATFORMS[f.platform]||PLATFORMS.ebay;
+      return `<button type="button" class="grp-sale" data-id="${f.id}">
+        <span class="c-sub" style="font-size:12px;flex:0 0 auto;min-width:58px">${fmtDate(f.date)}</span>
+        <span style="flex:1;min-width:0" class="truncate"><span class="pill ${plat.pill}" style="font-size:10px">${plat.label}</span>${f.qty>1?` <span class="c-sub">×${f.qty}</span>`:""}${f.returned?` <span style="color:#f5a524">↩</span>`:""}</span>
+        <span class="mono c-sub" style="font-size:12px;flex:0 0 auto">${eur(num(f.payout))}</span>
+        <span class="mono" style="font-weight:700;flex:0 0 auto;min-width:66px;text-align:right;color:${pp?'var(--accent)':'var(--danger)'}">${pp?"+":""}${eur(p)}</span>
+      </button>`; }).join("");
+    return `<div class="grp-item" style="border:1px solid var(--line);border-radius:14px;background:var(--cell-2);overflow:hidden">
+      <button type="button" class="grp-head" data-key="${attrEsc(g.key)}" style="display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;background:none;border:0;cursor:pointer">
+        <span style="flex:0 0 auto;width:42px;height:42px;border-radius:11px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--cell)">${g.img?`<img src="${attrEsc(g.img)}" style="width:100%;height:100%;object-fit:cover">`:dealIconSVG}</span>
+        <span style="flex:1;min-width:0"><span class="font-semibold text-[14px] truncate" style="display:block">${escapeHtml(g.name||"—")}</span><span class="c-sub text-[12px]">${g.sales.length} ${g.sales.length===1?"Verkauf":"Verkäufe"} · ${g.units} Stück · zuletzt ${fmtDate(new Date(g.last).toISOString())}</span></span>
+        <span class="mono" style="font-weight:800;font-size:15px;flex:0 0 auto;color:${pos?'var(--accent)':'var(--danger)'}">${pos?"+":""}${eur(g.profit)}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;transition:transform .2s;transform:rotate(${open?90:0}deg)"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <div class="grp-body ${open?'':'hidden'}" style="padding:0 14px 10px">${rows}</div>
+    </div>`; }).join("");
+}
 function renderTrackerList(){
   const period = $("#track-period") ? $("#track-period").value : "30";
   const q = $("#track-search") ? $("#track-search").value.trim().toLowerCase() : "";
@@ -1547,12 +1575,23 @@ function renderTrackerList(){
   if($("#tk-rev")){ $("#tk-rev").textContent=eur(rev);
     $("#tk-profit").textContent=(profit>=0?"+":"")+eur(profit); $("#tk-profit").style.color=profit>=0?"var(--accent)":"var(--danger)";
     $("#tk-margin").textContent=pct(margin); }
-  $("#track-list").innerHTML=list.map(dealCard).join("");
+  const box=$("#track-list");
+  $$("#track-view button").forEach(x=>x.setAttribute("aria-selected", x.dataset.view===trackView));
   $("#track-empty").classList.toggle("hidden", list.length>0);
-  $$("#track-list .deal-edit").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openDealEdit(b.dataset.id); }));
-  $$("#track-list .deal-del").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); deleteDeal(b.dataset.id); }));
-  $$("#track-list .deal-tile").forEach(el=>el.addEventListener("click",()=>openFlipDetail(el.dataset.id)));
+  if(trackView==="grouped"){
+    box.className="flex flex-col gap-2.5";
+    box.innerHTML=groupedTrackerHTML(list);
+    $$("#track-list .grp-head").forEach(b=>b.addEventListener("click",()=>{ const k=b.dataset.key; if(trackGrpExpanded.has(k)) trackGrpExpanded.delete(k); else trackGrpExpanded.add(k); renderTrackerList(); }));
+    $$("#track-list .grp-sale").forEach(b=>b.addEventListener("click",()=>openFlipDetail(b.dataset.id)));
+  } else {
+    box.className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
+    box.innerHTML=list.map(dealCard).join("");
+    $$("#track-list .deal-edit").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openDealEdit(b.dataset.id); }));
+    $$("#track-list .deal-del").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); deleteDeal(b.dataset.id); }));
+    $$("#track-list .deal-tile").forEach(el=>el.addEventListener("click",()=>openFlipDetail(el.dataset.id)));
+  }
 }
+$$("#track-view button").forEach(b=>b.addEventListener("click",()=>{ trackView=b.dataset.view==="grouped"?"grouped":"cards"; Store.set("fg_trackview",trackView); $$("#track-view button").forEach(x=>x.setAttribute("aria-selected", x.dataset.view===trackView)); renderTrackerList(); }));
 $("#track-period").addEventListener("change",renderTrackerList);
 if($("#track-search")) $("#track-search").addEventListener("input",()=>{ const x=$("#track-search-x"); if(x) x.classList.toggle("hidden",!$("#track-search").value); renderTrackerList(); });
 if($("#track-search-x")) $("#track-search-x").addEventListener("click",()=>{ const s=$("#track-search"); s.value=""; $("#track-search-x").classList.add("hidden"); s.focus(); renderTrackerList(); });

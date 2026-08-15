@@ -305,6 +305,12 @@ body.has-save-error #save-error-bar{ transform:translate(-50%, 0); }
 .calc-switch button:hover{ color:var(--text); }
 .calc-switch button[aria-selected="true"]{ background:color-mix(in srgb,var(--brand) 16%,transparent); color:var(--text); box-shadow:0 0 0 1px color-mix(in srgb,var(--brand) 40%,transparent) inset; }
 
+/* Verkäufe „Nach Produkt": gestapelte, aufklappbare Produkt-Gruppen */
+.grp-body{ display:flex; flex-direction:column; }
+.grp-sale{ display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:none; border:0; border-top:1px solid var(--line); padding:9px 4px; cursor:pointer; border-radius:8px; }
+.grp-sale:hover{ background:color-mix(in srgb,var(--brand) 8%,transparent); }
+.grp-head:hover{ background:color-mix(in srgb,var(--brand) 6%,transparent); }
+
 /* Zeitraum-Filter garantiert einzeilig (statt 2+1-Umbruch) */
 .range-group{ flex-wrap:nowrap; max-width:100%; overflow-x:auto; scrollbar-width:none; }
 .range-group::-webkit-scrollbar{ display:none; }
@@ -801,7 +807,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.16.6</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.16.7</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -849,7 +855,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.16.6</span>
+        <span class="nav-ver">v5.16.7</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1072,6 +1078,10 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <svg class="absolute left-4 top-1/2 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input id="track-search" class="field" style="padding-left:42px;padding-right:42px;" placeholder="Nach Produktname oder EAN suchen…" />
         <button id="track-search-x" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 hidden" style="width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--cell-2);color:var(--sub);display:flex;align-items:center;justify-content:center" aria-label="Suche löschen"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="calc-switch mb-4" id="track-view" role="tablist" aria-label="Ansicht">
+        <button type="button" data-view="cards" role="tab" aria-selected="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Karten</button>
+        <button type="button" data-view="grouped" role="tab" aria-selected="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Nach Produkt</button>
       </div>
       <div id="track-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
       <div id="track-empty" class="text-center py-10 hidden">
@@ -1958,7 +1968,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.16.6 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.16.7 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
