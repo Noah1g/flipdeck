@@ -808,7 +808,7 @@ function setAuthMode(mode){
   $("#password").setAttribute("autocomplete", signup ? "new-password" : "current-password");
   // Feld-Label & Platzhalter passend zum Modus (im Signup ist es klar der neue Username)
   const ul=$("#user-label"); if(ul) ul.textContent = signup ? "Benutzername" : "Benutzername oder E-Mail";
-  const uin=$("#username"); if(uin) uin.setAttribute("placeholder", signup ? "z. B. flipking" : "Name oder deine@email.de");
+  const uin=$("#username"); if(uin) uin.setAttribute("placeholder", signup ? "z. B. Noah1g" : "Name oder deine@email.de");
   // Desktop-Download-Zeile stört das lange Signup-Formular -> nur im Login zeigen
   document.querySelectorAll(".desktop-dl").forEach(el => el.classList.toggle("hidden", signup));
   const hint=$("#login-hint"); if(hint) hint.textContent = signup

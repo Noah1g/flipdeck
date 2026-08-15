@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v72";   // v72 (App v5.20.3): Signup-Layout - logische Feldreihenfolge, Label je Modus, Desktop-Link im Signup aus
+const VERSION    = "flipdeck-v73";   // v73 (App v5.20.4): Signup-Platzhalter Beispiel Noah1g
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
