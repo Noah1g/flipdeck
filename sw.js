@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v88";   // v88 (App v5.21.8): Kaufland-Hinweis - irrefuehrenden Bewerben-Prozent-Zusatz entfernt
+const VERSION    = "flipdeck-v89";   // v89 (App v5.21.9): kein horizontaler Scrollbalken im Verkaufs-Dialog; Recherche-Links als Grid
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

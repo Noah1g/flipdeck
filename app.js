@@ -2616,8 +2616,8 @@ function researchLinks(name, ean){
 }
 function researchHTML(name, ean){
   const L=researchLinks(name, ean);
-  const a=(href,label)=>`<a href="${href}" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="flex:1 1 0;min-width:0;padding:9px 8px;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px">${label}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>`;
-  return `<div><p class="label mb-1.5">Preis-Recherche</p><div class="flex gap-2">${a(L.idealo,"idealo")}${a(L.ebaySold,"eBay verkauft")}${a(L.kaufland,"Kaufland")}</div></div>`;
+  const a=(href,label)=>`<a href="${href}" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="min-width:0;padding:9px 8px;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap">${label}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>`;
+  return `<div><p class="label mb-1.5">Preis-Recherche</p><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">${a(L.idealo,"idealo")}${a(L.ebaySold,"eBay verkauft")}${a(L.kaufland,"Kaufland")}</div></div>`;
 }
 const parseTags = s => (s||"").split(",").map(t=>t.trim()).filter(Boolean).slice(0,12);
 const tagsChipsHTML = tags => (tags&&tags.length) ? `<span class="inv-tags">${tags.map(t=>`<span class="tagchip">${escapeHtml(t)}</span>`).join("")}</span>` : "";
