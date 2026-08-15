@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v92";   // v92 (App v5.21.12): passive Aktivitaets-Anzeige (last_seen) im Admin-Tab
+const VERSION    = "flipdeck-v93";   // v93 (App v5.21.13): Bestand - Versanddienst/Sendungsnr./Bezahlt entfernt (kein Automatik-Mehrwert)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

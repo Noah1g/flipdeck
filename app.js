@@ -2670,7 +2670,7 @@ async function persistImage(src){
     return src;
   }
 }
-function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tracking","iv-tags"].forEach(id=>$("#"+id).value=""); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; $("#iv-carrier").value=""; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=""; } if($("#iv-paymethod")){ refreshPaySelects(); $("#iv-paymethod").value=""; } resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
+function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tags"].forEach(id=>{ const el=$("#"+id); if(el) el.value=""; }); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=""; } if($("#iv-paymethod")){ refreshPaySelects(); $("#iv-paymethod").value=""; } resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
 function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hidden",!open);
   $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
   $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
@@ -2696,7 +2696,7 @@ $("#iv-add").addEventListener("click", async ()=>{
   req.forEach(([id,ok])=>{ const el=$("#"+id); if(!ok(el.value)){ flashError(el); bad=true; } });
   if(bad){ showToast("Bitte Pflichtfelder ausfüllen"); return; }
   const data={ name:$("#iv-name").value.trim(), ean:$("#iv-ean").value.trim(), qty:Math.max(1,parseInt($("#iv-qty").value)||1), vk:num($("#iv-vk").value), ek:num($("#iv-ek").value), ship:num($("#iv-ship").value), catPct:num($("#iv-cat").value), adPct:num($("#iv-ad").value), regionPct:num($("#iv-region").value), feeVer:FEE_VER, noInputVat:!!($("#iv-noinputvat")&&$("#iv-noinputvat").checked),
-    status:$("#iv-status").value||"stock", orderDate:$("#iv-orderdate").value||"", returnBy:$("#iv-returnby").value||"", buyPlatformId:(($("#iv-buyplatform")&&$("#iv-buyplatform").value!=="__new__")?$("#iv-buyplatform").value:""), payMethodId:(($("#iv-paymethod")&&$("#iv-paymethod").value!=="__new__")?$("#iv-paymethod").value:""), buyCarrier:$("#iv-carrier").value||"", buyTracking:$("#iv-tracking").value.trim(), tags:parseTags($("#iv-tags").value) };
+    status:$("#iv-status").value||"stock", orderDate:$("#iv-orderdate").value||"", returnBy:$("#iv-returnby").value||"", buyPlatformId:(($("#iv-buyplatform")&&$("#iv-buyplatform").value!=="__new__")?$("#iv-buyplatform").value:""), tags:parseTags($("#iv-tags").value) };
 
   const btn=$("#iv-add"); const label=btn.textContent;
   if(isDataUrl(pendingInvImg)){ btn.disabled=true; btn.textContent="Bild wird hochgeladen…"; }
@@ -2944,13 +2944,11 @@ function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   $("#iv-status").value = invStatus(it)==="returned" ? "stock" : invStatus(it);
   $("#iv-orderdate").value = it.orderDate||""; $("#iv-returnby").value = it.returnBy||"";
   refreshBuyPlatSelect(); if($("#iv-buyplatform")) $("#iv-buyplatform").value = (it.buyPlatformId && buyPlatformById(it.buyPlatformId)) ? it.buyPlatformId : "";
-  refreshPaySelects(); if($("#iv-paymethod")) $("#iv-paymethod").value = (it.payMethodId && payMethodById(it.payMethodId)) ? it.payMethodId : "";
-  $("#iv-carrier").value = it.buyCarrier||""; $("#iv-tracking").value = it.buyTracking||"";
   $("#iv-tags").value = (it.tags||[]).join(", ");
   // Der Workflow-Block ist normal zugeklappt. Hat der Artikel dort aber Daten,
   // klappt er beim Bearbeiten auf – sonst uebersieht man sie und loescht sie versehentlich.
-  const _more=document.querySelector(".iv-more");
-  if(_more) _more.open = !!(it.orderDate||it.returnBy||it.buyCarrier||it.buyTracking||(it.tags&&it.tags.length)||(invStatus(it)!=="stock")||it.noInputVat);
+  const _more=document.querySelector(".iv-more:not(.iv-more-strong)");
+  if(_more) _more.open = !!(it.orderDate||it.returnBy||(it.tags&&it.tags.length)||(invStatus(it)!=="stock")||it.noInputVat);
   pendingInvImg=it.img||null;
   if(it.img){ $("#iv-drop").classList.add("has"); $("#iv-drop-empty").classList.add("hidden"); $("#iv-drop-preview").src=it.img; $("#iv-drop-preview").classList.remove("hidden"); } else resetInvImage();
   $("#iv-add").textContent="Änderungen speichern";
