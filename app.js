@@ -624,7 +624,7 @@ const I18N = {
   de:{
     "tab.dashboard":"Übersicht","tab.tracker":"Verkäufe","tab.calc":"Gebühren","tab.inventory":"Bestand","tab.fix":"Fixkosten","tab.report":"Auswertung","tab.pwgen":"Passwörter","tab.admin":"Admin","tab.profil":"Profil",
     "nav.logout":"Abmelden",
-    "login.subtitle":"Reselling-Cockpit","login.user":"Username","login.pass":"Passwort","login.remember":"Angemeldet bleiben","login.btn":"Anmelden","login.err":"Username oder Passwort falsch.",
+    "login.subtitle":"Reselling-Cockpit","login.user":"Benutzername oder E-Mail","login.pass":"Passwort","login.remember":"Angemeldet bleiben","login.btn":"Anmelden","login.err":"Username oder Passwort falsch.",
     "dash.revenue":"Umsatz","dash.profit":"Nettogewinn","dash.margin":"Marge","dash.history":"Historie","dash.search":"Suche nach Produkt oder EAN…","dash.recent":"Letzte Deals",
     "track.add":"Neuen Deal hinzufügen","track.recent":"Letzte Deals","track.empty":"Keine Deals im Zeitraum",
     "calc.title":"Gebührenrechner","calc.toInv":"Zu Bestand hinzufügen ↗","calc.toTracker":"In Tracker übernehmen ↗",
@@ -638,7 +638,7 @@ const I18N = {
   en:{
     "tab.dashboard":"Dashboard","tab.tracker":"Tracker","tab.calc":"Fee Calc","tab.inventory":"Inventory","tab.fix":"Fixed Costs","tab.report":"Reports","tab.pwgen":"Passwords","tab.admin":"Admin","tab.profil":"Profile",
     "nav.logout":"Log out",
-    "login.subtitle":"Reselling cockpit","login.user":"Username","login.pass":"Password","login.remember":"Stay signed in","login.btn":"Sign in","login.err":"Wrong username or password.",
+    "login.subtitle":"Reselling cockpit","login.user":"Username or email","login.pass":"Password","login.remember":"Stay signed in","login.btn":"Sign in","login.err":"Wrong username or password.",
     "dash.revenue":"Revenue","dash.profit":"Net profit","dash.margin":"Margin","dash.history":"History","dash.search":"Search product or EAN…","dash.recent":"Recent deals",
     "track.add":"Add new deal","track.recent":"Recent deals","track.empty":"No deals in range",
     "calc.title":"Fee calculator","calc.toInv":"Send to inventory ↗","calc.toTracker":"Send to tracker ↗",

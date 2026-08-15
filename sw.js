@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v67";   // v67 (App v5.19.9): Passwort vergessen - Reset per E-Mail (Supabase) + Neu-Passwort-Flow
+const VERSION    = "flipdeck-v68";   // v68 (App v5.19.10): Login-Feld beschriftet als Benutzername oder E-Mail (Login mit Mail ging schon)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
