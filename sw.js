@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v79";   // v79 (App v5.20.10): Kontodaten beim Start frisch vom Server (Username-Anzeige aktuell)
+const VERSION    = "flipdeck-v80";   // v80 (App v5.21.0): Ersteinrichtung Kontotyp Privat/Gewerblich; Privat = keine USt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

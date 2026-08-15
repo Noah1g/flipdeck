@@ -704,11 +704,14 @@ async function enterApp(){
     kuMode = !!taxCfg.kuMode;
     defaultUstRate = taxCfg.defaultUstRate || 19;
     defaultPlatform = PLATFORMS[taxCfg.defaultPlatform] ? taxCfg.defaultPlatform : "ebay";
+    // Bestandskonten ohne Kontotyp gelten als gewerblich (haben bereits eine Steuerart gewählt)
+    acctType = taxCfg.acctType || "gewerblich";
     if(taxCfg.tourDone){ try{ Store.set(uKey("tourdone"),"1"); }catch(e){} }   // kontoweit: Tour nie wieder zeigen
   } else {
     // Kein Konto-Datensatz vorhanden (erster Login überhaupt) -> lokale Fallbacks behalten
     defaultUstRate = parseInt(Store.get(uKey("ustrate"))||"19")||19;
     defaultPlatform = Store.get(uKey("platform")) || "ebay";
+    acctType = Store.get(uKey("accttype")) || "gewerblich";
     if(!PLATFORMS[defaultPlatform]) defaultPlatform="ebay";
   }
   maybeAutoBackup();   // Ebene 1: lokale Tagessicherung
@@ -2009,7 +2012,7 @@ function openCustomMarketModal(){
     $("#cm-name").value=""; $("#cm-list").innerHTML=listHTML(); bindDel(); renderPlatManager(); showToast("✓ Marktplatz angelegt"); });
 }
 if($("#plat-add-custom")) $("#plat-add-custom").addEventListener("click",openCustomMarketModal);
-let defaultPlatform = "ebay", defaultUstRate = 19;
+let defaultPlatform = "ebay", defaultUstRate = 19, acctType = "gewerblich";   // acctType: "privat" | "gewerblich"
 const vatF = () => kuMode ? 1.19 : 1;
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
   const vk = vkUst ? vkRaw/(1+vkUst/100) : vkRaw;
@@ -2676,6 +2679,15 @@ function openAccountSetup(){
       <button id="as-skip" class="iconbtn" title="Später" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="my-4">
+      <p class="label mb-2">Kontotyp</p>
+      <div class="seg" style="width:100%">
+        <button type="button" id="as-priv" data-v="privat" aria-selected="${acctType==="privat"?"true":"false"}" style="flex:1">Privat</button>
+        <button type="button" id="as-gew" data-v="gewerblich" aria-selected="${acctType!=="privat"?"true":"false"}" style="flex:1">Gewerblich</button>
+      </div>
+      <p class="c-sub text-[11.5px] mt-1.5">Privat: du verkaufst gelegentlich, <b>keine Umsatzsteuer</b>. Gewerblich: unten den Steuerstatus wählen.</p>
+    </div>
+    <div id="as-biz-wrap"${acctType==="privat"?' class="hidden"':""}>
+    <div class="my-4">
       <p class="label mb-2">Steuerstatus</p>
       <div class="seg" style="width:100%">
         <button type="button" id="as-ku" data-v="1" aria-selected="${kuMode?"true":"false"}" style="flex:1">Kleinunternehmer (§19 UStG)</button>
@@ -2687,6 +2699,7 @@ function openAccountSetup(){
       <label class="label mb-2" for="as-rate">Standard-MwSt.-Satz</label>
       <select id="as-rate" class="field"><option value="19"${defaultUstRate===19?" selected":""}>19 % (Regelsteuersatz)</option><option value="7"${defaultUstRate===7?" selected":""}>7 % (Ermäßigt)</option><option value="0"${defaultUstRate===0?" selected":""}>0 % (Steuerbefreit)</option></select>
     </div>
+    </div>
     <div class="mb-4">
       <label class="label mb-2" for="as-platform">Standard-Verkaufsplattform</label>
       <select id="as-platform" class="field">${platformOptions(defaultPlatform)}</select>
@@ -2697,16 +2710,21 @@ function openAccountSetup(){
   const syncKuButtons=on=>{ $("#as-ku").setAttribute("aria-selected",on?"true":"false"); $("#as-reg").setAttribute("aria-selected",on?"false":"true"); $("#as-rate-wrap").classList.toggle("hidden",on); };
   $("#as-ku").addEventListener("click",()=>syncKuButtons(true));
   $("#as-reg").addEventListener("click",()=>syncKuButtons(false));
-  $("#as-skip").addEventListener("click",()=>{ DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, onboarded:true }); Store.set(uKey("onboarded"),"1"); $("#modal-root").innerHTML=""; startTourIfNew(); });
+  const syncAcct=t=>{ $("#as-priv").setAttribute("aria-selected",t==="privat"?"true":"false"); $("#as-gew").setAttribute("aria-selected",t==="gewerblich"?"true":"false"); $("#as-biz-wrap").classList.toggle("hidden",t==="privat"); };
+  $("#as-priv").addEventListener("click",()=>syncAcct("privat"));
+  $("#as-gew").addEventListener("click",()=>syncAcct("gewerblich"));
+  $("#as-skip").addEventListener("click",()=>{ DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, acctType, onboarded:true }); Store.set(uKey("onboarded"),"1"); $("#modal-root").innerHTML=""; startTourIfNew(); });
   $("#as-save").addEventListener("click",()=>{
-    kuMode = $("#as-ku").getAttribute("aria-selected")==="true";
-    defaultUstRate = num($("#as-rate").value);
+    acctType = $("#as-priv").getAttribute("aria-selected")==="true" ? "privat" : "gewerblich";
+    if(acctType==="privat"){ kuMode = true; defaultUstRate = 0; }   // Privat: keine Umsatzsteuer (MwSt-freier Modus)
+    else { kuMode = $("#as-ku").getAttribute("aria-selected")==="true"; defaultUstRate = num($("#as-rate").value); }
     defaultPlatform = $("#as-platform").value||"ebay";
     Store.set("fg_ku", kuMode?"1":"0");
     Store.set(uKey("ustrate"), String(defaultUstRate));
     Store.set(uKey("platform"), defaultPlatform);
+    Store.set(uKey("accttype"), acctType);
     Store.set(uKey("onboarded"),"1");
-    DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, onboarded:true });
+    DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, acctType, onboarded:true });
     calc(); renderInventory(); renderBreakEven();
     $("#modal-root").innerHTML=""; showToast("✓ Standardwerte gespeichert"); startTourIfNew();
   });
