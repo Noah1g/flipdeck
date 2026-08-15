@@ -3374,6 +3374,7 @@ function snapRestoreConfirm(id, dlabel){
   $("#snr-ok").addEventListener("click",async()=>{ $("#snr-ok").textContent="Stelle her…"; $("#snr-ok").disabled=true; await snapRestore(id); $("#modal-root").innerHTML=""; }); }
 function snapSetupHint(){ const box=$("#snap-setup"); if(!box) return; const sql=snapSetupSQL();
   box.classList.remove("hidden");
+  if(!(currentUser && currentUser.role==="owner")){ box.innerHTML=`<p class="c-sub text-[12px] leading-relaxed mt-1">Wiederherstellungs-Punkte werden serverseitig vorbereitet.</p>`; return; }
   box.innerHTML=`<div class="rounded-[14px] p-3.5 mt-1" style="background:var(--cell-2);border:1px solid var(--line)">
     <p class="text-[13px] font-semibold mb-1">Einrichtung nötig</p>
     <p class="c-sub text-[12px] leading-relaxed mb-2">Für dauerhafte Wiederherstellungs-Punkte lege einmalig die <span class="mono">snapshots</span>-Tabelle in Supabase an. SQL kopieren, im <span class="mono">SQL Editor</span> ausführen, dann neu laden.</p>
@@ -3403,11 +3404,14 @@ function renderInvFormatStatus(){ const box=$("#inv-format-status"); if(!box) re
     : `<div class="flex items-center gap-2 mb-2"><span class="pill pill-mut">Klassisch</span><span class="text-[13.5px]">${label} · ein Block</span></div>`;
   let html = line('Inventar', _invMode) + line('Verkäufe', _flipMode);
   const anyBlob = _invMode!=='rows' || _flipMode!=='rows';
-  if(anyBlob){
+  const owner = currentUser && currentUser.role==="owner";
+  if(anyBlob && owner){
     const sql = invSetupSQL()+"\n\n"+flipSetupSQL();
     html += `<p class="c-sub text-[12.5px] leading-relaxed mt-2 mb-3">Für sehr große Bestände/Verkaufslisten (ab ~5.000 Einträgen) gibt es ein schnelleres <b>Zeilen-Format</b>. Optional: die Tabellen anlegen, dann stellt Flipdeck beim nächsten Laden <b>automatisch</b> um — deine Daten bleiben 1:1 unverändert. Die SQL ist gefahrlos mehrfach ausführbar.</p>
       <button id="inv-sql-copy" class="btn-ghost w-full" style="margin-bottom:8px">SQL für schnelles Format kopieren</button>
       <pre class="mono" style="font-size:10.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:170px;overflow:auto;color:var(--sub);background:var(--cell);border:1px solid var(--line);border-radius:10px;padding:10px">${escapeHtml(sql)}</pre>`;
+  } else if(anyBlob){
+    html += `<p class="c-sub text-[12.5px] leading-relaxed mt-2">Klassisches Format — für normale Bestände völlig ausreichend und schnell.</p>`;
   } else {
     html += `<p class="c-sub text-[12.5px] leading-relaxed mt-2">Beides im schnellen Zeilen-Format — jede Änderung schreibt nur den betroffenen Eintrag, nicht die ganze Liste. Skaliert mühelos.</p>`;
   }

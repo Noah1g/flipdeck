@@ -801,7 +801,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <span class="auth-emblem"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.16.5</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Reselling-Cockpit</p><span class="auth-ver">v5.16.6</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -849,7 +849,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.16.5</span>
+        <span class="nav-ver">v5.16.6</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1889,8 +1889,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <div class="settings-panel hidden" data-spanel="daten">
           <!-- Sicherung & Backup: alles gebündelt -->
           <div class="cell p-5">
-            <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Sicherung &amp; Backup</h3>
-            <p class="c-sub text-[12.5px] leading-relaxed mb-4">Flipdeck sichert deine Daten <b>automatisch jeden Tag</b> — ☁ in der Cloud (auf jedem Gerät verfügbar) und 📱 lokal auf dem Gerät (auch offline), jeweils die letzten 7. Für den Notfall lädst du zusätzlich ab und zu ein <b>Datei-Backup</b> herunter — die einzige Sicherung außerhalb der Cloud.</p>
+            <h3 class="text-[17px] font-semibold mb-1.5 tracking-tight">Deine Daten sind sicher ✓</h3>
+            <p class="c-sub text-[12.5px] leading-relaxed mb-4">Flipdeck sichert alles <b>vollautomatisch</b> — laufend in der Cloud (auf jedem Gerät) plus Wiederherstellungs-Punkte, auf die du jederzeit zurück kannst. <b>Du musst dich um nichts kümmern.</b> Optional lädst du ab und zu ein <b>Backup als Datei</b> herunter — eine zusätzliche Kopie außerhalb der Cloud, für den ganz sicheren Fall.</p>
             <div id="autofile-status" class="mb-4"></div>
             <details class="iv-more mb-4">
               <summary>Automatische Sicherungen ansehen <span style="font-weight:400;text-transform:none;letter-spacing:0">(Cloud &amp; Gerät · je die letzten 7)</span></summary>
@@ -1904,28 +1904,27 @@ body.no-images .ms-head .thumb{ display:none !important; }
             <p class="c-sub text-[11.5px] leading-relaxed mt-2.5">Beim Einspielen einer JSON-Datei kannst du wählen, ob die Daten <b>ergänzt</b> oder komplett <b>ersetzt</b> werden.</p>
           </div>
 
-          <!-- Speicher-Format: klassischer Block vs. schnelles Zeilen-Format (großer Bestand) -->
-          <div class="cell p-5">
-            <h3 class="text-[17px] font-semibold mb-2 tracking-tight">Speicher-Format</h3>
-            <div id="inv-format-status"></div>
-          </div>
-
-          <!-- Wiederherstellungs-Punkte: feingranulares, geräteübergreifendes Netz -->
-          <div class="cell p-5">
-            <div class="flex items-center justify-between gap-3 mb-1.5">
-              <h3 class="text-[17px] font-semibold tracking-tight">Wiederherstellungs-Punkte</h3>
-              <button id="snap-now" class="btn-ghost" style="padding:7px 12px;font-size:12.5px;flex:0 0 auto;white-space:nowrap">Jetzt sichern</button>
-            </div>
-            <p class="c-sub text-[12.5px] leading-relaxed mb-4">Momentaufnahmen deines <b>gesamten Datenstands</b> — feiner als die Tages-Backups. Entstehen automatisch bei Änderungen (max. alle 10 Min.) und auf Knopfdruck, geräteübergreifend. Du kannst jederzeit auf einen früheren Stand zurück (das Zurücksetzen selbst ist auch umkehrbar). Die letzten 25 werden behalten.</p>
-            <div id="snap-list" class="flex flex-col gap-2"></div>
-            <div id="snap-setup" class="hidden"></div>
-          </div>
-
-          <!-- Erweitert: technische Bild-Wartung, standardmäßig zugeklappt -->
+          <!-- Erweitert · Technisches: läuft alles automatisch, standardmäßig zugeklappt -->
           <div class="cell p-5">
             <details class="iv-more">
-              <summary>Erweitert · Bilder-Wartung <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional, nur bei Bedarf)</span></summary>
-              <div style="margin-top:16px;display:flex;flex-direction:column;gap:18px">
+              <summary>Erweitert · Technisches <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional — läuft alles automatisch)</span></summary>
+              <div style="margin-top:16px;display:flex;flex-direction:column;gap:22px">
+                <!-- Wiederherstellungs-Punkte -->
+                <div>
+                  <div class="flex items-center justify-between gap-3 mb-1.5">
+                    <h4 class="text-[14px] font-semibold tracking-tight">Wiederherstellungs-Punkte</h4>
+                    <button id="snap-now" class="btn-ghost" style="padding:6px 11px;font-size:12px;flex:0 0 auto;white-space:nowrap">Jetzt sichern</button>
+                  </div>
+                  <p class="c-sub text-[12px] leading-relaxed mb-3">Automatische Momentaufnahmen deines Datenstands — du kannst jederzeit auf einen früheren Stand zurück. Läuft von selbst; die letzten 25 werden behalten.</p>
+                  <div id="snap-list" class="flex flex-col gap-2"></div>
+                  <div id="snap-setup" class="hidden"></div>
+                </div>
+                <!-- Speicher-Format -->
+                <div>
+                  <h4 class="text-[14px] font-semibold tracking-tight mb-1.5">Speicher-Format</h4>
+                  <div id="inv-format-status"></div>
+                </div>
+                <!-- Bilder-Wartung -->
                 <div class="rounded-[12px] p-3" style="background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent)">
                   <p class="text-[12.5px] leading-relaxed"><b style="color:var(--accent)">Läuft automatisch.</b> Flipdeck sichert deine Bilder regelmäßig im Hintergrund — du musst hier nichts tun. Die Knöpfe unten stoßen es nur zusätzlich sofort an.</p>
                 </div>
@@ -1959,7 +1958,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.16.5 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.16.6 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
