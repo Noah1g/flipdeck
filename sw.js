@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v70";   // v70 (App v5.20.1): E-Mail-Label im Signup ohne Klammer-Zusatz
+const VERSION    = "flipdeck-v71";   // v71 (App v5.20.2): Signup-Hinweistext auf eine schlanke Zeile gekuerzt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
