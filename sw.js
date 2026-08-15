@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v76";   // v76 (App v5.20.7): Benutzername vor Signup reservieren (public.usernames Unique)
+const VERSION    = "flipdeck-v77";   // v77 (App v5.20.8): Ziehstreifen auf Anmeldemaske (Desktop-Fenster verschiebbar)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
