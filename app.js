@@ -2720,8 +2720,12 @@ function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek",
 function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hidden",!open);
   $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
   $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
-  // Vorsteuerabzug ist nur bei Regelbesteuerung relevant -> für Kleinunternehmer & Privat ausblenden
-  const nir=$("#iv-noinputvat-row"); if(nir) nir.style.display = (acctType==="gewerblich" && !kuMode) ? "flex" : "none";
+  // Vorsteuerabzug + Brutto/Netto-Klarheit sind nur bei Regelbesteuerung relevant.
+  const reg = (acctType==="gewerblich" && !kuMode);
+  const nir=$("#iv-noinputvat-row"); if(nir) nir.style.display = reg ? "flex" : "none";
+  const ekh=$("#iv-ek-hint"); if(ekh) ekh.textContent = reg ? "· brutto" : "";
+  const vkh=$("#iv-vk-hint"); if(vkh) vkh.textContent = reg ? "· brutto" : "";
+  const pn=$("#iv-price-note"); if(pn) pn.classList.toggle("hidden", !reg);
   if(!open) resetInvForm(); }
 $("#iv-toggle").addEventListener("click",()=>setInvForm(!invFormOpen));
 $("#iv-cancel").addEventListener("click",()=>setInvForm(false));
