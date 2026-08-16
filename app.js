@@ -958,71 +958,112 @@ window.addEventListener("resize", moveThumb);
 const GUIDES = [
   { cat:"Erste Schritte", items:[
     { t:"Wie Flipdeck funktioniert", ic:"🚀", act:{tab:"dashboard"}, go:"Zum Dashboard", body:`
-      <p>Flipdeck begleitet deinen kompletten Reselling-Kreislauf — von der Kalkulation bis zur Auswertung:</p>
+      <p>Flipdeck begleitet deinen kompletten Reselling-Kreislauf — von der Recherche bis zur Auswertung:</p>
       <ol>
-        <li><b>Kalkulieren</b> — im <b>Gebühren-Rechner</b> prüfst du vor dem Kauf, ob sich ein Deal nach Marktplatz-Gebühren lohnt.</li>
-        <li><b>Bestand</b> — gekaufte Artikel erfasst du im <b>Bestand</b> mit Einkaufspreis, Zielpreis und Status.</li>
-        <li><b>Verkauf</b> — beim Verkauf tippst du auf „Verkaufen" und wählst den Marktplatz; Gebühren &amp; Gewinn rechnet Flipdeck automatisch.</li>
-        <li><b>Auswertung</b> — Dashboard &amp; Auswertung zeigen Gewinn, Marge und ROI über jeden Zeitraum.</li>
+        <li><b>Recherchieren</b> — im Laden per <b>Barcode-Scanner</b> Preise checken, oder im <b>Gebühren-Rechner</b> vorab prüfen, ob sich ein Deal nach Gebühren lohnt.</li>
+        <li><b>Bestand</b> — gekaufte Artikel erfasst du mit Einkaufspreis, Inseratpreis und optional Status.</li>
+        <li><b>Verkauf</b> — beim Verkauf „Als Verkauf an Tracker" tippen und den Marktplatz wählen; Gebühren &amp; Gewinn rechnet Flipdeck automatisch.</li>
+        <li><b>Auswertung</b> — Dashboard &amp; Auswertung zeigen Gewinn, Marge, ROI, Pakete &amp; Retourenquote über jeden Zeitraum.</li>
       </ol>
       <p>Deine Daten liegen sicher in der Cloud und werden automatisch gesichert.</p>` },
+    { t:"Kontotyp &amp; Steuerart einstellen", ic:"⚙️", act:{tab:"profil",scat:"geschaeft"}, go:"Zu Geschäft", body:`
+      <p>Beim ersten Login (oder später unter <b>Geschäft → Steuer &amp; Verkauf → Einstellungen öffnen</b>) legst du fest, wie Flipdeck rechnet:</p>
+      <ul>
+        <li><b>Privat</b> — du verkaufst gelegentlich, <b>keine Umsatzsteuer</b>. Steuer-Felder bleiben ausgeblendet.</li>
+        <li><b>Gewerblich</b> — dann wählst du den <b>Steuerstatus</b>:
+          <ul>
+            <li><b>Kleinunternehmer (§19)</b> — keine USt, Gebühren werden brutto gerechnet.</li>
+            <li><b>Regelbesteuert</b> — Flipdeck rechnet die USt aus Preisen heraus (Standardsatz wählbar: 19 / 7 %).</li>
+          </ul>
+        </li>
+      </ul>
+      <p>Der <b>Standard-Marktplatz</b> wird unter <b>Marktplätze</b> gewählt — danach richtet sich die Gewinn-Vorschau im Bestand.</p>` },
   ]},
   { cat:"Bestand &amp; Verkauf", items:[
+    { t:"Barcode scannen — Preise im Laden checken", ic:"📷", act:{tab:"inventory"}, go:"Zum Bestand", body:`
+      <p>Am Handy im <b>Bestand</b> auf <b>„Barcode scannen"</b> — spart beim Sourcing enorm Zeit.</p>
+      <ul>
+        <li>Barcode in den Rahmen halten → die <b>EAN</b> wird erkannt.</li>
+        <li>Direkt öffnen: <b>idealo</b> (Preisvergleich) und <b>eBay — verkaufte Artikel</b> (echte Verkaufspreise).</li>
+        <li><b>„In Bestand mit dieser EAN"</b> übernimmt die Nummer gleich in die Anlegen-Maske.</li>
+      </ul>
+      <p>Android scannt nativ; auf dem iPhone lädt der Scanner beim ersten Mal kurz nach. Ohne Kamera geht's per EAN-Eingabe.</p>` },
     { t:"Artikel in den Bestand aufnehmen", ic:"📦", act:{tab:"inventory"}, go:"Zum Bestand", body:`
       <p>Im <b>Bestand</b> legst du jeden Einkauf an, damit du später den Gewinn genau kennst.</p>
       <ul>
-        <li><b>Einkaufspreis (EK)</b> und dein geplanter <b>Verkaufspreis (VK)</b>.</li>
-        <li><b>Gebühren-Kategorie</b> (bestimmt die eBay-Gebühr) und optional <b>Einkaufsplattform</b> mit Retourenfrist.</li>
-        <li>Flipdeck zeigt sofort den <b>Mindest-VK</b> (nie darunter verkaufen) und den <b>Ziel-VK</b> für deine Zielmarge.</li>
+        <li><b>EK</b> (Einkaufspreis) und <b>Inserierter Preis</b> (dein geplanter Verkaufspreis). Bei Regelbesteuerung gibst du beide <b>brutto</b> ein — die USt rechnet Flipdeck heraus.</li>
+        <li><b>Gebühren-Kategorie</b> (optionale Schätzung für die Vorschau) — die echten Gebühren fallen erst beim Verkauf nach Marktplatz an.</li>
+        <li>Optional unter <b>Workflow &amp; Einkauf</b>: Status (Bestellt → Unterwegs → Im Lager), Einkaufsplattform mit <b>Retourenfrist</b> und <b>Notizen</b>.</li>
       </ul>
-      <p>Über den Status (Bestellt → Unterwegs → Im Lager) behältst du auch unterwegs gekaufte Ware im Blick.</p>` },
-    { t:"Einen Verkauf eintragen", ic:"💸", act:{tab:"inventory"}, go:"Zum Bestand", body:`
-      <p>Beim verkauften Artikel im Bestand auf <b>„Verkaufen"</b> tippen.</p>
+      <p>Flipdeck zeigt sofort <b>Mindest-VK</b> (nie darunter verkaufen) und <b>Ziel-VK</b> für deine Zielmarge.</p>` },
+    { t:"Marktplatz-Vergleich: wo am meisten Gewinn?", ic:"⚖️", act:{tab:"inventory"}, go:"Zum Bestand", body:`
+      <p>Klapp einen Artikel im Bestand auf → unter <b>„Wo am meisten Gewinn? · pro Stück"</b> siehst du den Gewinn je Marktplatz.</p>
       <ul>
-        <li><b>Marktplatz wählen</b> — eBay, Kaufland, eBay Privat, Kleinanzeigen … die passenden <b>Gebühren werden automatisch</b> abgezogen.</li>
-        <li><b>eBay Privat</b>: innerdeutsch 0 €, Ausland 5 %. <b>Kaufland</b>: Provision je Kategorie.</li>
+        <li>Verglichen werden nur die <b>echten Gebühren-Marktplätze</b> (z. B. eBay vs. Kaufland) — der beste ist mit ◆ markiert.</li>
+        <li>Gebührenfreie Kanäle (Kleinanzeigen, Vinted, Privat) werden bewusst weggelassen — die sind ohnehin am besten.</li>
+      </ul>
+      <p>Nur bei <b>gewerblichen</b> Konten sichtbar.</p>` },
+    { t:"Einen Verkauf eintragen", ic:"💸", act:{tab:"inventory"}, go:"Zum Bestand", body:`
+      <p>Beim verkauften Artikel im Bestand auf <b>„Als Verkauf an Tracker"</b> tippen.</p>
+      <ul>
+        <li><b>Marktplatz wählen</b> — die passenden <b>Gebühren werden automatisch</b> abgezogen. Bei <b>Kaufland</b> wird die Kategorie aus deiner eBay-Kategorie vorausgewählt.</li>
+        <li><b>eBay Privat</b>: innerdeutsch 0 €, Ausland 5 %. Regelbesteuert: die USt wird als „ans Finanzamt" ausgewiesen.</li>
         <li>Der <b>Gewinn</b> wird live berechnet und landet im Tracker &amp; in der Auswertung.</li>
       </ul>` },
+    { t:"Kundenretoure &amp; Teilerstattung", ic:"↩️", act:{tab:"tracker"}, go:"Zu Verkäufe", body:`
+      <p>Öffne einen Verkauf (Verkäufe-Tab) → unter <b>Aktionen</b>:</p>
+      <ul>
+        <li><b>Kundenretoure</b> — der Verkauf zählt nicht mehr für Umsatz &amp; Gewinn; optional den Artikel zurück ins Lager.</li>
+        <li><b>Teilerstattung</b> — du hast dem Käufer etwas zurückerstattet (Kulanz): Verkauf bleibt gültig, aber <b>Umsatz &amp; Gewinn sinken</b> um den Betrag.</li>
+      </ul>
+      <p>Deine <b>Retourenquote</b> siehst du im Dashboard auf der Karte <b>„Pakete"</b> (versendet + wie viele % retour).</p>` },
     { t:"Deal-Score &amp; ROI verstehen", ic:"◆", act:{tab:"inventory"}, go:"Zum Bestand", body:`
-      <p>Der <b>Deal-Score (A–E)</b> zeigt auf einen Blick, wie profitabel ein Artikel ist — gemessen am <b>ROI</b> (Rendite = Gewinn ÷ Einkaufspreis).</p>
+      <p>Der <b>Deal-Score (A–E)</b> zeigt auf einen Blick, wie profitabel ein Artikel ist — gemessen am <b>ROI</b> (Gewinn ÷ Einkaufspreis).</p>
       <ul>
         <li><b>A</b> ≥ 50 % · <b>B</b> ≥ 30 % · <b>C</b> ≥ 15 % · <b>D</b> ≥ 5 % · <b>E</b> darunter/Verlust.</li>
-        <li>Tippe im Bestand auf den <b>◆ Deal</b>-Pill für die Erklärung + die Marktplatz-Aufschlüsselung.</li>
+        <li>Der Score folgt deinem <b>Standard-Marktplatz</b> (dessen Gebühren). Tippe auf den <b>◆ Deal</b>-Pill für die Erklärung.</li>
       </ul>` },
     { t:"Verkäufe-Übersicht (Nach Produkt)", ic:"📊", act:{tab:"tracker"}, go:"Zu Verkäufe", body:`
       <p>Im <b>Verkäufe</b>-Tab siehst du alle Verkäufe. Bei viel Umschlag nutze die Ansicht <b>„Nach Produkt"</b>:</p>
       <ul>
         <li>Eine Zeile pro Produkt mit Anzahl Verkäufe, Stück und Gesamt-Gewinn.</li>
-        <li>Aufklappen zeigt die Einzelverkäufe — wie eine Verkaufs-Chronik.</li>
+        <li>Aufklappen zeigt die Einzelverkäufe — jede Zeile mit <b>Mülleimer</b> zum Löschen (per Rückgängig wiederholbar).</li>
       </ul>` },
   ]},
-  { cat:"Gebühren &amp; Preise", items:[
+  { cat:"Gebühren, Preise &amp; Steuer", items:[
     { t:"Gebühren-Rechner (eBay &amp; Kaufland)", ic:"🧮", act:{tab:"calc"}, go:"Zum Rechner", body:`
       <p>Der <b>Gebühren-Rechner</b> zeigt vor dem Kauf, was nach Marktplatz-Gebühren übrig bleibt.</p>
       <ul>
-        <li>Oben zwischen <b>eBay</b> und <b>Kaufland</b> umschalten (öffnet automatisch deinen Standard-Marktplatz).</li>
-        <li>EK, VK, Versand &amp; Kategorie eingeben → Reingewinn, Marge und Zielmargen-Ampel erscheinen live.</li>
+        <li>Oben zwischen <b>eBay</b> und <b>Kaufland</b> umschalten (öffnet deinen Standard-Marktplatz).</li>
+        <li>EK, VK, Versand &amp; Kategorie eingeben → Reingewinn, Marge und Zielmargen-Ampel live.</li>
         <li>„Zu Bestand hinzufügen" übernimmt die Werte direkt.</li>
       </ul>` },
-    { t:"eBay Privat vs. gewerblich", ic:"🏷️", act:{tab:"calc"}, go:"Zum Rechner", body:`
-      <p>Beim Verkauf-Eintragen wählst du den passenden eBay-Typ:</p>
+    { t:"Steuer: brutto/netto &amp; Vorsteuerabzug", ic:"🧾", act:{tab:"calc"}, go:"Zum Rechner", body:`
+      <p>Bei <b>Regelbesteuerung</b> koppelt der Rechner die USt automatisch an deine Konto-Steuerart:</p>
+      <ul>
+        <li>Die <b>USt</b> (19/7 %) ist auf EK &amp; VK vorbelegt — die „netto"-Beträge erscheinen sofort. Manuell per Klick änderbar.</li>
+        <li><b>„Kein Vorsteuerabzug"</b> (Haken unter EK) — für privat / ohne USt-Rechnung gekaufte Ware: voller EK, keine Vorsteuer → du siehst den ~19 % geringeren Gewinn.</li>
+      </ul>
+      <p>Bei <b>Kleinunternehmer/Privat</b> sind die USt-Optionen ausgeblendet — dort gibt es keine USt.</p>` },
+    { t:"eBay Privat vs. gewerblich", ic:"🏷️", act:{tab:"profil",scat:"geschaeft"}, go:"Zu Marktplätzen", body:`
+      <p>Je nach Kontotyp stehen unterschiedliche eBay-Kanäle zur Wahl (unter Geschäft → Marktplätze):</p>
       <ul>
         <li><b>eBay (gewerblich)</b> — Verkaufsprovision je Kategorie + Transaktionsgebühr.</li>
         <li><b>eBay · Privat</b> — innerdeutsch <b>gebührenfrei</b>, ins Ausland <b>5 %</b> auf (Artikel + Porto).</li>
       </ul>
-      <p>Welche Marktplätze zur Auswahl stehen, stellst du unter Geschäft → Marktplätze ein.</p>` },
+      <p>Amazon &amp; Etsy sind bewusst noch nicht dabei — dafür ist Flipdeck aktuell nicht ausgelegt.</p>` },
   ]},
   { cat:"Kosten &amp; Auswertung", items:[
-    { t:"Fixkosten &amp; Zielmarge", ic:"🧾", act:{tab:"fix"}, go:"Zu Fixkosten", body:`
+    { t:"Fixkosten &amp; Zielmarge", ic:"📐", act:{tab:"fix"}, go:"Zu Fixkosten", body:`
       <p>Im <b>Fixkosten</b>-Tab erfasst du wiederkehrende Kosten (Abos, Material …) mit <b>frei wählbarem Intervall</b> (monatlich, jährlich, alle X Tage …) und Startdatum — die nächste Fälligkeit wird berechnet.</p>
       <p>Die <b>Zielmarge</b> (Standard 15 %) ist deine gewünschte Gewinn-Marge je Artikel. Sie bestimmt den vorgeschlagenen <b>Ziel-VK</b> im Bestand — hier im Tab einstellbar.</p>` },
-    { t:"Auswertung lesen", ic:"📈", act:{tab:"report"}, go:"Zur Auswertung", body:`
+    { t:"Dashboard, Auswertung &amp; Retourenquote", ic:"📈", act:{tab:"report"}, go:"Zur Auswertung", body:`
       <p>Die <b>Auswertung</b> fasst einen Zeitraum (Monat/Jahr) zusammen: <b>Gewinn, Umsatz, Ausgaben, Marge</b> und die Aufteilung nach Produkten, Plattformen und Fixkosten.</p>
-      <p>Im <b>Dashboard</b> siehst du die wichtigsten Kennzahlen mit Zeitraum-Filtern — per „Anpassen" wählst du, welche Karten erscheinen.</p>` },
+      <p>Im <b>Dashboard</b> siehst du die Kennzahlen mit Zeitraum-Filter — inkl. der Karte <b>„Pakete"</b> (versendete Pakete + Retourenquote in %). Per <b>„Anpassen"</b> wählst du, welche Karten erscheinen, und sortierst sie per Drag &amp; Drop.</p>` },
   ]},
   { cat:"Einrichtung &amp; Daten", items:[
     { t:"Marktplätze wählen &amp; eigene anlegen", ic:"🛒", act:{tab:"profil",scat:"geschaeft"}, go:"Zu Marktplätzen", body:`
-      <p>Unter <b>Geschäft → Marktplätze</b> schaltest du ein, welche Marktplätze im Verkauf-Dialog erscheinen.</p>
+      <p>Unter <b>Geschäft → Marktplätze</b> schaltest du ein, welche Marktplätze im Verkauf-Dialog erscheinen, und wählst deine <b>Standard-Verkaufsplattform</b>.</p>
       <ul>
         <li>Fehlt einer? <b>„Eigenen Marktplatz anlegen"</b> — läuft ohne Gebühren-Automatik (Auszahlung selbst eintragen).</li>
         <li>Echte Gebühren-Struktur gewünscht? Per <b>Feedback</b> melden — wird ergänzt.</li>
@@ -1036,7 +1077,7 @@ const GUIDES = [
       </ul>` },
     { t:"Datensicherheit &amp; Backups", ic:"🛡️", act:{tab:"profil",scat:"daten"}, go:"Zu Daten", body:`
       <p>Deine Daten sind <b>automatisch sicher</b>: laufende Cloud-Sicherung, tägliche Backups und Wiederherstellungs-Punkte, auf die du jederzeit zurück kannst.</p>
-      <p>Für ganz sicher lädst du unter <b>Daten</b> ab und zu ein <b>Backup als Datei</b> herunter.</p>` },
+      <p>Optional lädst du unter <b>Daten</b> ab und zu ein <b>Backup als Datei</b> herunter (z. B. in einen Cloud-Ordner) — die zusätzliche Kopie in eigener Hand.</p>` },
   ]},
 ];
 let _guidesOpen = new Set();
