@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v105";   // v105 (App v5.21.25): Fee-Rechner Haken Kein Vorsteuerabzug (EK) zum Gewinn checken
+const VERSION    = "flipdeck-v106";   // v106 (App v5.22.0): Barcode-Scanner (mobil) - EAN scannen, idealo und eBay-Verkaeufe checken
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
