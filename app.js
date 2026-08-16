@@ -2081,8 +2081,16 @@ function openCustomMarketModal(){
 if($("#plat-add-custom")) $("#plat-add-custom").addEventListener("click",openCustomMarketModal);
 let defaultPlatform = "ebay", defaultUstRate = 19, acctType = "gewerblich";   // acctType: "privat" | "gewerblich"
 const vatF = () => kuMode ? 1.19 : 1;
-/* Steuerart-abhängige UI: USt-Rechner-Buttons nur bei Regelbesteuerung (gewerblich & kein KU). */
-function applyTaxUI(){ document.documentElement.classList.toggle("is-noust", !(acctType==="gewerblich" && !kuMode)); }
+/* Steuerart-abhängige UI: USt-Rechner-Buttons nur bei Regelbesteuerung (gewerblich & kein KU),
+   und der Fee-Rechner belegt USt automatisch aus der Konto-Steuerart (Standard-USt-Satz) vor. */
+function applyTaxUI(){
+  const reg = (acctType==="gewerblich" && !kuMode);
+  document.documentElement.classList.toggle("is-noust", !reg);
+  const rate = (reg && (defaultUstRate===19 || defaultUstRate===7)) ? defaultUstRate : 0;
+  vkUst = rate; ekUst = rate;
+  document.querySelectorAll(".ust").forEach(x=>x.setAttribute("aria-selected", rate>0 && parseInt(x.dataset.rate)===rate ? "true" : "false"));
+  if(typeof calc==="function") calc();
+}
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
   const vk = vkUst ? vkRaw/(1+vkUst/100) : vkRaw;
   const ek = ekUst ? ekRaw/(1+ekUst/100) : ekRaw;
@@ -2158,7 +2166,7 @@ $$(".ust").forEach(b=>b.addEventListener("click",()=>{
   calc();
 }));
 $$("#c-region button").forEach(btn=>btn.addEventListener("click",()=>{ regionPct=num(btn.dataset.pct); $$("#c-region button").forEach(b=>b.setAttribute("aria-selected",b===btn)); calc(); }));
-$("#c-reset").addEventListener("click",()=>{ $("#c-vk").value=""; $("#c-ek").value=""; $("#c-ship").value=shipDefStr(); $("#c-ad").value="0"; $("#c-cat").value="12"; regionPct=0; vkUst=0; ekUst=0; $$(".ust").forEach(x=>x.setAttribute("aria-selected","false")); $$("#c-region button").forEach(b=>b.setAttribute("aria-selected",b.dataset.pct==="0")); calc(); });
+$("#c-reset").addEventListener("click",()=>{ $("#c-vk").value=""; $("#c-ek").value=""; $("#c-ship").value=shipDefStr(); $("#c-ad").value="0"; $("#c-cat").value="12"; regionPct=0; $$("#c-region button").forEach(b=>b.setAttribute("aria-selected",b.dataset.pct==="0")); applyTaxUI(); });
 let calcs=[];
 const catLabel=()=>$("#c-cat").selectedOptions[0].textContent.split("·")[0].trim();
 $("#c-save").addEventListener("click",()=>{ calc();
