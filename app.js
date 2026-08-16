@@ -490,9 +490,10 @@ const eur = n => n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFracti
 const pct = n => n.toLocaleString("de-DE",{minimumFractionDigits:1,maximumFractionDigits:1})+" %";
 const fmtDate = iso => new Date(iso).toLocaleDateString("de-DE",{day:"numeric",month:"long",year:"numeric"});
 /* Kundenretoure: f.returned = true -> Verkauf zählt weder für Umsatz noch Gewinn.
+   Teilerstattung: f.refund = € an den Käufer zurück -> senkt Umsatz UND Gewinn um den Betrag.
    Eine Änderung an diesen drei Helfern korrigiert automatisch ALLE Auswertungen. */
-const flipProfit  = f => f.returned ? 0 : (num(f.payout)-num(f.ek)-num(f.ship))*(f.qty||1);
-const flipRevenue = f => f.returned ? 0 : num(f.payout)*(f.qty||1);
+const flipProfit  = f => f.returned ? 0 : (num(f.payout)-num(f.ek)-num(f.ship))*(f.qty||1) - num(f.refund||0);
+const flipRevenue = f => f.returned ? 0 : num(f.payout)*(f.qty||1) - num(f.refund||0);
 const flipCost    = f => f.returned ? 0 : (num(f.ek)+num(f.ship))*(f.qty||1);
 /* escapeHtml jetzt auch attribut-sicher: escapt zusätzlich " und ' → kein Quote-Breakout mehr,
    egal ob der Wert in Textinhalt ODER in einem Attribut landet. (Härtung, v5.10.6) */
@@ -1113,7 +1114,9 @@ function renderKPIs(){ const view=flips.filter(f=>inFilter(f.date));
   const prev=flips.filter(f=>prevFilter(f.date));
   const prevProfit=prev.reduce((s,f)=>s+flipProfit(f),0), prevRev=prev.reduce((s,f)=>s+flipRevenue(f),0);
   const cnt=view.length;
+  const retCnt=view.filter(f=>f.returned).length;
   let sub=`aus ${cnt} ${cnt===1?"Verkauf":"Verkäufen"}`;
+  if(retCnt>0) sub+=` · <span class="c-sub">Retourenquote ${pct(retCnt/cnt*100)}</span>`;
   if(prev.length){
     const dAbs=profit-prevProfit, up=dAbs>=0, col=up?"var(--accent)":"var(--danger)", arrow=up?"▲":"▼";
     const dPct = prevProfit!==0 ? ` (${up?"+":""}${(dAbs/Math.abs(prevProfit)*100).toLocaleString("de-DE",{maximumFractionDigits:0})} %)` : "";
@@ -1524,12 +1527,14 @@ function openFlipDetail(id){ const f=flips.find(x=>x.id===id); if(!f) return;
     ${ trackUrl(f.carrier,f.tracking) ? `<div class="mb-3">${trackLinkHTML(f.carrier,f.tracking,"Verkauf verfolgen")}</div>` : "" }
     <div class="mb-3">${researchHTML(f.name,f.ean)}</div>
     ${ f.returned ? `<div class="rounded-[14px] p-3 mb-3" style="background:color-mix(in srgb,#f5a524 12%,transparent);border:1px solid color-mix(in srgb,#f5a524 40%,var(--line))"><p class="text-[12.5px] font-semibold" style="color:#f5a524">↩ Als Kundenretoure gebucht${f.returnDate?` · ${fmtDate(f.returnDate)}`:""}</p><p class="c-sub text-[11px] mt-0.5">Dieser Verkauf zählt nicht mehr für Umsatz &amp; Gewinn.</p></div>` : "" }
+    ${ (!f.returned && num(f.refund)>0) ? `<div class="rounded-[14px] p-3 mb-3" style="background:color-mix(in srgb,#f5a524 12%,transparent);border:1px solid color-mix(in srgb,#f5a524 40%,var(--line))"><p class="text-[12.5px] font-semibold" style="color:#f5a524">€ Teilerstattung ${eur(num(f.refund))}</p><p class="c-sub text-[11px] mt-0.5">Umsatz &amp; Gewinn dieses Verkaufs sind um diesen Betrag reduziert.</p></div>` : "" }
     <p class="label mb-2">Aktionen</p>
     <div class="grid grid-cols-2 gap-2 mb-2">
       <button id="fd-restock" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>In Bestand</button>
       <button id="fd-relist" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h7v7"/></svg>Neuer Verkauf</button>
       <button id="fd-share" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Als Bild</button>
       <button id="fd-return" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;${f.returned?'':'color:#f5a524'}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10H9"/></svg>${f.returned?'Retoure rückg.':'Kundenretoure'}</button>
+      ${ f.returned ? "" : `<button id="fd-partial" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;grid-column:1 / -1;${num(f.refund)>0?'color:#f5a524':''}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>${num(f.refund)>0?`Teilerstattung ${eur(num(f.refund))} ändern`:'Teilerstattung'}</button>` }
     </div>
     <p class="c-sub text-[11px] leading-relaxed mb-3">„In Bestand"/„Neuer Verkauf" übernehmen Bild, Name, EAN, EK &amp; Versand. Kategorie, Menge, Preis &amp; Datum bitte prüfen.</p>
     <button id="fd-close" class="btn-ghost w-full">Schließen</button>
@@ -1540,6 +1545,23 @@ function openFlipDetail(id){ const f=flips.find(x=>x.id===id); if(!f) return;
   $("#fd-relist").addEventListener("click",()=>{ $("#modal-root").innerHTML=""; relistAsSale(f); });
   $("#fd-share").addEventListener("click",()=> exportSaleImage(f));
   $("#fd-return").addEventListener("click",()=>{ if(f.returned){ undoCustomerReturn(f.id); } else { $("#modal-root").innerHTML=""; openCustomerReturn(f.id); } });
+  if($("#fd-partial")) $("#fd-partial").addEventListener("click",()=>{ $("#modal-root").innerHTML=""; openPartialRefund(f.id); });
+}
+/* ===== Teilerstattung: Verkauf bleibt gültig, Umsatz & Gewinn sinken um den erstatteten Betrag ===== */
+function openPartialRefund(id){ const f=flips.find(x=>x.id===id); if(!f) return; const cur=num(f.refund||0);
+  $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal">
+    <p class="font-bold text-[16px] mb-1">Teilerstattung</p>
+    <p class="c-sub text-[12.5px] mb-4 leading-relaxed">Betrag, den du dem Käufer zurückerstattet hast (z. B. Kulanz bei kleinem Mangel). Der Verkauf bleibt gültig, aber <b>Umsatz &amp; Gewinn</b> sinken um diesen Betrag.</p>
+    <label class="label mb-1" for="pr-amt">Erstatteter Betrag €</label>
+    <input id="pr-amt" class="field tnum" inputmode="decimal" value="${cur>0?String(cur).replace('.',','):''}" placeholder="z. B. 10,00">
+    <div class="grid grid-cols-2 gap-3 mt-4"><button id="pr-cancel" class="btn-ghost">Abbrechen</button><button id="pr-ok" class="btn-accent">Speichern</button></div>
+    ${cur>0?`<button id="pr-clear" class="btn-ghost w-full" style="margin-top:8px;color:var(--danger)">Teilerstattung entfernen</button>`:""}
+  </div></div>`;
+  const done=(msg)=>{ DB.saveFlips(flips); $("#modal-root").innerHTML=""; renderDashboard(); renderTrackerList(); if(typeof renderReport==="function") renderReport(); showToast(msg); };
+  $("#ov").addEventListener("click",e=>{ if(e.target.id==="ov") $("#modal-root").innerHTML=""; });
+  $("#pr-cancel").addEventListener("click",()=>$("#modal-root").innerHTML="");
+  $("#pr-ok").addEventListener("click",()=>{ const a=Math.max(0,num($("#pr-amt").value)); if(a>0){ f.refund=a; done(`✓ Teilerstattung ${eur(a)} gebucht`); } else { delete f.refund; done("Teilerstattung entfernt"); } });
+  if($("#pr-clear")) $("#pr-clear").addEventListener("click",()=>{ delete f.refund; done("Teilerstattung entfernt"); });
 }
 
 /* Aus einem (verkauften) Artikel heraus erneut anlegen – spart komplettes Neu-Erfassen.

@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v94";   // v94 (App v5.21.14): Marktplatz-Vergleich im Bestand (nur Gewerblich, ohne Privat)
+const VERSION    = "flipdeck-v95";   // v95 (App v5.21.15): Teilerstattung-Knopf im Verkauf + Retourenquote im Dashboard
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
