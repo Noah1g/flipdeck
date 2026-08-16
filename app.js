@@ -1790,12 +1790,13 @@ function groupedTrackerHTML(list){
   return [...groups.values()].sort((a,b)=>b.last-a.last).map(g=>{
     const open=trackGrpExpanded.has(g.key), pos=g.profit>=0;
     const rows=g.sales.map(f=>{ const p=flipProfit(f), pp=p>=0, plat=PLATFORMS[f.platform]||PLATFORMS.ebay;
-      return `<button type="button" class="grp-sale" data-id="${f.id}">
+      return `<div class="grp-sale" role="button" tabindex="0" data-id="${f.id}">
         <span class="c-sub" style="font-size:12px;flex:0 0 auto;min-width:58px">${fmtDate(f.date)}</span>
         <span style="flex:1;min-width:0" class="truncate"><span class="pill ${plat.pill}" style="font-size:10px">${plat.label}</span>${f.qty>1?` <span class="c-sub">×${f.qty}</span>`:""}${f.returned?` <span style="color:#f5a524">↩</span>`:""}</span>
         <span class="mono c-sub" style="font-size:12px;flex:0 0 auto">${eur(num(f.payout))}</span>
         <span class="mono" style="font-weight:700;flex:0 0 auto;min-width:66px;text-align:right;color:${pp?'var(--accent)':'var(--danger)'}">${pp?"+":""}${eur(p)}</span>
-      </button>`; }).join("");
+        <button type="button" class="grp-del" data-id="${f.id}" title="Verkauf löschen" aria-label="Verkauf löschen">${icoTrash}</button>
+      </div>`; }).join("");
     return `<div class="grp-item" style="border:1px solid var(--line);border-radius:15px;background:var(--cell-2);overflow:hidden">
       <button type="button" class="grp-head" data-key="${attrEsc(g.key)}" style="display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;background:none;border:0;cursor:pointer">
         <span style="flex:0 0 auto;width:56px;height:56px;border-radius:13px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--cell)">${g.img?`<img src="${attrEsc(g.img)}" style="width:100%;height:100%;object-fit:cover">`:dealIconSVG}</span>
@@ -1824,7 +1825,8 @@ function renderTrackerList(){
     box.className="flex flex-col gap-2.5";
     box.innerHTML=groupedTrackerHTML(list);
     $$("#track-list .grp-head").forEach(b=>b.addEventListener("click",()=>{ const k=b.dataset.key; if(trackGrpExpanded.has(k)) trackGrpExpanded.delete(k); else trackGrpExpanded.add(k); renderTrackerList(); }));
-    $$("#track-list .grp-sale").forEach(b=>b.addEventListener("click",()=>openFlipDetail(b.dataset.id)));
+    $$("#track-list .grp-sale").forEach(b=>b.addEventListener("click",e=>{ if(e.target.closest(".grp-del")) return; openFlipDetail(b.dataset.id); }));
+    $$("#track-list .grp-del").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); deleteDeal(b.dataset.id); }));
   } else {
     box.className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4";
     box.innerHTML=list.map(dealCard).join("");
