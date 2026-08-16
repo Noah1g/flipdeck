@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v98";   // v98 (App v5.21.18): Vorsteuer-Schalter direkt unter EK statt im Workflow-Block
+const VERSION    = "flipdeck-v99";   // v99 (App v5.21.19): Bestand-Formular mit Abschnitts-Trennern (Produkt / Preise)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
