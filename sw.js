@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v101";   // v101 (App v5.21.21): Gebuehr-Vorschau Ueberschrift folgt Standard-Marktplatz (Kaufland/eBay)
+const VERSION    = "flipdeck-v102";   // v102 (App v5.21.22): Marktplatz-Vergleich nur echte Gebuehren-Marktplaetze (gebuehrenfreie raus)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

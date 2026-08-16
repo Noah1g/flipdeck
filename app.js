@@ -2502,8 +2502,9 @@ function mpEval(platKey, vk, ek, ship, item){
    „Privat/Freunde", „Ohne Gebühren", eigene Marktplätze und eBay-Privat werden ausgelassen. */
 function mpCompareHTML(it, st){
   if(st==="returned" || acctType!=="gewerblich") return "";
-  const skip=new Set(["privat","kein","sonstige","ebay_privat"]);
-  const plats=getEnabledPlatforms().filter(k=>{ const p=PLATFORMS[k]; return p && !p.custom && !skip.has(k); });
+  // Nur echte Gebühren-Marktplätze vergleichen — gebührenfreie (Kleinanzeigen, Vinted, Privat …)
+  // sind ohnehin immer am besten, das bringt keinen Erkenntnisgewinn.
+  const plats=getEnabledPlatforms().filter(k=>{ const p=PLATFORMS[k]; return p && p.hasFees && !p.ebayPrivate && !p.custom; });
   if(plats.length<2) return "";
   const rows=plats.map(k=>({ label:PLATFORMS[k].label, profit:mpEval(k,it.vk,it.ek,it.ship,it).profit }))
                   .sort((a,b)=>b.profit-a.profit);
