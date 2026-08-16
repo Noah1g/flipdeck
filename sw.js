@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v97";   // v97 (App v5.21.17): eigene Dashboard-Karte Pakete und Retourenquote
+const VERSION    = "flipdeck-v98";   // v98 (App v5.21.18): Vorsteuer-Schalter direkt unter EK statt im Workflow-Block
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
