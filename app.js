@@ -1115,8 +1115,13 @@ function renderKPIs(){ const view=flips.filter(f=>inFilter(f.date));
   const prevProfit=prev.reduce((s,f)=>s+flipProfit(f),0), prevRev=prev.reduce((s,f)=>s+flipRevenue(f),0);
   const cnt=view.length;
   const retCnt=view.filter(f=>f.returned).length;
+  if($("#kpi-packages")){
+    $("#kpi-packages").textContent=String(cnt);
+    $("#kpi-returns-sub").innerHTML = cnt>0
+      ? `versendet · ${retCnt>0?`<b style="color:#f5a524">${retCnt} ${retCnt===1?"Retoure":"Retouren"} (${pct(retCnt/cnt*100)})</b>`:"keine Retouren 🎉"}`
+      : "noch keine Verkäufe";
+  }
   let sub=`aus ${cnt} ${cnt===1?"Verkauf":"Verkäufen"}`;
-  if(retCnt>0) sub+=` · <span class="c-sub">Retourenquote ${pct(retCnt/cnt*100)}</span>`;
   if(prev.length){
     const dAbs=profit-prevProfit, up=dAbs>=0, col=up?"var(--accent)":"var(--danger)", arrow=up?"▲":"▼";
     const dPct = prevProfit!==0 ? ` (${up?"+":""}${(dAbs/Math.abs(prevProfit)*100).toLocaleString("de-DE",{maximumFractionDigits:0})} %)` : "";
@@ -1349,6 +1354,7 @@ const DASH_CARDS = [
   {key:"revenue",       label:"Gesamtumsatz",      sub:"eBay netto",           group:"kpi"},
   {key:"margin",        label:"Ø Marge",           sub:"Gewinn / Umsatz",      group:"kpi"},
   {key:"roi",           label:"Ø ROI",             sub:"Gewinn / Einsatz",     group:"kpi"},
+  {key:"returns",       label:"Pakete & Retouren", sub:"versendet · Retourenquote", group:"kpi"},
   {key:"chart-profit",  label:"Profit-Verlauf",    sub:"6-Monats-Chart",       group:"detail"},
   {key:"chart-revcost", label:"Umsatz & Gewinn",   sub:"Balken je Monat",      group:"detail"},
   {key:"chart-split",   label:"Umsatz-Aufteilung", sub:"nach Plattform",       group:"detail"},
