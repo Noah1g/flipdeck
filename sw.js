@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v100";   // v100 (App v5.21.20): Preis-Felder Brutto-Hinweis bei Regelbesteuerung
+const VERSION    = "flipdeck-v101";   // v101 (App v5.21.21): Gebuehr-Vorschau Ueberschrift folgt Standard-Marktplatz (Kaufland/eBay)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

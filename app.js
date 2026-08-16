@@ -2717,15 +2717,20 @@ async function persistImage(src){
   }
 }
 function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tags"].forEach(id=>{ const el=$("#"+id); if(el) el.value=""; }); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=""; } if($("#iv-paymethod")){ refreshPaySelects(); $("#iv-paymethod").value=""; } resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
-function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hidden",!open);
-  $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
-  $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
-  // Vorsteuerabzug + Brutto/Netto-Klarheit sind nur bei Regelbesteuerung relevant.
-  const reg = (acctType==="gewerblich" && !kuMode);
+/* Bestand-Formular an Steuerart & Standard-Marktplatz anpassen (Anlegen UND Bearbeiten). */
+function applyInvFormMode(){
+  const reg = (acctType==="gewerblich" && !kuMode);   // Vorsteuer/Brutto nur bei Regelbesteuerung
   const nir=$("#iv-noinputvat-row"); if(nir) nir.style.display = reg ? "flex" : "none";
   const ekh=$("#iv-ek-hint"); if(ekh) ekh.textContent = reg ? "· brutto" : "";
   const vkh=$("#iv-vk-hint"); if(vkh) vkh.textContent = reg ? "· brutto" : "";
   const pn=$("#iv-price-note"); if(pn) pn.classList.toggle("hidden", !reg);
+  // Gebühren-Vorschau folgt dem Standard-Marktplatz -> Überschrift passend benennen (Kaufland-Provision, sonst eBay-Modell)
+  const fh=$("#iv-fee-head"); if(fh) fh.textContent = (defaultPlatform==="kaufland" ? "Kaufland-Gebühr" : "eBay-Gebühr");
+}
+function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hidden",!open);
+  $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
+  $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
+  applyInvFormMode();
   if(!open) resetInvForm(); }
 $("#iv-toggle").addEventListener("click",()=>setInvForm(!invFormOpen));
 $("#iv-cancel").addEventListener("click",()=>setInvForm(false));
@@ -3003,6 +3008,7 @@ function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   if(it.img){ $("#iv-drop").classList.add("has"); $("#iv-drop-empty").classList.add("hidden"); $("#iv-drop-preview").src=it.img; $("#iv-drop-preview").classList.remove("hidden"); } else resetInvImage();
   $("#iv-add").textContent="Änderungen speichern";
   invFormOpen=true; $("#iv-form").classList.remove("hidden"); $("#iv-toggle-ic").style.transform="rotate(45deg)"; $("#iv-toggle").querySelector("span").textContent=t("ui.close");
+  applyInvFormMode();
   window.scrollTo({top:0,behavior:"smooth"}); }
 
 function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleCalFeedSync();
