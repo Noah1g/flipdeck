@@ -722,6 +722,7 @@ async function enterApp(){
     acctType = Store.get(uKey("accttype")) || "gewerblich";
     if(!PLATFORMS[defaultPlatform]) defaultPlatform="ebay";
   }
+  applyTaxUI();        // Steuerart-abhängige UI (USt-Buttons im Rechner nur bei Regelbesteuerung)
   maybeAutoBackup();   // Ebene 1: lokale Tagessicherung
   maybeCloudBackup();  // Ebene 2: Cloud-Sicherung in Supabase (fire-and-forget)
   snapInit();          // Ebene 3: feingranulare Wiederherstellungs-Punkte scharf schalten
@@ -2080,6 +2081,8 @@ function openCustomMarketModal(){
 if($("#plat-add-custom")) $("#plat-add-custom").addEventListener("click",openCustomMarketModal);
 let defaultPlatform = "ebay", defaultUstRate = 19, acctType = "gewerblich";   // acctType: "privat" | "gewerblich"
 const vatF = () => kuMode ? 1.19 : 1;
+/* Steuerart-abhängige UI: USt-Rechner-Buttons nur bei Regelbesteuerung (gewerblich & kein KU). */
+function applyTaxUI(){ document.documentElement.classList.toggle("is-noust", !(acctType==="gewerblich" && !kuMode)); }
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
   const vk = vkUst ? vkRaw/(1+vkUst/100) : vkRaw;
   const ek = ekUst ? ekRaw/(1+ekUst/100) : ekRaw;
@@ -2820,7 +2823,7 @@ function openAccountSetup(){
     Store.set(uKey("accttype"), acctType);
     Store.set(uKey("onboarded"),"1");
     DB.saveTaxCfg({ kuMode, defaultUstRate, defaultPlatform, acctType, onboarded:true });
-    calc(); renderInventory(); renderBreakEven();
+    applyTaxUI(); calc(); renderInventory(); renderBreakEven();
     $("#modal-root").innerHTML=""; showToast("✓ Standardwerte gespeichert"); startTourIfNew();
   });
 }

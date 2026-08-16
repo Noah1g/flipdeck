@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v102";   // v102 (App v5.21.22): Marktplatz-Vergleich nur echte Gebuehren-Marktplaetze (gebuehrenfreie raus)
+const VERSION    = "flipdeck-v103";   // v103 (App v5.21.23): Steuer-Audit - USt-Buttons nur bei Regelbest., Kaufland-Hinweis korrigiert
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
