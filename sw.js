@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v106";   // v106 (App v5.22.0): Barcode-Scanner (mobil) - EAN scannen, idealo und eBay-Verkaeufe checken
+const VERSION    = "flipdeck-v107";   // v107 (App v5.22.1): Barcode-Scanner iOS via ZXing (lokal vendored, lazy-load)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

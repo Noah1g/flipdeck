@@ -2697,28 +2697,39 @@ function researchHTML(name, ean){
   const a=(href,label)=>`<a href="${href}" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="min-width:0;padding:9px 8px;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap">${label}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>`;
   return `<div><p class="label mb-1.5">Preis-Recherche</p><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">${a(L.idealo,"idealo")}${a(L.ebaySold,"eBay verkauft")}${a(L.kaufland,"Kaufland")}</div></div>`;
 }
+/* Scan-Bibliothek (ZXing) nur bei Bedarf nachladen — lokal vendored, kein Runtime-CDN. */
+function loadZXing(){
+  return new Promise((resolve,reject)=>{
+    if(window.ZXing && window.ZXing.BrowserMultiFormatReader) return resolve();
+    const s=document.createElement("script"); s.src="./vendor/zxing.min.js"; s.async=true;
+    s.onload=()=> (window.ZXing && window.ZXing.BrowserMultiFormatReader) ? resolve() : reject(new Error("ZXing global fehlt"));
+    s.onerror=()=> reject(new Error("ZXing-Laden fehlgeschlagen"));
+    document.head.appendChild(s);
+  });
+}
 /* ===== Barcode-Scanner (mobil): EAN scannen -> idealo & eBay-Verkäufe checken, optional in Bestand.
-   Android/Chrome: nativer BarcodeDetector. Kein Support (z. B. iOS): EAN manuell eingeben. ===== */
+   Android/Chrome: nativer BarcodeDetector. Sonst (z. B. iOS): ZXing-Fallback. Ohne Kamera: manuell. ===== */
 async function openBarcodeScanner(){
-  const supported = ("BarcodeDetector" in window) && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const canCamera = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const hasNative = ("BarcodeDetector" in window) && canCamera;
   $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal" style="max-width:440px">
     <div class="flex items-start justify-between gap-3 mb-2">
       <div><p class="font-bold text-[18px]">Barcode scannen</p><p class="c-sub text-[12.5px] mt-0.5">EAN scannen und sofort Preise vergleichen.</p></div>
       <button id="bc-x" class="iconbtn" title="Schließen" aria-label="Schließen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-    <div id="bc-cam" class="${supported?'':'hidden'}" style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:10px">
+    <div id="bc-cam" class="${canCamera?'':'hidden'}" style="position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;margin-bottom:10px">
       <video id="bc-video" playsinline muted style="width:100%;height:100%;object-fit:cover"></video>
       <div style="position:absolute;inset:20% 12%;border:2px solid rgba(255,255,255,.85);border-radius:10px"></div>
     </div>
-    <p id="bc-status" class="c-sub text-[12px] text-center mb-3">${supported?"Kamera wird gestartet…":"Kamera-Scan wird auf diesem Gerät nicht unterstützt — EAN unten eintippen."}</p>
+    <p id="bc-status" class="c-sub text-[12px] text-center mb-3">${canCamera?"Kamera wird gestartet…":"Kamera nicht verfügbar — EAN unten eintippen."}</p>
     <div id="bc-manual">
       <label class="label mb-1" for="bc-ean">EAN manuell</label>
       <div class="flex gap-2"><input id="bc-ean" class="field tnum" inputmode="numeric" placeholder="z. B. 0820650859328" style="flex:1"><button id="bc-go" class="btn-accent" style="flex:0 0 auto">Los</button></div>
     </div>
     <div id="bc-result" class="hidden" style="margin-top:8px"></div>
   </div></div>`;
-  let stream=null, stop=false;
-  const cleanup=()=>{ stop=true; if(stream){ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} stream=null; } };
+  let stream=null, stop=false, zxingReader=null;
+  const cleanup=()=>{ stop=true; if(stream){ try{ stream.getTracks().forEach(t=>t.stop()); }catch(e){} stream=null; } if(zxingReader){ try{ zxingReader.reset(); }catch(e){} zxingReader=null; } };
   const close=()=>{ cleanup(); $("#modal-root").innerHTML=""; };
   $("#bc-x").addEventListener("click", close);
   $("#ov").addEventListener("click", e=>{ if(e.target.id==="ov") close(); });
@@ -2738,23 +2749,31 @@ async function openBarcodeScanner(){
   const submitManual=()=>{ const v=(($("#bc-ean")&&$("#bc-ean").value)||"").trim(); if(v) showResult(v); };
   $("#bc-go").addEventListener("click", submitManual);
   $("#bc-ean").addEventListener("keydown",e=>{ if(e.key==="Enter") submitManual(); });
-  if(!supported) return;
+  if(!canCamera) return;
+  const st=$("#bc-status");
+  const camFail=(msg)=>{ if(st) st.textContent=msg; const cam=$("#bc-cam"); if(cam) cam.classList.add("hidden"); };
+  const onHit=(val)=>{ val=(val||"").trim(); if(!val||stop) return; if(navigator.vibrate){ try{ navigator.vibrate(60); }catch(e){} } showResult(val); };
   try{
-    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:"environment" } } });
-    const video=$("#bc-video"); video.srcObject=stream; await video.play();
-    const st=$("#bc-status"); if(st) st.textContent="Barcode ruhig in den Rahmen halten…";
-    let detector; try{ detector=new BarcodeDetector(); }catch(e){ detector=null; }
-    if(!detector){ if(st) st.textContent="Scanner nicht verfügbar — EAN bitte manuell eintippen."; return; }
-    const tick=async ()=>{
-      if(stop) return;
-      try{ const codes=await detector.detect(video); if(codes && codes.length){ const val=(codes[0].rawValue||"").trim(); if(val){ if(navigator.vibrate) try{ navigator.vibrate(60); }catch(e){} showResult(val); return; } } }catch(e){}
+    if(hasNative){
+      stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:"environment" } } });
+      const video=$("#bc-video"); video.srcObject=stream; await video.play();
+      if(st) st.textContent="Barcode ruhig in den Rahmen halten…";
+      let detector; try{ detector=new BarcodeDetector(); }catch(e){ detector=null; }
+      if(!detector){ camFail("Scanner nicht verfügbar — EAN bitte manuell eintippen."); return; }
+      const tick=async ()=>{ if(stop) return;
+        try{ const codes=await detector.detect(video); if(codes && codes.length) return onHit(codes[0].rawValue); }catch(e){}
+        requestAnimationFrame(tick); };
       requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+    } else {
+      if(st) st.textContent="Scanner wird geladen…";
+      await loadZXing();
+      const video=$("#bc-video"); if(st) st.textContent="Barcode ruhig in den Rahmen halten…";
+      zxingReader=new ZXing.BrowserMultiFormatReader();
+      await zxingReader.decodeFromConstraints({ video:{ facingMode:{ ideal:"environment" } } }, video, (result)=>{ if(result) onHit(result.getText()); });
+    }
   }catch(e){
-    console.warn("[scan] Kamera:", e && e.message);
-    const st=$("#bc-status"); if(st) st.textContent="Kein Kamerazugriff — EAN bitte manuell eintippen.";
-    const cam=$("#bc-cam"); if(cam) cam.classList.add("hidden");
+    console.warn("[scan]", e && e.message);
+    camFail("Kein Kamerazugriff / Scanner — EAN bitte manuell eintippen.");
   }
 }
 if($("#iv-scan")) $("#iv-scan").addEventListener("click", openBarcodeScanner);
