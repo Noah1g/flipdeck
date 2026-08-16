@@ -2089,6 +2089,7 @@ function applyTaxUI(){
   const rate = (reg && (defaultUstRate===19 || defaultUstRate===7)) ? defaultUstRate : 0;
   vkUst = rate; ekUst = rate;
   document.querySelectorAll(".ust").forEach(x=>x.setAttribute("aria-selected", rate>0 && parseInt(x.dataset.rate)===rate ? "true" : "false"));
+  const cb=document.getElementById("c-noek-vat"); if(cb) cb.checked = reg && ekUst===0;   // Standard: Vorsteuer wird gezogen -> Haken aus
   if(typeof calc==="function") calc();
 }
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
@@ -2163,8 +2164,15 @@ $$(".ust").forEach(b=>b.addEventListener("click",()=>{
   if(field==="vk") vkUst=(vkUst===rate?0:rate); else ekUst=(ekUst===rate?0:rate);
   const cur = field==="vk"?vkUst:ekUst;
   $$(`.ust[data-field="${field}"]`).forEach(x=>x.setAttribute("aria-selected", parseInt(x.dataset.rate)===cur));
+  if(field==="ek"){ const cb=$("#c-noek-vat"); if(cb) cb.checked=(ekUst===0); }   // EK-USt aus = kein Vorsteuerabzug
   calc();
 }));
+/* „Kein Vorsteuerabzug"-Haken im Rechner: an = voller EK (keine Vorsteuer), aus = Standard-USt-Satz des Kontos */
+if($("#c-noek-vat")) $("#c-noek-vat").addEventListener("change",()=>{
+  ekUst = $("#c-noek-vat").checked ? 0 : ((defaultUstRate===19||defaultUstRate===7) ? defaultUstRate : 19);
+  $$('.ust[data-field="ek"]').forEach(x=>x.setAttribute("aria-selected", ekUst>0 && parseInt(x.dataset.rate)===ekUst ? "true":"false"));
+  calc();
+});
 $$("#c-region button").forEach(btn=>btn.addEventListener("click",()=>{ regionPct=num(btn.dataset.pct); $$("#c-region button").forEach(b=>b.setAttribute("aria-selected",b===btn)); calc(); }));
 $("#c-reset").addEventListener("click",()=>{ $("#c-vk").value=""; $("#c-ek").value=""; $("#c-ship").value=shipDefStr(); $("#c-ad").value="0"; $("#c-cat").value="12"; regionPct=0; $$("#c-region button").forEach(b=>b.setAttribute("aria-selected",b.dataset.pct==="0")); applyTaxUI(); });
 let calcs=[];

@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v104";   // v104 (App v5.21.24): Fee-Rechner USt automatisch aus Konto-Steuerart vorbelegt
+const VERSION    = "flipdeck-v105";   // v105 (App v5.21.25): Fee-Rechner Haken Kein Vorsteuerabzug (EK) zum Gewinn checken
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
