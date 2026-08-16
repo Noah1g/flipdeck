@@ -1038,13 +1038,14 @@ const GUIDES = [
         <li>EK, VK, Versand &amp; Kategorie eingeben → Reingewinn, Marge und Zielmargen-Ampel live.</li>
         <li>„Zu Bestand hinzufügen" übernimmt die Werte direkt.</li>
       </ul>` },
-    { t:"Steuer: brutto/netto &amp; Vorsteuerabzug", ic:"🧾", act:{tab:"calc"}, go:"Zum Rechner", body:`
-      <p>Bei <b>Regelbesteuerung</b> koppelt der Rechner die USt automatisch an deine Konto-Steuerart:</p>
+    { t:"USt-Modus je Artikel (inkl. §25a)", ic:"🧾", act:{tab:"inventory"}, go:"Zum Bestand", body:`
+      <p>Bei <b>Regelbesteuerung</b> wählst du im Bestand pro Artikel die <b>USt-Behandlung</b>:</p>
       <ul>
-        <li>Die <b>USt</b> (19/7 %) ist auf EK &amp; VK vorbelegt — die „netto"-Beträge erscheinen sofort. Manuell per Klick änderbar.</li>
-        <li><b>„Kein Vorsteuerabzug"</b> (Haken unter EK) — für privat / ohne USt-Rechnung gekaufte Ware: voller EK, keine Vorsteuer → du siehst den ~19 % geringeren Gewinn.</li>
+        <li><b>Rechnung mit USt</b> (Standard) — du hast eine USt-Rechnung, die <b>Vorsteuer</b> wird abgezogen.</li>
+        <li><b>§25a Differenzbesteuerung</b> — für <b>privat/gebraucht</b> gekaufte Ware: USt fällt <b>nur auf die Marge</b> (Verkauf − Einkauf) an, immer 19 %. Meist der günstige Normalfall.</li>
+        <li><b>Kein Vorsteuerabzug</b> — volle USt auf den Verkauf ohne Vorsteuer (~19 % weniger). Nur, wenn §25a nicht greift.</li>
       </ul>
-      <p>Bei <b>Kleinunternehmer/Privat</b> sind die USt-Optionen ausgeblendet — dort gibt es keine USt.</p>` },
+      <p>Preise gibst du immer <b>brutto</b> ein — die USt rechnet Flipdeck heraus und weist sie beim Verkauf als „ans Finanzamt" aus. Bei <b>Kleinunternehmer/Privat</b> entfällt die ganze USt-Rechnerei.</p>` },
     { t:"eBay Privat vs. gewerblich", ic:"🏷️", act:{tab:"profil",scat:"geschaeft"}, go:"Zu Marktplätzen", body:`
       <p>Je nach Kontotyp stehen unterschiedliche eBay-Kanäle zur Wahl (unter Geschäft → Marktplätze):</p>
       <ul>
@@ -2857,11 +2858,23 @@ async function persistImage(src){
     return src;
   }
 }
-function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tags"].forEach(id=>{ const el=$("#"+id); if(el) el.value=""; }); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; if($("#iv-noinputvat")) $("#iv-noinputvat").checked=false; if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=""; } if($("#iv-paymethod")){ refreshPaySelects(); $("#iv-paymethod").value=""; } resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
+function resetInvForm(){ editingInvId=null; ["iv-name","iv-ean","iv-vk","iv-ek","iv-orderdate","iv-returnby","iv-tags"].forEach(id=>{ const el=$("#"+id); if(el) el.value=""; }); $("#iv-qty").value="1"; $("#iv-ship").value=shipDefStr(); $("#iv-ad").value="0"; $("#iv-cat").value="12"; $("#iv-region").value="0"; $("#iv-status").value="stock"; if($("#iv-vatmode")) $("#iv-vatmode").value="normal"; if($("#iv-buyplatform")){ refreshBuyPlatSelect(); $("#iv-buyplatform").value=""; } if($("#iv-paymethod")){ refreshPaySelects(); $("#iv-paymethod").value=""; } resetInvImage(); $("#iv-add").textContent="Hinzufügen"; }
+/* Erklärtext zum gewählten USt-Modus im Bestand-Formular. */
+function updateVatModeHint(){
+  const el=$("#iv-vatmode-hint"), sel=$("#iv-vatmode"); if(!el||!sel) return;
+  const m=sel.value;
+  el.innerHTML = m==="margin"
+      ? "USt fällt nur auf deine <b>Marge</b> (Verkauf − Einkauf) an — meist der günstige Normalfall für <b>privat/gebraucht</b> gekaufte Ware."
+    : m==="noinput"
+      ? "Volle USt auf den Verkauf, <b>keine Vorsteuer</b> auf den EK → ~19 % weniger. Nur, wenn §25a nicht in Frage kommt."
+      : "Du hast eine <b>USt-Rechnung</b> zum Einkauf — die Vorsteuer wird abgezogen (Standard).";
+}
+if($("#iv-vatmode")) $("#iv-vatmode").addEventListener("change", updateVatModeHint);
 /* Bestand-Formular an Steuerart & Standard-Marktplatz anpassen (Anlegen UND Bearbeiten). */
 function applyInvFormMode(){
   const reg = (acctType==="gewerblich" && !kuMode);   // Vorsteuer/Brutto nur bei Regelbesteuerung
-  const nir=$("#iv-noinputvat-row"); if(nir) nir.style.display = reg ? "flex" : "none";
+  const nir=$("#iv-noinputvat-row"); if(nir) nir.style.display = reg ? "block" : "none";
+  updateVatModeHint();
   const ekh=$("#iv-ek-hint"); if(ekh) ekh.textContent = reg ? "· brutto" : "";
   const vkh=$("#iv-vk-hint"); if(vkh) vkh.textContent = reg ? "· brutto" : "";
   const pn=$("#iv-price-note"); if(pn) pn.classList.toggle("hidden", !reg);
@@ -2891,7 +2904,7 @@ $("#iv-add").addEventListener("click", async ()=>{
   const req=[["iv-name",v=>v.trim()!==""],["iv-vk",v=>v.trim()!==""],["iv-ek",v=>v.trim()!==""]]; let bad=false;
   req.forEach(([id,ok])=>{ const el=$("#"+id); if(!ok(el.value)){ flashError(el); bad=true; } });
   if(bad){ showToast("Bitte Pflichtfelder ausfüllen"); return; }
-  const data={ name:$("#iv-name").value.trim(), ean:$("#iv-ean").value.trim(), qty:Math.max(1,parseInt($("#iv-qty").value)||1), vk:num($("#iv-vk").value), ek:num($("#iv-ek").value), ship:num($("#iv-ship").value), catPct:num($("#iv-cat").value), adPct:num($("#iv-ad").value), regionPct:num($("#iv-region").value), feeVer:FEE_VER, noInputVat:!!($("#iv-noinputvat")&&$("#iv-noinputvat").checked),
+  const data={ name:$("#iv-name").value.trim(), ean:$("#iv-ean").value.trim(), qty:Math.max(1,parseInt($("#iv-qty").value)||1), vk:num($("#iv-vk").value), ek:num($("#iv-ek").value), ship:num($("#iv-ship").value), catPct:num($("#iv-cat").value), adPct:num($("#iv-ad").value), regionPct:num($("#iv-region").value), feeVer:FEE_VER, vatMode:($("#iv-vatmode")?$("#iv-vatmode").value:"normal"),
     status:$("#iv-status").value||"stock", orderDate:$("#iv-orderdate").value||"", returnBy:$("#iv-returnby").value||"", buyPlatformId:(($("#iv-buyplatform")&&$("#iv-buyplatform").value!=="__new__")?$("#iv-buyplatform").value:""), tags:parseTags($("#iv-tags").value) };
 
   const btn=$("#iv-add"); const label=btn.textContent;
@@ -2968,7 +2981,11 @@ function openAccountSetup(){
    - Kleinunternehmer (kuMode): nie (kein Vorsteuerabzug)
    - Regelbesteuert + Ausnahme "kein Vorsteuerabzug" (it.noInputVat): voller EK
    - sonst Regelbesteuert: Standard-MwSt-Satz aus dem Profil wird herausgerechnet */
-function ekVatRate(it){ if(kuMode) return 0; if(it && it.noInputVat) return 0; return num(defaultUstRate)||0; }
+/* USt-Modus je Artikel (nur Regelbesteuerung): "normal" = Vorsteuer abziehbar,
+   "margin" = §25a Differenzbesteuerung (USt nur auf Marge), "noinput" = volle USt, keine Vorsteuer.
+   Alt-Feld noInputVat wird als "noinput" gelesen. */
+function vatModeOf(it){ if(!it) return "normal"; if(it.vatMode) return it.vatMode; return it.noInputVat ? "noinput" : "normal"; }
+function ekVatRate(it){ if(kuMode) return 0; const m=vatModeOf(it); if(m==="margin"||m==="noinput") return 0; return num(defaultUstRate)||0; }
 function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   const maxQty=Math.max(1,it.qty);
   const opts=Array.from({length:maxQty},(_,i)=>`<option value="${i+1}">${i+1} ${maxQty===1?"Stück":"Stück"}</option>`).join("");
@@ -3054,13 +3071,15 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
      Ist "Verkaufspreis enthält USt" aktiv, wird die USt vor der Gewinnrechnung herausgerechnet –
      sie ist eine Steuerschuld ans Finanzamt, kein eigener Ertrag. */
   const _ekR = ekVatRate(it); const ekNet = _ekR ? it.ek/(1+_ekR/100) : it.ek;
+  const marginMode = (!kuMode && vatModeOf(it)==="margin");   // §25a Differenzbesteuerung: USt nur auf die Marge
   let sellKRegion = klRegion;   // DE-Zone / PL für Kaufland-Verkäufe in diesem Dialog
   let sellEbpIntl = false;      // eBay-Privat: Verkauf ins Ausland (5 %)?
   const calcSale=(q,vk,shipTot,noFee,pack,adPct,ustRate)=>{
     const plat=$("#sell-platform").value;
     const V=vatF();
-    const vkNet = ustRate ? vk/(1+ustRate/100) : vk;
-    const ustPerUnit = vk - vkNet;
+    let vkNet, ustPerUnit;
+    if(marginMode){ ustPerUnit = Math.max(0, vk - it.ek) * 19/119; vkNet = vk; }   // §25a: USt nur auf die Marge (immer 19 %), EK voll
+    else { vkNet = ustRate ? vk/(1+ustRate/100) : vk; ustPerUnit = vk - vkNet; }
     let feesTotal;
     if(noFee){ feesTotal=0; }
     else if(PLATFORMS[plat] && PLATFORMS[plat].ebayPrivate){
@@ -3074,7 +3093,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
       const combined=it.catPct+adPct+it.regionPct;
       feesTotal = transFee(vkNet) + vkNet*q*combined/100*V;
     }
-    const payoutTotal = vkNet*q - feesTotal;
+    const payoutTotal = vkNet*q - feesTotal - (marginMode ? ustPerUnit*q : 0);   // §25a: abzuführende Margen-USt reduziert die Auszahlung
     const payoutPer = q>0 ? payoutTotal/q : payoutTotal;
     const ustTotal = ustPerUnit*q;
     const tot = payoutTotal - ekNet*q - shipTot - (pack?1:0);
@@ -3092,7 +3111,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     const ustRate = kuMode ? 0 : defaultUstRate;
     const {payoutTotal,tot,margin,ustTotal}=calcSale(q,vk,shipTot,noFee,pack,adPct,ustRate);
     $("#sell-profit").textContent=(tot>=0?"+":"")+eur(tot); $("#sell-profit").style.color=tot>=0?"var(--accent)":"var(--danger)";
-    $("#sell-sub").textContent=`${noFee?"Ohne Gebühren · ":""}Auszahlung gesamt ${eur(payoutTotal)} · EK ${eur(it.ek)}/Stk${_ekR?` (netto ${eur(ekNet)})`:""} · Porto ${eur(shipTot)}${pack?" · +1€ Verpackung":""} · Marge ${pct(margin)}${ustTotal>0?` · davon ${eur(ustTotal)} USt ans Finanzamt`:""}`; };
+    $("#sell-sub").textContent=`${noFee?"Ohne Gebühren · ":""}Auszahlung gesamt ${eur(payoutTotal)} · EK ${eur(it.ek)}/Stk${_ekR?` (netto ${eur(ekNet)})`:""} · Porto ${eur(shipTot)}${pack?" · +1€ Verpackung":""} · Marge ${pct(margin)}${ustTotal>0?` · davon ${eur(ustTotal)} USt${marginMode?" (§25a · nur Marge)":""} ans Finanzamt`:""}`; };
   /* Felder je Marktplatz: Versand/Sendungsnr./Zahlungsmethode nur bei gebührenfreien
      (privaten) Verkäufen; Kaufland-Kategorie nur bei Kaufland. */
   const kDefault=String(ebayPctToKauflandIdx(it.catPct));   // Kaufland-Kategorie aus der eBay-Kategorie des Artikels vorauswählen
@@ -3136,7 +3155,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
   });
 }
 function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return; editingInvId=id; $("#iv-name").value=it.name; $("#iv-ean").value=it.ean||""; $("#iv-qty").value=it.qty; $("#iv-vk").value=String(it.vk).replace(".",","); $("#iv-ek").value=String(it.ek).replace(".",","); $("#iv-ship").value=String(it.ship).replace(".",","); $("#iv-cat").value=String(it.catPct); $("#iv-ad").value=String(it.adPct).replace(".",","); $("#iv-region").value=String(it.regionPct);
-  if($("#iv-noinputvat")) $("#iv-noinputvat").checked=!!it.noInputVat;
+  if($("#iv-vatmode")) $("#iv-vatmode").value = vatModeOf(it);
   $("#iv-status").value = invStatus(it)==="returned" ? "stock" : invStatus(it);
   $("#iv-orderdate").value = it.orderDate||""; $("#iv-returnby").value = it.returnBy||"";
   refreshBuyPlatSelect(); if($("#iv-buyplatform")) $("#iv-buyplatform").value = (it.buyPlatformId && buyPlatformById(it.buyPlatformId)) ? it.buyPlatformId : "";
@@ -3144,7 +3163,7 @@ function openInvEdit(id){ const it=inventory.find(x=>x.id===id); if(!it) return;
   // Der Workflow-Block ist normal zugeklappt. Hat der Artikel dort aber Daten,
   // klappt er beim Bearbeiten auf – sonst uebersieht man sie und loescht sie versehentlich.
   const _more=document.querySelector(".iv-more:not(.iv-more-strong)");
-  if(_more) _more.open = !!(it.orderDate||it.returnBy||(it.tags&&it.tags.length)||(invStatus(it)!=="stock")||it.noInputVat);
+  if(_more) _more.open = !!(it.orderDate||it.returnBy||(it.tags&&it.tags.length)||(invStatus(it)!=="stock"));
   pendingInvImg=it.img||null;
   if(it.img){ $("#iv-drop").classList.add("has"); $("#iv-drop-empty").classList.add("hidden"); $("#iv-drop-preview").src=it.img; $("#iv-drop-preview").classList.remove("hidden"); } else resetInvImage();
   $("#iv-add").textContent="Änderungen speichern";

@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v108";   // v108 (App v5.22.2): Guides aktualisiert + erweitert (Kontotyp, Scanner, Vergleich, Retoure, Steuer)
+const VERSION    = "flipdeck-v109";   // v109 (App v5.23.0): §25a Differenzbesteuerung - 3-Wege USt-Modus je Artikel + Verkaufs-Rechnung
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
