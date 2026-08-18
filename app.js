@@ -3038,6 +3038,8 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
 
       <div id="sell-ad-section">
         <div class="ms-sec"><span class="ms-sec-dot"></span><span class="ms-sec-t">Gebühren &amp; Werbung</span><span class="ms-sec-line"></span></div>
+        <label class="label" for="sell-cat">eBay-Gebühren-Kategorie</label>
+        <select id="sell-cat" class="field" style="margin-bottom:10px">${$("#iv-cat")?$("#iv-cat").innerHTML:""}</select>
         <div class="flex items-center justify-between mb-1.5">
           <label class="label" for="sell-ad" style="margin:0">Bewerben % <span class="info-i" data-tip="Tatsächlich angefallene Werbe-Gebühr für DIESEN Verkauf. Eine geschaltete Promo wird nicht immer fällig – hier auf den real fälligen Wert anpassen oder auf 0 setzen.">i</span></label>
           <span class="c-sub text-[11px]">geplant: ${String(it.adPct).replace('.',',')} %${it.adPct>0?` · <button type="button" id="sell-ad-zero" style="background:none;border:0;cursor:pointer;color:var(--brand);font-weight:600;font-size:11px;padding:0">auf 0 setzen</button>`:""}</span>
@@ -3110,7 +3112,8 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
       const p=kauflandPct(cat, sellKRegion==="pl");   // Kaufland kennt kein eBay-artiges „Bewerben %"
       feesTotal = (vkNet*q*p/100 + (cat.fixed||0)*q) * V;   // Provision + Medien-Zuschlag je Artikel
     } else {
-      const combined=it.catPct+adPct+it.regionPct;
+      const catP = $("#sell-cat") ? num($("#sell-cat").value) : it.catPct;   // Kategorie ist im Verkauf änderbar
+      const combined=catP+adPct+it.regionPct;
       feesTotal = transFee(vkNet) + vkNet*q*combined/100*V;
     }
     const payoutTotal = vkNet*q - feesTotal - (marginMode ? ustPerUnit*q : 0);   // §25a: abzuführende Margen-USt reduziert die Auszahlung
@@ -3145,6 +3148,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
   fillSellKCat();
   $$("#sell-k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===sellKRegion));
   if($("#sell-k-cat")) $("#sell-k-cat").addEventListener("change",recompute);
+  if($("#sell-cat")){ $("#sell-cat").value=String(it.catPct); $("#sell-cat").addEventListener("change",recompute); }   // eBay-Kategorie aus Artikel vorbelegen, im Verkauf änderbar
   $$("#sell-k-region button").forEach(b=>b.addEventListener("click",()=>{ sellKRegion=b.dataset.region==="pl"?"pl":"de"; $$("#sell-k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===sellKRegion)); fillSellKCat(); recompute(); }));
   $$("#sell-ebp-region button").forEach(b=>b.addEventListener("click",()=>{ sellEbpIntl=b.dataset.intl==="1"; $$("#sell-ebp-region button").forEach(x=>x.setAttribute("aria-selected", (x.dataset.intl==="1")===sellEbpIntl)); recompute(); }));
   ["sell-qty","sell-vk","sell-ship","sell-ad"].forEach(x=>$("#"+x).addEventListener("input",recompute));
