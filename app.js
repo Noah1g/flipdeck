@@ -1651,26 +1651,31 @@ function relistAsSale(f){
 function openCustomerReturn(id){ const f=flips.find(x=>x.id===id); if(!f) return;
   $("#modal-root").innerHTML=`<div class="overlay" id="ov"><div class="modal">
     <p class="font-bold text-[16px] mb-1">Kundenretoure</p>
-    <p class="c-sub text-[12.5px] mb-4 leading-relaxed">„${escapeHtml(f.name)}" wird als retourniert markiert und zählt <b>nicht mehr</b> für Umsatz &amp; Gewinn. Der Eintrag bleibt zur Nachvollziehbarkeit erhalten.</p>
-    <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:pointer;user-select:none">
-      <input id="cr-restock" type="checkbox" checked style="width:18px;height:18px;accent-color:var(--brand);flex:0 0 auto;margin-top:1px">
-      <span><span class="text-[13.5px] font-semibold">Artikel zurück ins Lager</span><span class="c-sub text-[12px]" style="display:block;line-height:1.4">${f.qty||1}× wieder als verkaufsbereiter Bestand aufnehmen.</span></span>
-    </label>
+    <p class="c-sub text-[12.5px] mb-4 leading-relaxed">„${escapeHtml(f.name)}" wird als retourniert markiert und zählt <b>nicht mehr</b> für Umsatz &amp; Gewinn. Was passiert mit dem Artikel?</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <label class="cr-opt"><input type="radio" name="cr-dest" value="bware" checked><span><b>Als B-Ware anlegen</b><span class="c-sub">Eigener Artikel mit „B-Ware"-Notiz — für geöffnete/gebrauchte Rückläufer, eigener Preis.</span></span></label>
+      <label class="cr-opt"><input type="radio" name="cr-dest" value="aware"><span><b>Als A-Ware zurück</b><span class="c-sub">Neuwertig/ungeöffnet — erhöht den Original-Bestand (oder neuer A-Artikel).</span></span></label>
+      <label class="cr-opt"><input type="radio" name="cr-dest" value="none"><span><b>Nicht ins Lager</b><span class="c-sub">Entsorgt / Totalverlust — kein Bestand.</span></span></label>
+    </div>
     <div class="grid grid-cols-2 gap-3"><button id="cr-cancel" class="btn-ghost">Abbrechen</button><button id="cr-ok" class="btn-accent">Retoure buchen</button></div>
   </div></div>`;
   $("#ov").addEventListener("click",e=>{ if(e.target.id==="ov") $("#modal-root").innerHTML=""; });
   $("#cr-cancel").addEventListener("click",()=>$("#modal-root").innerHTML="");
   $("#cr-ok").addEventListener("click",()=>{
-    const restock=$("#cr-restock").checked;
+    const dest=(document.querySelector('input[name="cr-dest"]:checked')||{}).value||"bware";
     f.returned=true; f.returnDate=new Date().toISOString(); DB.saveFlips(flips);
-    if(restock){
+    if(dest==="aware"){
       const it=f.invId && inventory.find(x=>x.id===f.invId);
       if(it){ it.qty=(it.qty||0)+(f.qty||1); it.touchedAt=new Date().toISOString(); if(invStatus(it)==="returned"){ it.status="stock"; delete it.supReturn; } }
       else addInventoryItem({ name:f.name, ean:f.ean||"", qty:f.qty||1, vk:num(f.payout), ek:num(f.ek), ship:num(f.ship), catPct:12, adPct:0, regionPct:0, status:"stock", img:f.img||null, tags:["Retoure"] });
       DB.saveInventory(inventory);
+    } else if(dest==="bware"){
+      // Eigener B-Ware-Artikel, Preis offen (neu festzulegen), damit A-Bestand nicht mit Gebrauchtware vermischt wird
+      addInventoryItem({ name:f.name+" (B-Ware)", ean:f.ean||"", qty:f.qty||1, vk:0, ek:num(f.ek), ship:num(f.ship), catPct:12, adPct:0, regionPct:0, status:"stock", img:f.img||null, tags:["B-Ware","Retoure"] });
+      DB.saveInventory(inventory);
     }
     $("#modal-root").innerHTML=""; renderDashboard(); renderTrackerList(); renderInventory(); if(typeof renderReport==="function") renderReport();
-    showToast(restock?"✓ Retoure gebucht – Artikel zurück im Lager":"✓ Retoure gebucht");
+    showToast(dest==="none" ? "✓ Retoure gebucht" : (dest==="bware" ? "✓ Retoure gebucht – als B-Ware im Lager (Preis festlegen)" : "✓ Retoure gebucht – A-Ware zurück im Lager"));
   });
 }
 function undoCustomerReturn(id){ const f=flips.find(x=>x.id===id); if(!f) return;
@@ -2131,18 +2136,20 @@ function applyTaxUI(){
   const rate = (reg && (defaultUstRate===19 || defaultUstRate===7)) ? defaultUstRate : 0;
   vkUst = rate; ekUst = rate;
   document.querySelectorAll(".ust").forEach(x=>x.setAttribute("aria-selected", rate>0 && parseInt(x.dataset.rate)===rate ? "true" : "false"));
-  const cb=document.getElementById("c-noek-vat"); if(cb) cb.checked = reg && ekUst===0;   // Standard: Vorsteuer wird gezogen -> Haken aus
+  const sel=document.getElementById("c-vatmode"); if(sel) sel.value="normal";   // Standard: Vorsteuer abziehbar
   if(typeof calc==="function") calc();
 }
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
-  const vk = vkUst ? vkRaw/(1+vkUst/100) : vkRaw;
-  const ek = ekUst ? ekRaw/(1+ekUst/100) : ekRaw;
-  $("#vk-net").textContent = vkUst ? "netto "+eur(vk) : "";
-  $("#ek-net").textContent = ekUst ? "netto "+eur(ek) : "";
+  const marginMode = (!kuMode && $("#c-vatmode") && $("#c-vatmode").value==="margin");   // §25a: USt nur auf die Marge
+  let vk, ek, outVat;
+  if(marginMode){ vk=vkRaw; ek=ekRaw; outVat=Math.max(0, vkRaw-ekRaw)*19/119; }
+  else { vk = vkUst ? vkRaw/(1+vkUst/100) : vkRaw; ek = ekUst ? ekRaw/(1+ekUst/100) : ekRaw; outVat=0; }
+  $("#vk-net").textContent = marginMode ? ("Margen-USt "+eur(outVat)) : (vkUst ? "netto "+eur(vk) : "");
+  $("#ek-net").textContent = marginMode ? "EK voll (§25a)" : (ekUst ? "netto "+eur(ek) : "");
   const V=vatF();
   const pack = packMode ? 1 : 0;
   const trans=transFee(vk), fvf=vk*catP/100*V, ad=vk*adP/100*V, intl=vk*regionPct/100*V;
-  const fees=trans+fvf+ad+intl, payout=vk-fees, profit=payout-ek-ship-pack, margin=vk>0?profit/vk*100:0;
+  const fees=trans+fvf+ad+intl, payout=vk-fees, profit=payout-ek-ship-pack-outVat, margin=vk>0?profit/vk*100:0;
   last={vk,ek,ship,adP,catP,regionPct,payout,fees,profit,margin,pack};
   const rp=$("#r-profit"); rp.textContent=(profit>=0?"+":"")+eur(profit); rp.style.color=profit>=0?"var(--accent)":"var(--danger)";
   $("#r-payout").textContent=eur(payout); $("#r-fees").textContent=eur(fees); $("#r-margin").textContent=pct(margin);
@@ -2150,7 +2157,7 @@ function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),s
   $("#b-ad-l").textContent=`Anzeigengebühr (${adP.toLocaleString("de-DE")} %)`; $("#b-ad").textContent="- "+eur(ad);
   $("#b-int-l").textContent=`Auslandsgebühr (${regionPct.toLocaleString("de-DE")} %)`; $("#b-int").textContent="- "+eur(intl);
   $("#b-ship").textContent="- "+eur(ship); $("#b-total").textContent="- "+eur(fees);
-  $("#b-ku-note").textContent = kuMode ? "inkl. 19 % MwSt." : "netto";
+  $("#b-ku-note").textContent = marginMode ? "§25a · USt nur auf Marge" : (kuMode ? "inkl. 19 % MwSt." : "netto");
   renderGoalStatus(vk,ek,ship,catP+adP+regionPct,margin,profit); }
 
 /* Zielmargen-Ampel: gedeckt / knapp / verfehlt + fehlender VK */
@@ -2206,13 +2213,17 @@ $$(".ust").forEach(b=>b.addEventListener("click",()=>{
   if(field==="vk") vkUst=(vkUst===rate?0:rate); else ekUst=(ekUst===rate?0:rate);
   const cur = field==="vk"?vkUst:ekUst;
   $$(`.ust[data-field="${field}"]`).forEach(x=>x.setAttribute("aria-selected", parseInt(x.dataset.rate)===cur));
-  if(field==="ek"){ const cb=$("#c-noek-vat"); if(cb) cb.checked=(ekUst===0); }   // EK-USt aus = kein Vorsteuerabzug
+  if(field==="ek"){ const sel=$("#c-vatmode"); if(sel && sel.value!=="margin") sel.value=(ekUst===0?"noinput":"normal"); }   // EK-USt aus = kein Vorsteuerabzug
   calc();
 }));
-/* „Kein Vorsteuerabzug"-Haken im Rechner: an = voller EK (keine Vorsteuer), aus = Standard-USt-Satz des Kontos */
-if($("#c-noek-vat")) $("#c-noek-vat").addEventListener("change",()=>{
-  ekUst = $("#c-noek-vat").checked ? 0 : ((defaultUstRate===19||defaultUstRate===7) ? defaultUstRate : 19);
-  $$('.ust[data-field="ek"]').forEach(x=>x.setAttribute("aria-selected", ekUst>0 && parseInt(x.dataset.rate)===ekUst ? "true":"false"));
+/* USt-Modus im Rechner: normal = Vorsteuer abziehbar · margin = §25a (nur Marge) · noinput = voller EK ohne Vorsteuer */
+if($("#c-vatmode")) $("#c-vatmode").addEventListener("change",()=>{
+  const m=$("#c-vatmode").value; const acct=(defaultUstRate===19||defaultUstRate===7)?defaultUstRate:19;
+  if(m==="margin"){ ekUst=0; vkUst=0; $$(".ust").forEach(x=>x.setAttribute("aria-selected","false")); }
+  else {
+    ekUst = (m==="noinput") ? 0 : acct; vkUst = acct;
+    $$(".ust").forEach(x=>{ const cur=(x.dataset.field==="vk"?vkUst:ekUst); x.setAttribute("aria-selected", cur>0 && parseInt(x.dataset.rate)===cur ? "true":"false"); });
+  }
   calc();
 });
 $$("#c-region button").forEach(btn=>btn.addEventListener("click",()=>{ regionPct=num(btn.dataset.pct); $$("#c-region button").forEach(b=>b.setAttribute("aria-selected",b===btn)); calc(); }));
