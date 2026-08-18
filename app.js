@@ -2551,18 +2551,27 @@ function ebayPctToKauflandIdx(ebayPct){ ebayPct=num(ebayPct);
 /* Marktplatz-abhängige Gewinn-Projektion für den Bestand-Deal-Score: rechnet mit dem
    Gebührenmodell des angegebenen Marktplatzes statt fix eBay-gewerblich. */
 function mpEval(platKey, vk, ek, ship, item){
-  const V=vatF(); const p=PLATFORMS[platKey]||PLATFORMS.ebay; let fees;
+  const V=vatF(); const p=PLATFORMS[platKey]||PLATFORMS.ebay;
+  // USt genau wie im Verkaufs-Dialog berücksichtigen, damit Bestand & Verkauf denselben Gewinn zeigen.
+  const marginMode = (!kuMode && vatModeOf(item)==="margin");   // §25a
+  const ustRate = kuMode ? 0 : (num(defaultUstRate)||0);
+  let vkNet, outVat;
+  if(marginMode){ outVat = Math.max(0, vk - ek) * 19/119; vkNet = vk; }   // USt nur auf Marge
+  else { vkNet = ustRate ? vk/(1+ustRate/100) : vk; outVat = 0; }         // Ausgangs-USt aus VK herausgerechnet
+  let fees;
   if(!p.hasFees || p.ebayPrivate) fees=0;                                   // gebührenfrei / eBay-Privat (Inland-Projektion)
-  else if(platKey==="kaufland") fees=vk*ebayPctToKauflandPct(item.catPct)/100*V;
-  else fees=transFee(vk)+vk*(num(item.catPct)+num(item.adPct)+num(item.regionPct))/100*V;   // eBay gewerblich
-  const payout=vk-fees, profit=payout-ek-ship;
-  return {fees,payout,profit,margin:vk>0?profit/vk*100:0};
+  else if(platKey==="kaufland") fees=vkNet*ebayPctToKauflandPct(item.catPct)/100*V;
+  else fees=transFee(vkNet)+vkNet*(num(item.catPct)+num(item.adPct)+num(item.regionPct))/100*V;   // eBay gewerblich
+  const ekR = ekVatRate(item); const ekNet = ekR ? ek/(1+ekR/100) : ek;    // Vorsteuer je USt-Modus
+  const payout = vkNet - fees - outVat;
+  const profit = payout - ekNet - ship;
+  return { fees, payout, profit, margin: vkNet>0 ? profit/vkNet*100 : 0 };
 }
 /* Marktplatz-Vergleich (nur Gewerblich-Konten): Gewinn/Stück je aktiviertem Marktplatz,
    damit man auf einen Blick sieht, wo sich der Verkauf am meisten lohnt.
    „Privat/Freunde", „Ohne Gebühren", eigene Marktplätze und eBay-Privat werden ausgelassen. */
 function mpCompareHTML(it, st){
-  if(st==="returned" || acctType!=="gewerblich") return "";
+  if(st==="returned" || acctType!=="gewerblich" || num(it.vk)<=0) return "";
   // Nur echte Gebühren-Marktplätze vergleichen — gebührenfreie (Kleinanzeigen, Vinted, Privat …)
   // sind ohnehin immer am besten, das bringt keinen Erkenntnisgewinn.
   const plats=getEnabledPlatforms().filter(k=>{ const p=PLATFORMS[k]; return p && p.hasFees && !p.ebayPrivate && !p.custom; });
@@ -2901,7 +2910,7 @@ $("#iv-drop-x").addEventListener("click", e=>{ e.stopPropagation(); resetInvImag
 /* iv-ekust entfernt: Vorsteuer läuft jetzt automatisch über die Profil-Steuerart (siehe ekVatRate);
    Ausnahme "kein Vorsteuerabzug" liegt als optionaler Schalter im Workflow-Block (#iv-noinputvat). */
 $("#iv-add").addEventListener("click", async ()=>{
-  const req=[["iv-name",v=>v.trim()!==""],["iv-vk",v=>v.trim()!==""],["iv-ek",v=>v.trim()!==""]]; let bad=false;
+  const req=[["iv-name",v=>v.trim()!==""],["iv-ek",v=>v.trim()!==""]]; let bad=false;   // Inserierter Preis ist optional (kann man beim Einkauf noch offen lassen)
   req.forEach(([id,ok])=>{ const el=$("#"+id); if(!ok(el.value)){ flashError(el); bad=true; } });
   if(bad){ showToast("Bitte Pflichtfelder ausfüllen"); return; }
   const data={ name:$("#iv-name").value.trim(), ean:$("#iv-ean").value.trim(), qty:Math.max(1,parseInt($("#iv-qty").value)||1), vk:num($("#iv-vk").value), ek:num($("#iv-ek").value), ship:num($("#iv-ship").value), catPct:num($("#iv-cat").value), adPct:num($("#iv-ad").value), regionPct:num($("#iv-region").value), feeVer:FEE_VER, vatMode:($("#iv-vatmode")?$("#iv-vatmode").value:"normal"),
@@ -3179,12 +3188,13 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleC
   const rows = inventory.map(it=>{
     const combined=it.catPct+it.adPct+it.regionPct;
     const ev=mpEval(defaultPlatform,it.vk,it.ek,it.ship,it);   // Deal-Score folgt dem Standard-Marktplatz des Kontos
+    const priceOpen=num(it.vk)<=0;   // Inserierter Preis noch nicht festgelegt
     const minVK=minProtectVK(it.ek,it.ship,combined), tgtVK=targetVK(it.ek,it.ship,combined,goal,0);
     const ageDays=Math.floor((Date.now()-new Date(it.touchedAt||it.date||Date.now()).getTime())/86400000);
     const st=invStatus(it);
-    if(st!=="returned"){ units+=it.qty; cap+=it.ek*it.qty; prof+=ev.profit*it.qty; }
-    return { it, st, combined, ev, minVK, tgtVK, ageDays,
-      healthy:ev.margin>=goalPct, loss:ev.profit<0,
+    if(st!=="returned"){ units+=it.qty; cap+=it.ek*it.qty; if(!priceOpen) prof+=ev.profit*it.qty; }
+    return { it, st, combined, ev, minVK, tgtVK, ageDays, priceOpen,
+      healthy:priceOpen||ev.margin>=goalPct, loss:!priceOpen&&ev.profit<0,
       dl:(st!=="returned"?deadlineInfo(it.returnBy):null),
       dsort:new Date(it.date||it.touchedAt||0).getTime() };
   });
@@ -3232,13 +3242,14 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleC
   /* 3) Karten rendern */
   list.innerHTML="";
   const placeholder=`<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>`;
-  view.forEach(r=>{ const {it,st,combined,ev,minVK,tgtVK,ageDays,healthy,loss,dl}=r;
+  view.forEach(r=>{ const {it,st,combined,ev,minVK,tgtVK,ageDays,healthy,loss,dl,priceOpen}=r;
     const open=invExpanded.has(it.id), selected=bulkSel.has(it.id);
     const stMeta=INV_STATUS[st], canAdv=(st==="ordered"||st==="transit");
     const wfBadge=`<button type="button" class="pill inv-status" data-id="${it.id}" ${canAdv?'title="Klick: nächster Status"':''} style="border:1px solid ${stMeta.ring};color:${stMeta.col};background:color-mix(in srgb,${stMeta.col} 13%,transparent);${canAdv?'cursor:pointer':'cursor:default'}">${lang==="en"?stMeta.en:stMeta.de}${canAdv?' →':''}</button>`;
     // „Gesund" ist der Normalzustand -> kein Pill (weniger Rauschen). Nur Probleme werden markiert.
     const healthPill = st==="returned" ? "" : (loss ? `<span class="pill pill-warn">⚠ ${lang==="en"?"Loss":"Verlust"}</span>` : (!healthy ? `<span class="pill pill-warn">⚠ ${lang==="en"?"Below target":"Unter Ziel"}</span>` : ""));
-    const _ds = st==="returned" ? null : dealGrade(ev.profit, it.ek);
+    const _ds = (st==="returned"||priceOpen) ? null : dealGrade(ev.profit, it.ek);
+    const openPricePill = priceOpen ? `<span class="pill pill-mut">Preis noch offen</span>` : "";
     const scorePill = _ds ? `<button type="button" class="pill deal-pill" data-roi="${_ds.roi}" data-grade="${_ds.g}" data-col="${attrEsc(_ds.col)}" data-vk="${it.vk}" data-ek="${it.ek}" data-ship="${it.ship}" data-comb="${it.catPct+it.adPct+it.regionPct}" data-cat="${it.catPct}" style="border:1px solid color-mix(in srgb,${_ds.col} 45%,var(--line));color:${_ds.col};background:color-mix(in srgb,${_ds.col} 12%,transparent);font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px" title="Antippen: So wird der Deal-Score berechnet">◆ Deal ${_ds.g}<span style="opacity:.75;font-weight:600">ⓘ</span></button>` : "";
     const stalePill = st==="returned" ? "" : (ageDays>=staleDays*2 ? `<span class="pill pill-stale-red">⏳ ${ageDays} T</span>` : (ageDays>=staleDays ? `<span class="pill pill-stale">⏳ ${ageDays} T</span>` : ""));
     const floorPill = st==="returned" ? "" : `<span class="pill pill-floor" title="${lang==="en"?"Floor price – never sell below":"Mindest-VK – niemals darunter verkaufen"}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="pf-label">${lang==="en"?"Floor":"Min-VK"}</span> ${minVK===Infinity?"—":eur(minVK)}</span>`;
@@ -3264,12 +3275,14 @@ function renderInventory(){ const list=$("#inv-list"); applyFeatCfg(); scheduleC
       <div class="inv-head" role="button" tabindex="0" data-toggle="${it.id}" aria-expanded="${open}" ${bulkMode?'style="padding-left:46px"':''}>
         <span class="inv-thumb">${ it.img?`<img src="${attrEsc(it.img)}" alt="">`:placeholder }</span>
         <span class="inv-main">
-          <span class="inv-pills">${wfBadge}${scorePill}${healthPill}${floorPill}${dlPill}${refundPill}${stalePill}</span>
+          <span class="inv-pills">${wfBadge}${openPricePill}${scorePill}${healthPill}${floorPill}${dlPill}${refundPill}${stalePill}</span>
           <span class="inv-title">${escapeHtml(it.name)}</span>
-          <span class="inv-meta">${it.qty} ${lang==="en"?"pcs":"Stk"} · VK ${eur(it.vk)} · EK ${eur(it.ek)}${it.ean?` · ${escapeHtml(it.ean)}`:""}</span>
+          <span class="inv-meta">${it.qty} ${lang==="en"?"pcs":"Stk"} · VK ${priceOpen?"—":eur(it.vk)} · EK ${eur(it.ek)}${it.ean?` · ${escapeHtml(it.ean)}`:""}</span>
           ${tagsChipsHTML(it.tags)}
           <span class="inv-hero">
-            <span><span class="inv-hero-label">${lang==="en"?"Profit / unit":"Profit / Stück"}</span><span class="inv-hero-val" style="color:${pCol}">${ev.profit>=0?"+":""}${eur(ev.profit)}<span class="c-sub" style="font-size:12px;font-weight:600;margin-left:6px">${pct(ev.margin)} Marge</span></span></span>
+            ${priceOpen
+              ? `<span><span class="inv-hero-label">Verkaufspreis</span><span class="inv-hero-val" style="color:var(--sub)">noch offen — Preis festlegen</span></span>`
+              : `<span><span class="inv-hero-label">${lang==="en"?"Profit / unit":"Profit / Stück"}</span><span class="inv-hero-val" style="color:${pCol}">${ev.profit>=0?"+":""}${eur(ev.profit)}<span class="c-sub" style="font-size:12px;font-weight:600;margin-left:6px">${pct(ev.margin)} Marge</span></span></span>`}
             <svg class="inv-chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </span>
         </span>
