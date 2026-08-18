@@ -690,6 +690,7 @@ function renderAvatar(){
 async function enterApp(){
   // Login sofort sichtbar quittieren
   $("#menu-admin").style.display = currentUser.role==="owner" ? "" : "none";
+  { const adv=$("#data-advanced"); if(adv) adv.style.display = currentUser.role==="owner" ? "" : "none"; }   // technische Wartung nur für Owner
   hideSplash();
   $("#login-view").classList.add("hidden"); $("#pending-view").classList.add("hidden"); $("#app-view").classList.remove("hidden");
   applyI18n();

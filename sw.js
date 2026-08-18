@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v115";   // v115 (App v5.24.3): technische Wartungs-Funktionen in Erweitert-Bereich eingeklappt
+const VERSION    = "flipdeck-v116";   // v116 (App v5.24.4): technische Wartung nur fuer Owner, fuer Nutzer komplett ausgeblendet
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
