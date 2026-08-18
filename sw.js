@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v117";   // v117 (App v5.24.5): Kundenretoure nur gewerblich; Preis-Begriffe vereinheitlicht (VK brutto vs Auszahlung netto)
+const VERSION    = "flipdeck-v118";   // v118 (App v5.24.6): Report Auszahlung netto -> nach Gebuehren (KU/Privat nicht mit USt verwirren)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
