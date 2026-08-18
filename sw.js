@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v110";   // v110 (App v5.23.1): Dashboard-Header auf Handy gestapelt (Begruessung einzeilig)
+const VERSION    = "flipdeck-v111";   // v111 (App v5.23.2): doppelte Dashboard-Schnelllinks entfernt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
