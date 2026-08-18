@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v114";   // v114 (App v5.24.2): Verkaufs-Dialog - eBay-Kategorie sichtbar und aenderbar
+const VERSION    = "flipdeck-v115";   // v115 (App v5.24.3): technische Wartungs-Funktionen in Erweitert-Bereich eingeklappt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
