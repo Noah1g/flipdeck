@@ -2158,7 +2158,7 @@ function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),s
   $("#b-ad-l").textContent=`Anzeigengebühr (${adP.toLocaleString("de-DE")} %)`; $("#b-ad").textContent="- "+eur(ad);
   $("#b-int-l").textContent=`Auslandsgebühr (${regionPct.toLocaleString("de-DE")} %)`; $("#b-int").textContent="- "+eur(intl);
   $("#b-ship").textContent="- "+eur(ship); $("#b-total").textContent="- "+eur(fees);
-  $("#b-ku-note").textContent = marginMode ? "§25a · USt nur auf Marge" : (kuMode ? "inkl. 19 % MwSt." : "netto");
+  $("#b-ku-note").textContent = kuMode ? "" : (marginMode ? "§25a · USt nur auf Marge" : "netto");   // KU/Privat: keine USt-Notiz (kein Vorsteuer-Thema)
   renderGoalStatus(vk,ek,ship,catP+adP+regionPct,margin,profit); }
 
 /* Zielmargen-Ampel: gedeckt / knapp / verfehlt + fehlender VK */
@@ -2337,7 +2337,7 @@ function kauflandCalc(){ if(!$("#k-vk")) return;
   $("#kb-ship").textContent="- "+eur(ship);
   $("#kb-pack-row").style.display=(pack>0)?"":"none"; $("#kb-pack").textContent="- "+eur(pack);
   $("#kb-total").textContent="- "+eur(fees);
-  $("#kb-ku-note").textContent = kuMode ? "inkl. 19 % MwSt." : "netto"; }
+  $("#kb-ku-note").textContent = kuMode ? "" : "netto"; }   // KU/Privat: keine USt-Notiz
 if($("#k-cat")){ ["k-vk","k-ek","k-ship"].forEach(id=>$("#"+id).addEventListener("input",kauflandCalc)); $("#k-cat").addEventListener("change",kauflandCalc); }
 if($("#k-pack")) $("#k-pack").addEventListener("change",()=>{ klPackMode=$("#k-pack").checked; Store.set("fg_kpack",klPackMode?"1":"0"); kauflandCalc(); });
 $$("#k-region button").forEach(b=>b.addEventListener("click",()=>{ klRegion=b.dataset.region==="pl"?"pl":"de"; Store.set("fg_kregion",klRegion); $$("#k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===klRegion)); fillKauflandCats(); kauflandCalc(); }));
