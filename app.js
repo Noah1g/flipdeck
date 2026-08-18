@@ -962,7 +962,7 @@ const GUIDES = [
       <p>Flipdeck begleitet deinen kompletten Reselling-Kreislauf — von der Recherche bis zur Auswertung:</p>
       <ol>
         <li><b>Recherchieren</b> — im Laden per <b>Barcode-Scanner</b> Preise checken, oder im <b>Gebühren-Rechner</b> vorab prüfen, ob sich ein Deal nach Gebühren lohnt.</li>
-        <li><b>Bestand</b> — gekaufte Artikel erfasst du mit Einkaufspreis, Inseratpreis und optional Status.</li>
+        <li><b>Bestand</b> — gekaufte Artikel erfasst du mit Einkaufspreis (EK) und geplantem Verkaufspreis (VK).</li>
         <li><b>Verkauf</b> — beim Verkauf „Als Verkauf an Tracker" tippen und den Marktplatz wählen; Gebühren &amp; Gewinn rechnet Flipdeck automatisch.</li>
         <li><b>Auswertung</b> — Dashboard &amp; Auswertung zeigen Gewinn, Marge, ROI, Pakete &amp; Retourenquote über jeden Zeitraum.</li>
       </ol>
@@ -992,7 +992,7 @@ const GUIDES = [
     { t:"Artikel in den Bestand aufnehmen", ic:"📦", act:{tab:"inventory"}, go:"Zum Bestand", body:`
       <p>Im <b>Bestand</b> legst du jeden Einkauf an, damit du später den Gewinn genau kennst.</p>
       <ul>
-        <li><b>EK</b> (Einkaufspreis) und <b>Inserierter Preis</b> (dein geplanter Verkaufspreis). Bei Regelbesteuerung gibst du beide <b>brutto</b> ein — die USt rechnet Flipdeck heraus.</li>
+        <li><b>EK</b> (Einkaufspreis) und <b>Verkaufspreis (VK)</b> — dein geplanter Preis, brutto (vor Marktplatz-Gebühren). Bei Regelbesteuerung rechnet Flipdeck die USt heraus.</li>
         <li><b>Gebühren-Kategorie</b> (optionale Schätzung für die Vorschau) — die echten Gebühren fallen erst beim Verkauf nach Marktplatz an.</li>
         <li>Optional unter <b>Workflow &amp; Einkauf</b>: Status (Bestellt → Unterwegs → Im Lager), Einkaufsplattform mit <b>Retourenfrist</b> und <b>Notizen</b>.</li>
       </ul>
@@ -1075,7 +1075,7 @@ const GUIDES = [
       <ul>
         <li>Am einfachsten mit der <b>Vorlage</b>.</li>
         <li>Flipdeck <b>erkennt die Spalten automatisch</b> (auch fremde Exporte) — du prüfst nur die Vorschau und klickst Import.</li>
-        <li>„Verkaufspreis" = der Betrag, den du <b>tatsächlich erhalten</b> hast (nach Gebühren).</li>
+        <li>„Auszahlung" = der Betrag, den du <b>tatsächlich erhalten</b> hast (nach Gebühren) — nicht der Brutto-VK.</li>
       </ul>` },
     { t:"Datensicherheit &amp; Backups", ic:"🛡️", act:{tab:"profil",scat:"daten"}, go:"Zu Daten", body:`
       <p>Deine Daten sind <b>automatisch sicher</b>: laufende Cloud-Sicherung, tägliche Backups und Wiederherstellungs-Punkte, auf die du jederzeit zurück kannst.</p>
@@ -1583,7 +1583,7 @@ function openFlipDetail(id){ const f=flips.find(x=>x.id===id); if(!f) return;
       <button id="fd-restock" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>In Bestand</button>
       <button id="fd-relist" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h7v7"/></svg>Neuer Verkauf</button>
       <button id="fd-share" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Als Bild</button>
-      <button id="fd-return" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;${f.returned?'':'color:#f5a524'}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10H9"/></svg>${f.returned?'Retoure rückg.':'Kundenretoure'}</button>
+      ${ (acctType==="privat" && !f.returned) ? "" : `<button id="fd-return" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;${f.returned?'':'color:#f5a524'}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10H9"/></svg>${f.returned?'Retoure rückg.':'Kundenretoure'}</button>` }
       ${ f.returned ? "" : `<button id="fd-partial" class="btn-ghost" style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;grid-column:1 / -1;${num(f.refund)>0?'color:#f5a524':''}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>${num(f.refund)>0?`Teilerstattung ${eur(num(f.refund))} ändern`:'Teilerstattung'}</button>` }
     </div>
     <p class="c-sub text-[11px] leading-relaxed mb-3">„In Bestand"/„Neuer Verkauf" übernehmen Bild, Name, EAN, EK &amp; Versand. Kategorie, Menge, Preis &amp; Datum bitte prüfen.</p>
@@ -1594,7 +1594,7 @@ function openFlipDetail(id){ const f=flips.find(x=>x.id===id); if(!f) return;
   $("#fd-restock").addEventListener("click",()=>{ $("#modal-root").innerHTML=""; restockToInventory(f); });
   $("#fd-relist").addEventListener("click",()=>{ $("#modal-root").innerHTML=""; relistAsSale(f); });
   $("#fd-share").addEventListener("click",()=> exportSaleImage(f));
-  $("#fd-return").addEventListener("click",()=>{ if(f.returned){ undoCustomerReturn(f.id); } else { $("#modal-root").innerHTML=""; openCustomerReturn(f.id); } });
+  if($("#fd-return")) $("#fd-return").addEventListener("click",()=>{ if(f.returned){ undoCustomerReturn(f.id); } else { $("#modal-root").innerHTML=""; openCustomerReturn(f.id); } });
   if($("#fd-partial")) $("#fd-partial").addEventListener("click",()=>{ $("#modal-root").innerHTML=""; openPartialRefund(f.id); });
 }
 /* ===== Teilerstattung: Verkauf bleibt gültig, Umsatz & Gewinn sinken um den erstatteten Betrag ===== */
@@ -3025,7 +3025,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
       <div class="grid grid-cols-2 gap-3">
         <div><label class="label" for="sell-qty">Stückzahl</label><select id="sell-qty" class="field">${opts}</select></div>
         <div><label class="label" for="sell-date">Verkaufsdatum</label><input id="sell-date" class="field" type="date" value="${todayISOInput()}"></div>
-        <div><label class="label" for="sell-vk">Verkaufspreis € / Stück</label><input id="sell-vk" class="field tnum" inputmode="decimal" value="${String(it.vk).replace('.',',')}"></div>
+        <div><label class="label" for="sell-vk">Verkaufspreis (VK) € / Stück</label><input id="sell-vk" class="field tnum" inputmode="decimal" value="${String(it.vk).replace('.',',')}"></div>
         <div><label class="label" for="sell-ship">Porto € (Bestellung) <span class="info-i" data-tip="Porto fällt nur EINMAL pro Bestellung an – auch bei Mehrfachkauf. Nicht pro Stück eingeben.">i</span></label><input id="sell-ship" class="field tnum" inputmode="decimal" value="${String(it.ship).replace('.',',')}"></div>
       </div>
 
@@ -4239,11 +4239,11 @@ function parseCSV(text){ text=String(text||"").replace(/^﻿/,"");
     else if(c!=='\r') field+=c; }
   if(field.length||row.length){ row.push(field); rows.push(row); }
   return rows.map(r=>r.map(c=>c.trim())).filter(r=>r.some(c=>c!=="")); }
-const CSV_TEMPLATE = "Produkt;Menge;Verkaufspreis;Einkaufspreis;Versand;Marktplatz;Datum;EAN\nBeispiel-Artikel;1;49,99;20,00;4,99;eBay;15.08.2026;\n";
+const CSV_TEMPLATE = "Produkt;Menge;Auszahlung;Einkaufspreis;Versand;Marktplatz;Datum;EAN\nBeispiel-Artikel;1;49,99;20,00;4,99;eBay;15.08.2026;\n";
 const CSV_FIELDS = [
   {key:"name",     label:"Produkt", req:true,  kw:["produkt","artikel","gegenstand","name","title","titel","bezeichnung","item","listing","description","beschreibung"]},
   {key:"qty",      label:"Menge",   kw:["menge","anzahl","stückzahl","qty","quantity","stück","stk"]},
-  {key:"payout",   label:"Verkaufspreis / Auszahlung", req:true, kw:["auszahlung","verkaufspreis","gesamtpreis","erlös","erlöse","einnahmen","payout","umsatz","total","gesamt","sold","betrag","preis","price"]},
+  {key:"payout",   label:"Auszahlung (nach Gebühren)", req:true, kw:["auszahlung","verkaufspreis","gesamtpreis","erlös","erlöse","einnahmen","payout","umsatz","total","gesamt","sold","betrag","preis","price"]},
   {key:"ek",       label:"Einkaufspreis", kw:["einkaufspreis","einkauf","kosten","cost","buy","ek","wareneinsatz"]},
   {key:"ship",     label:"Versand", kw:["versand","porto","shipping","ship","versandkosten"]},
   {key:"platform", label:"Marktplatz", kw:["marktplatz","plattform","platform","kanal","channel","market","börse","site"]},
@@ -4307,7 +4307,7 @@ function openCsvImportModal(rows){
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">${fieldsHTML}</div>
       <p class="label mb-1">Vorschau <span class="c-sub" style="font-weight:400">(${valid.length} importierbar)</span></p>
       <div style="background:var(--cell-2);border:1px solid var(--line);border-radius:12px;padding:2px 12px 8px">${prev||'<p class="c-sub text-[12px] py-3">Keine Zeile mit Produktname erkannt — bitte Spalte „Produkt" zuordnen.</p>'}</div>
-      <p class="c-sub text-[11px] leading-relaxed mt-2.5">„Verkaufspreis/Auszahlung" = Betrag, den du <b>tatsächlich erhalten hast</b> (nach Marktplatz-Gebühren) — bei Import werden keine Gebühren erneut abgezogen.</p>
+      <p class="c-sub text-[11px] leading-relaxed mt-2.5">„Auszahlung" = Betrag, den du <b>tatsächlich erhalten hast</b> (nach Marktplatz-Gebühren) — bei Import werden keine Gebühren erneut abgezogen.</p>
       <div class="grid grid-cols-2 gap-3 mt-4"><button id="csv-cancel" class="btn-ghost">Abbrechen</button><button id="csv-do" class="btn-accent"${valid.length?'':' disabled'}>${valid.length} Verkäufe importieren</button></div>
     </div></div>`;
     const close=()=>{ $("#modal-root").innerHTML=""; };

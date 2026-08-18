@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v116";   // v116 (App v5.24.4): technische Wartung nur fuer Owner, fuer Nutzer komplett ausgeblendet
+const VERSION    = "flipdeck-v117";   // v117 (App v5.24.5): Kundenretoure nur gewerblich; Preis-Begriffe vereinheitlicht (VK brutto vs Auszahlung netto)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
