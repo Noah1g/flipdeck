@@ -492,9 +492,12 @@ const fmtDate = iso => new Date(iso).toLocaleDateString("de-DE",{day:"numeric",m
 /* Kundenretoure: f.returned = true -> Verkauf zählt weder für Umsatz noch Gewinn.
    Teilerstattung: f.refund = € an den Käufer zurück -> senkt Umsatz UND Gewinn um den Betrag.
    Eine Änderung an diesen drei Helfern korrigiert automatisch ALLE Auswertungen. */
-const flipProfit  = f => f.returned ? 0 : (num(f.payout)-num(f.ek)-num(f.ship))*(f.qty||1) - num(f.refund||0);
+/* EK effektiv: bei Regelbesteuerung-Normalmodus wird die Vorsteuer vom EK abgezogen (ekVatRate>0),
+   sonst (KU/Privat/§25a/kein Vorsteuerabzug sowie Alt-/Importdaten ohne Feld) voller EK. */
+const ekEff = f => (f && f.ekVatRate) ? num(f.ek)/(1+num(f.ekVatRate)/100) : num(f.ek);
+const flipProfit  = f => f.returned ? 0 : (num(f.payout)-ekEff(f)-num(f.ship))*(f.qty||1) - num(f.refund||0);
 const flipRevenue = f => f.returned ? 0 : num(f.payout)*(f.qty||1) - num(f.refund||0);
-const flipCost    = f => f.returned ? 0 : (num(f.ek)+num(f.ship))*(f.qty||1);
+const flipCost    = f => f.returned ? 0 : (ekEff(f)+num(f.ship))*(f.qty||1);
 /* escapeHtml jetzt auch attribut-sicher: escapt zusätzlich " und ' → kein Quote-Breakout mehr,
    egal ob der Wert in Textinhalt ODER in einem Attribut landet. (Härtung, v5.10.6) */
 const escapeHtml = s => String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
@@ -2556,7 +2559,10 @@ function salesHistoryHTML(it){
 function dynTargetMargin(){ return targetMargin(); } /* fix statt dynamisch */
 const BREAK_EVEN_MARGIN = 0.05;
 
-function evalVK(vk,ek,ship,combinedPct){ const V=vatF(); const fees=transFee(vk)+vk*combinedPct/100*V,payout=vk-fees,profit=payout-ek-ship; return {fees,payout,profit,margin:vk>0?profit/vk*100:0}; }
+function evalVK(vk,ek,ship,combinedPct){ const V=vatF(); const r=kuMode?0:(num(defaultUstRate)||0);
+  const vkNet = r ? vk/(1+r/100) : vk, ekNet = r ? ek/(1+r/100) : ek;   // Regelbest.: Ausgangs-USt raus, Vorsteuer vom EK
+  const fees=transFee(vkNet)+vkNet*combinedPct/100*V, payout=vkNet-fees, profit=payout-ekNet-ship;
+  return {fees,payout,profit,margin:vkNet>0?profit/vkNet*100:0}; }
 /* eBay-Kategorie-% grob auf die passende Kaufland-Provision mappen (Elektronik→Elektronik usw.). */
 function ebayPctToKauflandPct(ebayPct){ ebayPct=num(ebayPct);
   if(ebayPct>0 && ebayPct<=7) return 7;    // Elektronik / Geräte / Reifen
@@ -2689,7 +2695,17 @@ function dealScoreInfoHTML(ds){
    Handy nicht. Tippen öffnet die Erklärung als Fenster (Zweck + Rechenweg). */
 document.addEventListener("click", e=>{ const i=e.target.closest && e.target.closest(".info-i"); if(!i) return;
   e.preventDefault(); e.stopPropagation(); const tip=i.getAttribute("data-tip"); if(tip) openInfoModal("Erklärung", `<p style="color:var(--text)">${escapeHtml(tip)}</p>`); });
-function targetVK(ek,ship,combinedPct,goal,fpp){ fpp=fpp||0; const V=vatF(), k=1-V*combinedPct/100, denom=k-goal; if(denom<=0) return Infinity; let vk=((kuMode?0.54:0.42)+ek+ship+fpp)/denom; if(vk<=10) vk=((kuMode?0.45:0.35)+ek+ship+fpp)/denom; return vk; }
+/* Brutto-VK für eine Zielmarge (Marge relativ zum Netto-Verkauf) — USt-korrekt:
+   Regelbesteuerung rechnet Ausgangs-USt raus und zieht die Vorsteuer vom EK ab; KU/Privat brutto. */
+function targetVK(ek,ship,combinedPct,goal,fpp){ fpp=fpp||0;
+  const V=vatF(), r=kuMode?0:(num(defaultUstRate)||0);
+  const ekN = r ? ek/(1+r/100) : ek;                 // EK netto (Vorsteuer) bei Regelbest.
+  const denom = 1 - V*combinedPct/100 - goal;
+  if(denom<=0) return Infinity;
+  let vkNet=((kuMode?0.54:0.42)+ekN+ship+fpp)/denom;
+  if(vkNet<=10) vkNet=((kuMode?0.45:0.35)+ekN+ship+fpp)/denom;
+  return vkNet*(1+r/100);                             // -> Brutto-VK
+}
 function minProtectVK(ek,ship,combinedPct){ return targetVK(ek,ship,combinedPct, BREAK_EVEN_MARGIN, 0); }
 
 /* In Inventory übernehmen: überträgt die berechneten Werte direkt in die Inventory-Eingabemaske */
@@ -3185,7 +3201,7 @@ function openSellModal(id){ const it=inventory.find(x=>x.id===id); if(!it) retur
     const shipPer = (shipTot + (pack?1:0))/q;
     const dateVal=$("#sell-date").value||todayISOInput();
     const platform=$("#sell-platform").value||"ebay";
-    flips.unshift({ id:"f"+Date.now(), invId:it.id, name:it.name, ean:it.ean||"", qty:q, ek:it.ek, payout:payoutPer, ship:shipPer, date:new Date(dateVal+"T12:00:00").toISOString(), img:it.img||null, carrier:($("#sell-carrier")?$("#sell-carrier").value:"")||"", tracking:($("#sell-tracking")?$("#sell-tracking").value.trim():""), payMethodId:($("#sell-paymethod")?$("#sell-paymethod").value:""), platform, ustRate });
+    flips.unshift({ id:"f"+Date.now(), invId:it.id, name:it.name, ean:it.ean||"", qty:q, ek:it.ek, ekVatRate:_ekR, payout:payoutPer, ship:shipPer, date:new Date(dateVal+"T12:00:00").toISOString(), img:it.img||null, carrier:($("#sell-carrier")?$("#sell-carrier").value:"")||"", tracking:($("#sell-tracking")?$("#sell-tracking").value.trim():""), payMethodId:($("#sell-paymethod")?$("#sell-paymethod").value:""), platform, ustRate });
     DB.saveFlips(flips);
     it.qty-=q; it.touchedAt=new Date().toISOString(); if(it.qty<=0) inventory=inventory.filter(x=>x.id!==it.id);
     DB.saveInventory(inventory);

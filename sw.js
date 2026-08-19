@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v125";   // v125 (App v5.25.0): Kaufland-Rechner USt-korrekt inkl. Modus/25a (wie eBay-Rechner)
+const VERSION    = "flipdeck-v126";   // v126 (App v5.25.1): USt-Konsistenz - verbuchter Gewinn = Vorschau; Ziel/Mindest-VK USt-korrekt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
