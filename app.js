@@ -992,9 +992,9 @@ const GUIDES = [
     { t:"Artikel in den Bestand aufnehmen", ic:"📦", act:{tab:"inventory"}, go:"Zum Bestand", body:`
       <p>Im <b>Bestand</b> legst du jeden Einkauf an, damit du später den Gewinn genau kennst.</p>
       <ul>
-        <li><b>EK</b> (Einkaufspreis) und <b>Verkaufspreis (VK)</b> — dein geplanter Preis, brutto (vor Marktplatz-Gebühren). Bei Regelbesteuerung rechnet Flipdeck die USt heraus.</li>
+        <li><b>EK</b> (Einkaufspreis) und <b>Verkaufspreis (VK)</b> — dein geplanter Preis, brutto (vor Marktplatz-Gebühren). Der VK ist <b>optional</b> — beim Einkauf kannst du ihn offen lassen (der Artikel zeigt dann „Preis noch offen"). Bei Regelbesteuerung rechnet Flipdeck die USt heraus.</li>
         <li><b>Gebühren-Kategorie</b> (optionale Schätzung für die Vorschau) — die echten Gebühren fallen erst beim Verkauf nach Marktplatz an.</li>
-        <li>Optional unter <b>Workflow &amp; Einkauf</b>: Status (Bestellt → Unterwegs → Im Lager), Einkaufsplattform mit <b>Retourenfrist</b> und <b>Notizen</b>.</li>
+        <li>Optional unter <b>Workflow &amp; Einkauf</b>: Status, Einkaufsplattform + <b>Zustelldatum</b> (daraus berechnet sich die <b>Rückgabefrist</b>) und <b>Notizen</b>.</li>
       </ul>
       <p>Flipdeck zeigt sofort <b>Mindest-VK</b> (nie darunter verkaufen) und <b>Ziel-VK</b> für deine Zielmarge.</p>` },
     { t:"Marktplatz-Vergleich: wo am meisten Gewinn?", ic:"⚖️", act:{tab:"inventory"}, go:"Zum Bestand", body:`
@@ -1007,15 +1007,15 @@ const GUIDES = [
     { t:"Einen Verkauf eintragen", ic:"💸", act:{tab:"inventory"}, go:"Zum Bestand", body:`
       <p>Beim verkauften Artikel im Bestand auf <b>„Als Verkauf an Tracker"</b> tippen.</p>
       <ul>
-        <li><b>Marktplatz wählen</b> — die passenden <b>Gebühren werden automatisch</b> abgezogen. Bei <b>Kaufland</b> wird die Kategorie aus deiner eBay-Kategorie vorausgewählt.</li>
+        <li><b>Marktplatz wählen</b> — die passenden <b>Gebühren werden automatisch</b> abgezogen. Die <b>Gebühren-Kategorie</b> (eBay bzw. Kaufland) ist vorbelegt, lässt sich im Dialog aber pro Verkauf anpassen.</li>
         <li><b>eBay Privat</b>: innerdeutsch 0 €, Ausland 5 %. Regelbesteuert: die USt wird als „ans Finanzamt" ausgewiesen.</li>
         <li>Der <b>Gewinn</b> wird live berechnet und landet im Tracker &amp; in der Auswertung.</li>
       </ul>` },
     { t:"Kundenretoure &amp; Teilerstattung", ic:"↩️", act:{tab:"tracker"}, go:"Zu Verkäufe", body:`
       <p>Öffne einen Verkauf (Verkäufe-Tab) → unter <b>Aktionen</b>:</p>
       <ul>
-        <li><b>Kundenretoure</b> — der Verkauf zählt nicht mehr für Umsatz &amp; Gewinn; optional den Artikel zurück ins Lager.</li>
-        <li><b>Teilerstattung</b> — du hast dem Käufer etwas zurückerstattet (Kulanz): Verkauf bleibt gültig, aber <b>Umsatz &amp; Gewinn sinken</b> um den Betrag.</li>
+        <li><b>Kundenretoure</b> (nur bei <b>gewerblichen</b> Konten) — der Verkauf zählt nicht mehr für Umsatz &amp; Gewinn. Du wählst, was mit dem Artikel passiert: <b>als B-Ware</b> anlegen (eigener Artikel, Preis offen), <b>als A-Ware</b> zurück in den Bestand, oder <b>nicht ins Lager</b> (Totalverlust).</li>
+        <li><b>Teilerstattung</b> (auch bei Privat) — du hast dem Käufer etwas zurückerstattet (Kulanz): Verkauf bleibt gültig, aber <b>Umsatz &amp; Gewinn sinken</b> um den Betrag.</li>
       </ul>
       <p>Deine <b>Retourenquote</b> siehst du im Dashboard auf der Karte <b>„Pakete"</b> (versendet + wie viele % retour).</p>` },
     { t:"Deal-Score &amp; ROI verstehen", ic:"◆", act:{tab:"inventory"}, go:"Zum Bestand", body:`
@@ -1037,6 +1037,7 @@ const GUIDES = [
       <ul>
         <li>Oben zwischen <b>eBay</b> und <b>Kaufland</b> umschalten (öffnet deinen Standard-Marktplatz).</li>
         <li>EK, VK, Versand &amp; Kategorie eingeben → Reingewinn, Marge und Zielmargen-Ampel live.</li>
+        <li>Bei <b>Regelbesteuerung</b> ist die USt automatisch berücksichtigt — den USt-Modus (inkl. <b>§25a</b>) wählst du unter dem EK-Feld.</li>
         <li>„Zu Bestand hinzufügen" übernimmt die Werte direkt.</li>
       </ul>` },
     { t:"USt-Modus je Artikel (inkl. §25a)", ic:"🧾", act:{tab:"inventory"}, go:"Zum Bestand", body:`
