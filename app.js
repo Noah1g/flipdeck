@@ -2143,6 +2143,7 @@ function applyTaxUI(){
 }
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
   const marginMode = (!kuMode && $("#c-vatmode") && $("#c-vatmode").value==="margin");   // §25a: USt nur auf die Marge
+  document.documentElement.classList.toggle("is-margin-calc", marginMode);   // im §25a-Modus die USt-19/7-Buttons ausblenden (irrelevant)
   let vk, ek, outVat;
   if(marginMode){ vk=vkRaw; ek=ekRaw; outVat=Math.max(0, vkRaw-ekRaw)*19/119; }
   else { vk = vkUst ? vkRaw/(1+vkUst/100) : vkRaw; ek = ekUst ? ekRaw/(1+ekUst/100) : ekRaw; outVat=0; }
