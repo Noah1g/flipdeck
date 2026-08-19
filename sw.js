@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v123";   // v123 (App v5.24.11): 25a-Modus im Rechner blendet die USt-19/7-Buttons aus (irrelevant)
+const VERSION    = "flipdeck-v124";   // v124 (App v5.24.12): Kein Vorsteuerabzug - nur EK-USt-Buttons ausblenden, VK bleibt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

@@ -2143,12 +2143,14 @@ function applyTaxUI(){
 }
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
   const marginMode = (!kuMode && $("#c-vatmode") && $("#c-vatmode").value==="margin");   // §25a: USt nur auf die Marge
-  document.documentElement.classList.toggle("is-margin-calc", marginMode);   // im §25a-Modus die USt-19/7-Buttons ausblenden (irrelevant)
+  const noInputCalc = (!kuMode && $("#c-vatmode") && $("#c-vatmode").value==="noinput");   // Kein Vorsteuerabzug: EK voll, VK-USt bleibt
+  document.documentElement.classList.toggle("is-margin-calc", marginMode);     // §25a: alle USt-19/7-Buttons ausblenden (irrelevant)
+  document.documentElement.classList.toggle("is-noinput-calc", noInputCalc);   // Kein Vorsteuerabzug: nur EK-Buttons ausblenden
   let vk, ek, outVat;
   if(marginMode){ vk=vkRaw; ek=ekRaw; outVat=Math.max(0, vkRaw-ekRaw)*19/119; }
   else { vk = vkUst ? vkRaw/(1+vkUst/100) : vkRaw; ek = ekUst ? ekRaw/(1+ekUst/100) : ekRaw; outVat=0; }
   $("#vk-net").textContent = marginMode ? ("Margen-USt "+eur(outVat)) : (vkUst ? "netto "+eur(vk) : "");
-  $("#ek-net").textContent = marginMode ? "EK voll (§25a)" : (ekUst ? "netto "+eur(ek) : "");
+  $("#ek-net").textContent = marginMode ? "EK voll (§25a)" : (noInputCalc ? "EK voll" : (ekUst ? "netto "+eur(ek) : ""));
   const V=vatF();
   const pack = packMode ? 1 : 0;
   const trans=transFee(vk), fvf=vk*catP/100*V, ad=vk*adP/100*V, intl=vk*regionPct/100*V;
