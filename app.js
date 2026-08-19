@@ -2139,6 +2139,7 @@ function applyTaxUI(){
   vkUst = rate; ekUst = rate;
   document.querySelectorAll(".ust").forEach(x=>x.setAttribute("aria-selected", rate>0 && parseInt(x.dataset.rate)===rate ? "true" : "false"));
   const sel=document.getElementById("c-vatmode"); if(sel) sel.value="normal";   // Standard: Vorsteuer abziehbar
+  const kSel=document.getElementById("k-vatmode"); if(kSel) kSel.value="normal";
   if(typeof calc==="function") calc();
 }
 function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),ship=num($("#c-ship").value),adP=num($("#c-ad").value),catP=num($("#c-cat").value);
@@ -2329,20 +2330,27 @@ function kauflandCalc(){ if(!$("#k-vk")) return;
   const cat=KAUFLAND_CATS[parseInt($("#k-cat").value)||0]||KAUFLAND_CATS[0];
   const isPL=klRegion==="pl", pctUsed=kauflandPct(cat,isPL);
   const V=vatF(), pack=klPackMode?1:0;
-  const comm=vk*pctUsed/100*V, media=(cat.fixed||0)*V, fees=comm+media;
-  const payout=vk-fees, profit=payout-ek-ship-pack, margin=vk>0?profit/vk*100:0;
+  // USt genau wie im eBay-Rechner: Modus aus dem Dropdown (Regelbesteuerung), sonst account-neutral
+  const kMode = (!kuMode && $("#k-vatmode")) ? $("#k-vatmode").value : "normal";
+  const ustRate = kuMode ? 0 : (num(defaultUstRate)||0);
+  let vkNet, ekNet, outVat;
+  if(!kuMode && kMode==="margin"){ vkNet=vk; ekNet=ek; outVat=Math.max(0, vk-ek)*19/119; }   // §25a
+  else { vkNet = ustRate ? vk/(1+ustRate/100) : vk; ekNet = (kuMode||kMode==="noinput") ? ek : (ustRate ? ek/(1+ustRate/100) : ek); outVat=0; }
+  const comm=vkNet*pctUsed/100*V, media=(cat.fixed||0)*V, fees=comm+media;
+  const payout=vkNet-fees, profit=payout-ekNet-ship-pack-outVat; const vk_disp=vkNet, margin=vkNet>0?profit/vkNet*100:0;
   kLast={vk,ek,ship,pack,catPct:pctUsed,fees,payout,profit,margin};
   const rp=$("#k-profit"); rp.textContent=(profit>=0?"+":"")+eur(profit); rp.style.color=profit>=0?"var(--accent)":"var(--danger)";
   $("#k-payout").textContent=eur(payout); $("#k-fees").textContent=eur(fees); $("#k-margin").textContent=pct(margin);
-  $("#kb-vk").textContent="+ "+eur(vk);
+  $("#kb-vk").textContent="+ "+eur(vk_disp);
   $("#kb-comm-l").textContent=`Verkaufsprovision (${pctUsed.toLocaleString("de-DE")} %${isPL?" · PL":""})`;
   $("#kb-comm").textContent="- "+eur(comm);
   $("#kb-media-row").style.display=(cat.fixed>0)?"":"none"; $("#kb-media").textContent="- "+eur(media);
   $("#kb-ship").textContent="- "+eur(ship);
   $("#kb-pack-row").style.display=(pack>0)?"":"none"; $("#kb-pack").textContent="- "+eur(pack);
   $("#kb-total").textContent="- "+eur(fees);
-  $("#kb-ku-note").textContent = kuMode ? "" : "netto"; }   // KU/Privat: keine USt-Notiz
+  $("#kb-ku-note").textContent = kuMode ? "" : (kMode==="margin" ? "§25a · nur Marge" : "netto"); }   // KU/Privat: keine USt-Notiz
 if($("#k-cat")){ ["k-vk","k-ek","k-ship"].forEach(id=>$("#"+id).addEventListener("input",kauflandCalc)); $("#k-cat").addEventListener("change",kauflandCalc); }
+if($("#k-vatmode")) $("#k-vatmode").addEventListener("change",kauflandCalc);
 if($("#k-pack")) $("#k-pack").addEventListener("change",()=>{ klPackMode=$("#k-pack").checked; Store.set("fg_kpack",klPackMode?"1":"0"); kauflandCalc(); });
 $$("#k-region button").forEach(b=>b.addEventListener("click",()=>{ klRegion=b.dataset.region==="pl"?"pl":"de"; Store.set("fg_kregion",klRegion); $$("#k-region button").forEach(x=>x.setAttribute("aria-selected", x.dataset.region===klRegion)); fillKauflandCats(); kauflandCalc(); }));
 if($("#k-inv")) $("#k-inv").addEventListener("click",()=>{ kauflandCalc(); setTab("inventory"); setInvForm(true);

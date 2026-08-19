@@ -843,7 +843,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Hub fürs alternative Reselling</p><span class="auth-ver">v5.24.12</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Hub fürs alternative Reselling</p><span class="auth-ver">v5.25.0</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -896,7 +896,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.24.12</span>
+        <span class="nav-ver">v5.25.0</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1346,6 +1346,11 @@ body.no-images .ms-head .thumb{ display:none !important; }
           <div><label class="label" for="k-ek">Einkaufspreis €</label><input id="k-ek" class="field tnum" inputmode="decimal" value="20" /></div>
           <div><label class="label" for="k-vk">Verkaufspreis €</label><input id="k-vk" class="field tnum" inputmode="decimal" value="50" /></div>
         </div>
+        <select id="k-vatmode" class="calc-ust-row field mb-4" style="font-size:12px;padding:6px 9px" title="USt-Behandlung für diese Rechnung">
+          <option value="normal">Vorsteuer abziehbar</option>
+          <option value="margin">§25a Differenzbest. (nur Marge)</option>
+          <option value="noinput">Kein Vorsteuerabzug</option>
+        </select>
         <div class="mb-4"><label class="label" for="k-ship">Versand (du zahlst) €</label><input id="k-ship" class="field tnum" inputmode="decimal" value="4.99" /></div>
         <div class="mb-4"><label class="label">Zielland (Provision unterscheidet sich)</label>
           <div class="calc-switch" id="k-region" role="tablist" style="grid-template-columns:1fr 1fr">
@@ -2065,7 +2070,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.24.12 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.25.0 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
