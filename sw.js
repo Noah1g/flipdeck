@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v119";   // v119 (App v5.24.7): USt/MwSt-Notizen fuer KU/Privat entfernt (keine Steuer-Verwirrung)
+const VERSION    = "flipdeck-v120";   // v120 (App v5.24.8): Bestelldatum bei neuem Artikel auf heute vorbelegt
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

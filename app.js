@@ -2906,6 +2906,8 @@ function setInvForm(open){ invFormOpen=open; $("#iv-form").classList.toggle("hid
   $("#iv-toggle-ic").style.transform = open ? "rotate(45deg)" : "rotate(0deg)";
   $("#iv-toggle").querySelector("span").textContent = open ? t("ui.close") : t("inv.add");
   applyInvFormMode();
+  // Neues Formular: Bestelldatum auf heute vorbelegen (beim Bearbeiten setzt openInvEdit das echte Datum)
+  if(open && !editingInvId){ const od=$("#iv-orderdate"); if(od && !od.value) od.value=todayISOInput(); }
   if(!open) resetInvForm(); }
 $("#iv-toggle").addEventListener("click",()=>setInvForm(!invFormOpen));
 $("#iv-cancel").addEventListener("click",()=>setInvForm(false));
