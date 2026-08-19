@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v120";   // v120 (App v5.24.8): Bestelldatum bei neuem Artikel auf heute vorbelegt
+const VERSION    = "flipdeck-v121";   // v121 (App v5.24.9): Bestelldatum -> Zustelldatum; Rueckgabefrist ab Zustellung
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
