@@ -1486,9 +1486,9 @@ if($("#feat-sellavail")) $("#feat-sellavail").addEventListener("click",()=>toggl
    Jeder Einkauf kann einer Plattform zugeordnet werden. Aus Bestelldatum + Retourenzeit
    berechnet Flipdeck die Rückgabefrist automatisch; sie erscheint im Aufmerksamkeiten-Banner
    und als Frist-Pill im Bestand. Gespeichert in fixCfg (synct über die Cloud). */
+/* Amazon & eBay bewusst NICHT als Default — deren Rückgabe variiert (Amazon je Kategorie,
+   eBay je Verkäufer/Privatverkauf). Wer sie braucht, legt sie mit der echten Frist selbst an. */
 const DEFAULT_BUY_PLATFORMS = [
-  {id:"bp_amazon", name:"Amazon", returnDays:30},
-  {id:"bp_ebay", name:"eBay", returnDays:30},
   {id:"bp_zalando", name:"Zalando", returnDays:100},
   {id:"bp_nike", name:"Nike", returnDays:30},
   {id:"bp_kleinanzeigen", name:"Kleinanzeigen", returnDays:0}
