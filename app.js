@@ -495,8 +495,11 @@ const fmtDate = iso => new Date(iso).toLocaleDateString("de-DE",{day:"numeric",m
 /* EK effektiv: bei Regelbesteuerung-Normalmodus wird die Vorsteuer vom EK abgezogen (ekVatRate>0),
    sonst (KU/Privat/§25a/kein Vorsteuerabzug sowie Alt-/Importdaten ohne Feld) voller EK. */
 const ekEff = f => (f && f.ekVatRate) ? num(f.ek)/(1+num(f.ekVatRate)/100) : num(f.ek);
-const flipProfit  = f => f.returned ? 0 : (num(f.payout)-ekEff(f)-num(f.ship))*(f.qty||1) - num(f.refund||0);
-const flipRevenue = f => f.returned ? 0 : num(f.payout)*(f.qty||1) - num(f.refund||0);
+/* Auszahlung effektiv: enthält bei direkt erfassten Regelbest.-Deals noch die Ausgangs-USt (payoutVatRate>0)
+   -> für Umsatz/Gewinn netto rechnen. Verkäufe aus dem Bestand sind schon netto gespeichert (kein Feld). */
+const payoutEff = f => (f && f.payoutVatRate) ? num(f.payout)/(1+num(f.payoutVatRate)/100) : num(f.payout);
+const flipProfit  = f => f.returned ? 0 : (payoutEff(f)-ekEff(f)-num(f.ship))*(f.qty||1) - num(f.refund||0);
+const flipRevenue = f => f.returned ? 0 : payoutEff(f)*(f.qty||1) - num(f.refund||0);
 const flipCost    = f => f.returned ? 0 : (ekEff(f)+num(f.ship))*(f.qty||1);
 /* escapeHtml jetzt auch attribut-sicher: escapt zusätzlich " und ' → kein Quote-Breakout mehr,
    egal ob der Wert in Textinhalt ODER in einem Attribut landet. (Härtung, v5.10.6) */
@@ -1926,6 +1929,7 @@ function setDealForm(open){ dealFormOpen=open; $("#dt-form").classList.toggle("h
   $("#dt-toggle-ic").style.transform=open?"rotate(45deg)":"rotate(0deg)";
   $("#dt-toggle").querySelector("span").textContent=open?t("ui.close"):t("track.add");
   if(open && !editingDealId){ const p=$("#f-platform"); fillDealPlatform(p && p.value ? p.value : defaultPlatform); }   // Marktplatz-Optionen beim Öffnen befüllen
+  const vh=$("#f-vat-hint"); if(vh) vh.classList.toggle("hidden", !(acctType==="gewerblich" && !kuMode));   // USt-Hinweis nur bei Regelbesteuerung
   if(!open) resetDealForm(); }
 /* Marktplatz-Auswahl im direkten Deal-Formular mit den aktivierten Marktplätzen füllen. */
 function fillDealPlatform(sel){ const el=$("#f-platform"); if(!el) return; const en=getEnabledPlatforms();
@@ -1987,7 +1991,8 @@ $("#add-flip").addEventListener("click", async ()=>{
     if(f){ Object.assign(f,data); f.img = imgSrc || null; }
     DB.saveFlips(flips); highlightId=editingDealId; showToast("✓ Deal aktualisiert");
   } else {
-    const flip=Object.assign({id:"f"+Date.now(), img:imgSrc||null, ekVatRate:(kuMode?0:(num(defaultUstRate)||0))}, data);
+    const _vr=(kuMode?0:(num(defaultUstRate)||0));   // Regelbest.: USt aus EK (Vorsteuer) und Auszahlung herausrechnen
+    const flip=Object.assign({id:"f"+Date.now(), img:imgSrc||null, ekVatRate:_vr, payoutVatRate:_vr}, data);
     flips.push(flip); DB.saveFlips(flips); highlightId=flip.id; showToast("✓ Deal erfolgreich gespeichert");
   }
   setDealForm(false); renderTrackerList(); renderDashboard();

@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v130";   // v130 (App v5.25.5): Deal-Formular Marktplatz-Dropdown beim Oeffnen befuellen (war leer/buggy)
+const VERSION    = "flipdeck-v131";   // v131 (App v5.25.6): Deal-Formular klarer fuer VATler; Auszahlung netto gerechnet
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
