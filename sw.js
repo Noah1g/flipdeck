@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v128";   // v128 (App v5.25.3): 24-Std-Filter im Dashboard entfernt
+const VERSION    = "flipdeck-v129";   // v129 (App v5.25.4): stiller Mehrgeraete-Schutz - Bestand/Verkaeufe beim Vordergrund frisch nachladen
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

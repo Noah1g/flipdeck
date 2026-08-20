@@ -690,6 +690,27 @@ function renderAvatar(){
   $("#nav-username").textContent = uname;
   const pv=$("#profil-avatar"); if(pv) pv.innerHTML = avatarUrl ? `<img src="${attrEsc(avatarUrl)}" alt="">` : `<span>${init}</span>`;
 }
+/* Stiller Mehrgeräte-Schutz: Kommt die App zurück in den Vordergrund, werden Bestand & Verkäufe
+   frisch aus der Cloud geladen (aktualisiert auch die internen Vergleichs-Stände _invRows/_flipRows) —
+   so überschreibt ein veraltetes Gerät nichts mehr. Läuft im Hintergrund, ohne jede Meldung. */
+let _refreshBusy=false, _lastRefresh=0;
+async function refreshFromCloud(force){
+  if(_refreshBusy) return;
+  if(!sb || !currentUser || !currentUser.id) return;
+  if(invFormOpen || dealFormOpen) return;                         // laufende Eingabe nicht stören
+  if($("#modal-root") && $("#modal-root").innerHTML.trim()) return;   // offener Dialog nicht wegreißen
+  if(!force && Date.now()-_lastRefresh < 4000) return;
+  _refreshBusy=true; _lastRefresh=Date.now();
+  try{
+    const [fl, inv] = await Promise.all([DB.getFlips(), DB.getInventory()]);
+    if(Array.isArray(inv)) inventory = inv;
+    if(Array.isArray(fl)) flips = fl;
+    try{ renderInventory(); renderTrackerList(); renderDashboard(); }catch(e){}
+  }catch(e){ /* still bleiben, kein Popup */ }
+  finally{ _refreshBusy=false; }
+}
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") refreshFromCloud(); });
+window.addEventListener("focus", ()=>refreshFromCloud());
 async function enterApp(){
   // Login sofort sichtbar quittieren
   $("#menu-admin").style.display = currentUser.role==="owner" ? "" : "none";
