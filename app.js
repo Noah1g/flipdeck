@@ -1905,7 +1905,11 @@ function setDealForm(open){ dealFormOpen=open; $("#dt-form").classList.toggle("h
   $("#dt-toggle-ic").style.transform=open?"rotate(45deg)":"rotate(0deg)";
   $("#dt-toggle").querySelector("span").textContent=open?t("ui.close"):t("track.add");
   if(!open) resetDealForm(); }
-function resetDealForm(){ editingDealId=null; ["f-name","f-ean","f-ek","f-payout","f-ship"].forEach(id=>$("#"+id).value=""); $("#f-qty").value="1"; $("#f-date").value=todayISOInput(); resetImage(); setFlipMode("each"); flipFormPreview(); $("#dt-form-title").textContent="Neuen Deal erfassen"; $("#add-flip").textContent="Deal speichern"; }
+/* Marktplatz-Auswahl im direkten Deal-Formular mit den aktivierten Marktplätzen füllen. */
+function fillDealPlatform(sel){ const el=$("#f-platform"); if(!el) return; const en=getEnabledPlatforms();
+  const cur = (sel && en.includes(sel)) ? sel : (en.includes(defaultPlatform)?defaultPlatform:en[0]);
+  el.innerHTML = en.map(k=>`<option value="${k}"${k===cur?" selected":""}>${(PLATFORMS[k]&&PLATFORMS[k].label)||k}</option>`).join(""); }
+function resetDealForm(){ editingDealId=null; ["f-name","f-ean","f-ek","f-payout","f-ship"].forEach(id=>$("#"+id).value=""); $("#f-qty").value="1"; $("#f-date").value=todayISOInput(); fillDealPlatform(defaultPlatform); resetImage(); setFlipMode("each"); flipFormPreview(); $("#dt-form-title").textContent="Neuen Deal erfassen"; $("#add-flip").textContent="Deal speichern"; }
 $("#dt-toggle").addEventListener("click",()=>setDealForm(!dealFormOpen));
 $("#dt-cancel").addEventListener("click",()=>setDealForm(false));
 
@@ -1949,6 +1953,7 @@ $("#add-flip").addEventListener("click", async ()=>{
   const ekIn=num($("#f-ek").value), payIn=num($("#f-payout").value), shIn=num($("#f-ship").value);
   const data={ name:$("#f-name").value.trim(), ean:$("#f-ean").value.trim(), qty:q,
     ek: flipMode==="total"?ekIn/q:ekIn, payout: flipMode==="total"?payIn/q:payIn, ship: flipMode==="total"?shIn/q:shIn,
+    platform: ($("#f-platform")?$("#f-platform").value:defaultPlatform)||"ebay",
     date:new Date(dateVal+"T12:00:00").toISOString() };
   // Bild NICHT als Base64 im flips-JSON ablegen -> in den Storage auslagern, nur URL speichern
   const btn=$("#add-flip"); const label=btn.textContent;
@@ -1960,7 +1965,7 @@ $("#add-flip").addEventListener("click", async ()=>{
     if(f){ Object.assign(f,data); f.img = imgSrc || null; }
     DB.saveFlips(flips); highlightId=editingDealId; showToast("✓ Deal aktualisiert");
   } else {
-    const flip=Object.assign({id:"f"+Date.now(), img:imgSrc||null}, data);
+    const flip=Object.assign({id:"f"+Date.now(), img:imgSrc||null, ekVatRate:(kuMode?0:(num(defaultUstRate)||0))}, data);
     flips.push(flip); DB.saveFlips(flips); highlightId=flip.id; showToast("✓ Deal erfolgreich gespeichert");
   }
   setDealForm(false); renderTrackerList(); renderDashboard();
@@ -1969,6 +1974,7 @@ $("#add-flip").addEventListener("click", async ()=>{
 
 function openDealEdit(id){ const f=flips.find(x=>x.id===id); if(!f) return; editingDealId=id;
   $("#f-name").value=f.name; $("#f-ean").value=f.ean||""; $("#f-qty").value=f.qty; $("#f-ek").value=f.ek; $("#f-payout").value=f.payout; $("#f-ship").value=f.ship||""; setFlipMode("each");
+  fillDealPlatform(f.platform);
   $("#f-date").value=new Date(f.date).toISOString().slice(0,10);
   pendingImg=f.img||null;
   if(f.img){ $("#drop").classList.add("has"); $("#drop-empty").classList.add("hidden"); $("#drop-preview").src=f.img; $("#drop-preview").classList.remove("hidden"); } else resetImage();
