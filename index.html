@@ -843,7 +843,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Hub fürs alternative Reselling</p><span class="auth-ver">v5.25.6</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Hub fürs alternative Reselling</p><span class="auth-ver">v5.25.7</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -896,7 +896,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.25.6</span>
+        <span class="nav-ver">v5.25.7</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1081,11 +1081,11 @@ body.no-images .ms-head .thumb{ display:none !important; }
       </div>
       <div class="grid grid-cols-2 gap-3 mb-3">
         <div><label class="label" for="f-qty">Stück</label><input id="f-qty" class="field tnum" inputmode="numeric" type="number" min="1" value="1" /></div>
-        <div><label class="label" for="f-ek"><span id="lbl-ek">EK € / Stück</span> *<span class="info-i" data-tip="Was du für den Artikel bezahlt hast (brutto, wie auf deiner Rechnung/Quittung). Bei Regelbesteuerung zieht Flipdeck die Vorsteuer selbst ab.">i</span></label><input id="f-ek" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
+        <div><label class="label" for="f-ek"><span id="lbl-ek">EK € / Stück</span> <span id="f-ek-hint" class="c-sub" style="font-weight:400;text-transform:none;letter-spacing:0"></span>*<span class="info-i" data-tip="Was du für den Artikel bezahlt hast (brutto, wie auf deiner Rechnung/Quittung). Bei Regelbesteuerung zieht Flipdeck die Vorsteuer selbst ab.">i</span></label><input id="f-ek" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
       </div>
       <div class="grid grid-cols-2 gap-3 mb-4">
         <div><label class="label" for="f-ship"><span id="lbl-ship">Versand € / Stück</span> <span class="info-i" data-tip="Deine eigenen Versandkosten. Im Modus „gesamt“ einmal pro Bestellung eingeben – bei Mehrfachkauf wird Porto nur einmal fällig.">i</span></label><input id="f-ship" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
-        <div><label class="label" for="f-payout"><span id="lbl-payout">Auszahlung € / Stück</span> *<span class="info-i" data-tip="Der Betrag, den der Marktplatz dir tatsächlich ausgezahlt hat — steht in deiner eBay-Zahlungs-/Verkaufsübersicht (nach allen Gebühren). Bei Regelbesteuerung ist die USt darin enthalten; Flipdeck rechnet sie für den Gewinn heraus. Im Modus „gesamt“ den Gesamtbetrag der Bestellung eintragen.">i</span></label><input id="f-payout" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
+        <div><label class="label" for="f-payout"><span id="lbl-payout">Auszahlung € / Stück</span> <span id="f-payout-hint" class="c-sub" style="font-weight:400;text-transform:none;letter-spacing:0"></span>*<span class="info-i" data-tip="Der Betrag, den der Marktplatz dir tatsächlich ausgezahlt hat — steht in deiner eBay-Zahlungs-/Verkaufsübersicht (nach allen Gebühren). Bei Regelbesteuerung ist die USt darin enthalten; Flipdeck rechnet sie für den Gewinn heraus. Im Modus „gesamt“ den Gesamtbetrag der Bestellung eintragen.">i</span></label><input id="f-payout" class="field tnum" inputmode="decimal" placeholder="0,00" /></div>
       </div>
       <div class="mb-4"><label class="label" for="f-platform">Marktplatz</label><select id="f-platform" class="field"></select></div>
       <p class="c-sub text-[11px] mb-1 -mt-2 px-1">EK und Auszahlung gelten <b>pro Stück</b>. Bei mehreren Stück rechnet Flipdeck den Endbetrag automatisch hoch.</p>
@@ -2071,7 +2071,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.25.6 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.25.7 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 

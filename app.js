@@ -1929,7 +1929,10 @@ function setDealForm(open){ dealFormOpen=open; $("#dt-form").classList.toggle("h
   $("#dt-toggle-ic").style.transform=open?"rotate(45deg)":"rotate(0deg)";
   $("#dt-toggle").querySelector("span").textContent=open?t("ui.close"):t("track.add");
   if(open && !editingDealId){ const p=$("#f-platform"); fillDealPlatform(p && p.value ? p.value : defaultPlatform); }   // Marktplatz-Optionen beim Öffnen befüllen
-  const vh=$("#f-vat-hint"); if(vh) vh.classList.toggle("hidden", !(acctType==="gewerblich" && !kuMode));   // USt-Hinweis nur bei Regelbesteuerung
+  const reg=(acctType==="gewerblich" && !kuMode);   // Regelbesteuerung -> Brutto-Hinweise + USt-Zeile
+  const vh=$("#f-vat-hint"); if(vh) vh.classList.toggle("hidden", !reg);
+  const eh=$("#f-ek-hint"); if(eh) eh.textContent = reg ? "· brutto " : "";
+  const ph=$("#f-payout-hint"); if(ph) ph.textContent = reg ? "· brutto " : "";
   if(!open) resetDealForm(); }
 /* Marktplatz-Auswahl im direkten Deal-Formular mit den aktivierten Marktplätzen füllen. */
 function fillDealPlatform(sel){ const el=$("#f-platform"); if(!el) return; const en=getEnabledPlatforms();

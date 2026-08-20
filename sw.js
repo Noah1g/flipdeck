@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v131";   // v131 (App v5.25.6): Deal-Formular klarer fuer VATler; Auszahlung netto gerechnet
+const VERSION    = "flipdeck-v132";   // v132 (App v5.25.7): Deal-Formular EK/Auszahlung mit Brutto-Hinweis bei Regelbesteuerung
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
