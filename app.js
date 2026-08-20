@@ -1925,6 +1925,7 @@ let dealFormOpen=false;
 function setDealForm(open){ dealFormOpen=open; $("#dt-form").classList.toggle("hidden",!open);
   $("#dt-toggle-ic").style.transform=open?"rotate(45deg)":"rotate(0deg)";
   $("#dt-toggle").querySelector("span").textContent=open?t("ui.close"):t("track.add");
+  if(open && !editingDealId){ const p=$("#f-platform"); fillDealPlatform(p && p.value ? p.value : defaultPlatform); }   // Marktplatz-Optionen beim Öffnen befüllen
   if(!open) resetDealForm(); }
 /* Marktplatz-Auswahl im direkten Deal-Formular mit den aktivierten Marktplätzen füllen. */
 function fillDealPlatform(sel){ const el=$("#f-platform"); if(!el) return; const en=getEnabledPlatforms();
