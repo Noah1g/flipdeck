@@ -1231,18 +1231,27 @@ function renderHistory(){ const q=$("#search").value.trim().toLowerCase();
 function monthlyBuckets(n){ const out=[]; const d0=new Date();
   for(let i=n-1;i>=0;i--){ const d=new Date(d0.getFullYear(),d0.getMonth()-i,1); out.push({y:d.getFullYear(),m:d.getMonth(),label:MONTHS[d.getMonth()],profit:0,revenue:0,cost:0,count:0}); }
   flips.forEach(f=>{ const d=new Date(f.date); const b=out.find(o=>o.y===d.getFullYear()&&o.m===d.getMonth()); if(b){ b.profit+=flipProfit(f); b.revenue+=flipRevenue(f); b.cost+=flipCost(f); b.count+=(f.qty||1); } }); return out; }
-function barChartSVG(items,key){ const W=340,H=164,padT=24,padB=26,padX=8;
-  const vals=items.map(o=>o[key]), maxV=Math.max(1,...vals), minV=Math.min(0,...vals), range=(maxV-minV)||1;
-  const plotH=H-padT-padB, zeroY=padT+(maxV/range)*plotH, n=items.length, slot=(W-padX*2)/n, bw=Math.min(26,slot*0.5);
-  let grid="",bars="",labels="",vlabels="";
+function barChartSVG(items,key){ const W=340,H=170,padT=22,padB=28,padX=12;
+  const vals=items.map(o=>o[key]||0), maxV=Math.max(1,...vals), minV=Math.min(0,...vals), range=(maxV-minV)||1;
+  const plotH=H-padT-padB, n=items.length, bottomY=padT+plotH;
+  const xFor=i=> n<=1 ? W/2 : padX+(W-padX*2)*i/(n-1);
+  const yFor=v=> padT+(maxV-v)/range*plotH;
+  const zeroY=yFor(0);
+  const pts=items.map((it,i)=>[xFor(i), yFor(it[key]||0)]);
+  let grid="";
   for(let g=0;g<=2;g++){ const y=padT+plotH*g/2; grid+=`<line x1="${padX}" y1="${y.toFixed(1)}" x2="${W-padX}" y2="${y.toFixed(1)}" class="grid"/>`; }
-  items.forEach((it,i)=>{ const v=it[key],cx=padX+slot*i+slot/2,x=cx-bw/2,h=Math.abs(v)/range*plotH,y=v>=0?zeroY-h:zeroY;
-    bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(2,h).toFixed(1)}" rx="4" class="${v>=0?'bar':'bar-neg'}"><title>${it.label}: ${eur(v)}</title></rect>`;
-    // Wertbeschriftung: über positiven, unter negativen Balken
-    const vy = v>=0 ? Math.max(9,y-4) : Math.min(H-padB+11, zeroY+h+11);
-    if(Math.abs(v)>=0.005) vlabels+=`<text x="${cx.toFixed(1)}" y="${vy.toFixed(1)}" text-anchor="middle" class="val${v<0?' val-neg':''}">${compactEur(v)}</text>`;
-    labels+=`<text x="${cx.toFixed(1)}" y="${H-9}" text-anchor="middle" class="axis">${it.label}</text>`; });
-  return `<svg viewBox="0 0 ${W} ${H}" class="chart" preserveAspectRatio="xMidYMid meet">${grid}${bars}${vlabels}${labels}</svg>`; }
+  let d=`M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for(let i=0;i<pts.length-1;i++){ const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+    const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6, c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
+    d+=` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`; }
+  const area=`${d} L ${pts[pts.length-1][0].toFixed(1)} ${bottomY.toFixed(1)} L ${pts[0][0].toFixed(1)} ${bottomY.toFixed(1)} Z`;
+  const last=pts[pts.length-1];
+  let vlabels="",labels="";
+  items.forEach((it,i)=>{ const v=it[key]||0, x=pts[i][0], y=pts[i][1];
+    if(Math.abs(v)>=0.005) vlabels+=`<text x="${x.toFixed(1)}" y="${Math.max(10,y-9).toFixed(1)}" text-anchor="middle" class="val${v<0?' val-neg':''}">${compactEur(v)}</text>`;
+    labels+=`<text x="${x.toFixed(1)}" y="${H-8}" text-anchor="middle" class="axis">${it.label}</text>`; });
+  const uid="pc"+Math.random().toString(36).slice(2,7);
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="${uid}a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".34"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient><filter id="${uid}g" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${grid}<line x1="${padX}" y1="${zeroY.toFixed(1)}" x2="${W-padX}" y2="${zeroY.toFixed(1)}" class="grid"/><path d="${area}" fill="url(#${uid}a)"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#${uid}g)"/><circle class="pulse-dot" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="5" fill="var(--accent)"/><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="4" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/>${vlabels}${labels}</svg>`; }
 /* Gestapelt: Kosten (grau, unten) + Gewinn (grün, oben) = Umsatz (Balkenhöhe).
    Verlustmonate erscheinen komplett rot. So sieht man auf einen Blick, wie viel
    vom Umsatz wirklich Gewinn ist – aussagekräftiger als getrennte Balken. */
