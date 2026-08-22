@@ -1184,6 +1184,7 @@ function renderKPIs(){ const view=flips.filter(f=>inFilter(f.date));
   const revenue=view.reduce((s,f)=>s+flipRevenue(f),0), profit=view.reduce((s,f)=>s+flipProfit(f),0), margin=revenue>0?profit/revenue*100:0;
   const cost=view.reduce((s,f)=>s+num(f.ek)*(f.qty||1),0), roi=cost>0?profit/cost*100:0;
   animate($("#kpi-revenue"),revenue,eur); animate($("#kpi-profit"),profit,eur); animate($("#kpi-margin"),margin,pct); if($("#kpi-roi")) animate($("#kpi-roi"),roi,pct);
+  { const mr=$("#kpi-margin-ring"); if(mr){ const C=188.5, frac=Math.max(0,Math.min(1,margin/100)); mr.style.strokeDashoffset=(C*(1-frac)).toFixed(1); mr.setAttribute("stroke", margin<0?"var(--danger)":"var(--brand)"); } }
 
   // Trend ggü. der gleich langen Vorperiode
   const prev=flips.filter(f=>prevFilter(f.date));

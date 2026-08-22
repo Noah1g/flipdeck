@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v138";   // v138 (App v5.26.3): SW - app.js/tailwind Netz-zuerst (Update-Stau behoben)
+const VERSION    = "flipdeck-v139";   // v139 (App v5.26.4): Dashboard - Marge als leuchtender Glow-Ring
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
