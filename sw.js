@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v136";   // v136 (App v5.26.1): Dashboard - Profit-Verlauf als leuchtender Linien-Chart mit Puls-Punkt
+const VERSION    = "flipdeck-v137";   // v137 (App v5.26.2): UI - linke Glas-Sidebar (Desktop), Mockup-Redesign Durchgang 1
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

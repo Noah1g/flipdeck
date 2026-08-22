@@ -499,6 +499,27 @@ html{ scroll-padding-top:96px; }
 @media (min-width:1280px){ #inv-list{ grid-template-columns:repeat(3,1fr); } }
 @media (min-width:1200px){ #rp-list{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; align-content:start; } }
 @media (min-width:1500px){ #hist-list{ display:grid; grid-template-columns:repeat(2,1fr); gap:6px; align-content:start; max-height:640px; } }
+/* ===== v5.26.2 · Sidebar-Redesign (Desktop) — Mockup-Look; mobil unverändert ===== */
+.nav-mark{ display:none; width:42px; height:42px; border-radius:14px; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:20px; color:#04122e; background:linear-gradient(145deg,var(--brand),var(--accent-2)); box-shadow:0 8px 22px -6px color-mix(in srgb,var(--brand) 70%,transparent); }
+@media (min-width:1041px){
+  .topnav{ top:14px; bottom:14px; left:14px; right:auto; width:74px; border:1px solid var(--line); border-bottom:1px solid var(--line); border-radius:26px; box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 30px 70px -30px rgba(0,0,0,.8); }
+  .topnav-inner{ flex-direction:column; height:100%; max-width:none; margin:0; padding:16px 0; gap:12px; align-items:center; }
+  .nav-left{ flex-direction:column; gap:0; }
+  .nav-left .wordmark, .nav-left .nav-ver{ display:none !important; }
+  .nav-mark{ display:flex; }
+  .topnav .tabs{ flex:1 1 auto; flex-direction:column; width:100%; align-items:center; justify-content:flex-start; gap:6px; overflow:visible; padding:6px 0; }
+  .topnav .tabs button{ width:48px; height:48px; padding:0; justify-content:center; border-radius:14px; }
+  .topnav .tabs button span[data-i18n]{ display:none; }
+  .topnav .tabs button svg{ width:20px; height:20px; }
+  .topnav .tabs button[aria-selected="true"]{ background:linear-gradient(160deg, color-mix(in srgb,var(--brand) 34%,transparent), color-mix(in srgb,var(--brand) 10%,transparent)); box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 8px 20px -10px color-mix(in srgb,var(--brand) 55%,transparent); }
+  .topnav .tab-thumb{ display:none !important; }
+  .nav-right{ flex-direction:column; margin-top:auto; gap:8px; }
+  .nav-right #nav-username, .nav-right .nav-caret{ display:none; }
+  .nav-profile{ padding:5px; border-radius:14px; max-width:none; }
+  .app-main{ margin:0; max-width:none; padding:34px 40px 48px calc(74px + 34px); }
+  .tabbar{ top:0; }
+  .nav-right .menu{ right:auto; left:calc(100% + 12px); top:auto; bottom:0; }
+}
 
 /* ===== Mobile: Logo+Profil oben, Tabs als scrollbare Reihe darunter ===== */
 @media (max-width:1040px){
@@ -846,7 +867,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Hub fürs alternative Reselling</p><span class="auth-ver">v5.26.1</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Hub fürs alternative Reselling</p><span class="auth-ver">v5.26.2</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -898,8 +919,8 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="topnav-inner">
       <!-- LINKS · Logo -->
       <div class="nav-left">
-        <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.26.1</span>
+        <span class="nav-mark" aria-hidden="true">F</span><span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
+        <span class="nav-ver">v5.26.2</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -2074,7 +2095,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.26.1 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.26.2 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
