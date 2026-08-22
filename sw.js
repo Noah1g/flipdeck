@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v133";   // v133 (App v5.25.8): Amazon/eBay aus Standard-Einkaufsplattformen entfernt (Rueckgabe variiert)
+const VERSION    = "flipdeck-v134";   // v134 (App v5.25.9): Sicherheit - Rollen/Status ueber gesicherte RPCs (Privilege-Escalation-Fix)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

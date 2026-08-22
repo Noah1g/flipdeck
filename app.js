@@ -172,13 +172,15 @@ async function profileList(){
   if(r.error) throw r.error;
   return (r.data||[]).map(u=>Object.assign({ status:'approved' }, u));   // ohne status-Spalte gilt: freigegeben
 }
+/* Rollen/Status NUR über SECURITY-DEFINER-RPCs ändern (prüft serverseitig is_owner()).
+   Fallback auf Direkt-Update nur, solange die RPC noch nicht angelegt ist (Alt-Verhalten). */
 async function profileSetRole(id, role){
-  const { error } = await sb.from('profiles').update({ role }).eq('id', id);
-  if(error) throw error;
+  const { error } = await sb.rpc('set_user_role', { target:id, new_role:role });
+  if(error){ if(/set_user_role|does not exist|not found/i.test(error.message||'')){ const r=await sb.from('profiles').update({ role }).eq('id', id); if(r.error) throw r.error; return; } throw error; }
 }
 async function setUserStatus(id, status){
-  const { error } = await sb.from('profiles').update({ status }).eq('id', id);
-  if(error) throw error;
+  const { error } = await sb.rpc('set_user_status', { target:id, new_status:status });
+  if(error){ if(/set_user_status|does not exist|not found/i.test(error.message||'')){ const r=await sb.from('profiles').update({ status }).eq('id', id); if(r.error) throw r.error; return; } throw error; }
 }
 /* zentrale Nach-Login-Weiche: freigegeben -> App, sonst -> Warte-Screen */
 async function handlePostAuth(user){
