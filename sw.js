@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v137";   // v137 (App v5.26.2): UI - linke Glas-Sidebar (Desktop), Mockup-Redesign Durchgang 1
+const VERSION    = "flipdeck-v138";   // v138 (App v5.26.3): SW - app.js/tailwind Netz-zuerst (Update-Stau behoben)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
@@ -84,6 +84,18 @@ self.addEventListener("fetch", e => {
           JSON.stringify({ offline: true }),
           { status: 503, headers: { "Content-Type": "application/json" } }
         )))
+    );
+    return;
+  }
+
+  // 3b) App-Code (app.js / tailwind.css) -> IMMER Netz zuerst, damit Updates sofort
+  //     ankommen (offline: letzter Stand aus dem Cache). Sonst hängt man auf alten Versionen.
+  if (url.origin === self.location.origin &&
+      (url.pathname.endsWith("/app.js") || url.pathname.endsWith("/tailwind.css"))) {
+    e.respondWith(
+      fetch(req)
+        .then(res => { if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); } return res; })
+        .catch(() => caches.match(req))
     );
     return;
   }
