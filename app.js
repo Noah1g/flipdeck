@@ -604,6 +604,7 @@ async function resolveConflictKeepMine(){
 
 /* ===== 3 · THEMES ===== */
 const PALETTES = {
+  aqua:{label:"Aqua Glass",t:{"--bg":"#050A18","--cell":"#0B1224","--cell-2":"#121C34","--text":"#F4F8FF","--sub":"#93A7CA","--line":"rgba(255,255,255,.09)","--accent":"#34D399","--accent-3":"#60A5FA","--accent-2":"#22D3EE","--accent-soft":"rgba(52,211,153,.13)","--danger":"#FF5C7A","--danger-soft":"rgba(255,92,122,.15)","--glow":"rgba(96,165,250,.30)"}},
   spacegray:{label:"Indigo · Mint",t:{"--bg":"#060911","--cell":"#0B1120","--cell-2":"#121A2E","--text":"#F8FAFC","--sub":"#94A3B8","--line":"rgba(255,255,255,.08)","--accent":"#34D399","--accent-3":"#7C8AFF","--accent-2":"#10B981","--accent-soft":"rgba(52,211,153,.12)","--danger":"#FB7185","--danger-soft":"rgba(251,113,133,.14)","--glow":"rgba(124,138,255,.30)"}},
   midnight:{label:"Midnight · Cyan",t:{"--bg":"#080C18","--cell":"#0E1526","--cell-2":"#162038","--text":"#EAF0FB","--sub":"#8A99B5","--line":"rgba(255,255,255,.08)","--accent":"#38BDF8","--accent-3":"#818CF8","--accent-2":"#0EA5E9","--accent-soft":"rgba(56,189,248,.13)","--danger":"#FB7185","--danger-soft":"rgba(251,113,133,.14)","--glow":"rgba(56,189,248,.24)"}},
   deeppurple:{label:"Ash · Indigo",t:{"--bg":"#0B0D14","--cell":"#13161F","--cell-2":"#1C2030","--text":"#F1F2F8","--sub":"#9AA0B5","--line":"rgba(255,255,255,.08)","--accent":"#A5B4FC","--accent-3":"#C4B5FD","--accent-2":"#818CF8","--accent-soft":"rgba(165,180,252,.13)","--danger":"#FB7185","--danger-soft":"rgba(251,113,133,.14)","--glow":"rgba(165,180,252,.24)"}},
@@ -624,14 +625,14 @@ let lang      = DB.getSetting("lang","de");     // 'de' | 'en'
 /* Light-Mode: nur die Neutral-Tokens werden überschrieben, Akzentfarbe bleibt */
 const LIGHT_TOKENS = { "--bg":"#f3f4f7","--cell":"#ffffff","--cell-2":"#eef0f4","--text":"#1c1c1e","--sub":"#6b7280","--line":"rgba(0,0,0,.09)","--glow":"rgba(0,0,0,.10)" };
 function applyPalette(key){ Store.set("fg_theme",key); applyTheme(); }
-function applyTheme(){ const key=Store.get("fg_theme")||"spacegray"; const p=PALETTES[key]; if(!p) return;
+function applyTheme(){ const key=Store.get("fg_theme")||"aqua"; const p=PALETTES[key]; if(!p) return;
   const tokens = Object.assign({}, p.t, themeMode==="light" ? LIGHT_TOKENS : {});
   Object.entries(tokens).forEach(([k,v])=>document.documentElement.style.setProperty(k,v));
   document.documentElement.classList.toggle("light", themeMode==="light");
   document.querySelector('meta[name="theme-color"]').setAttribute("content",tokens["--bg"]);
   buildThemeMenu(); }
 function setMode(m){ themeMode=m; DB.setSetting("mode",m); applyTheme(); }
-function buildThemeMenu(){ const cur=Store.get("fg_theme")||"spacegray";
+function buildThemeMenu(){ const cur=Store.get("fg_theme")||"aqua";
   $("#theme-menu").innerHTML = Object.entries(PALETTES).map(([k,p])=>`
     <button class="menu-item" data-theme="${k}"><span class="sw"><i style="background:${p.t["--bg"]}"></i><i style="background:${p.t["--cell-2"]}"></i><i style="background:${p.t["--accent"]}"></i></span><span class="flex-1">${p.label}</span>${k===cur?`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`:""}</button>`).join("");
   $$("#theme-menu .menu-item").forEach(b=>b.addEventListener("click",()=>{ applyPalette(b.dataset.theme); $("#theme-menu").classList.add("hidden"); showToast(t("toast.palette")+": "+PALETTES[b.dataset.theme].label); }));
@@ -4775,7 +4776,7 @@ $("#pw-save").addEventListener("click", async ()=>{
 
 /* ===== 13 · BOOT ===== */
 (async () => {
-    applyPalette(Store.get("fg_theme")||"spacegray");
+    applyPalette(Store.get("fg_theme")||"aqua");
     applyI18n();
     kuMode = Store.get("fg_ku")===null ? true : Store.get("fg_ku")==="1";
     packMode = Store.get("fg_pack")===null ? true : Store.get("fg_pack")==="1";

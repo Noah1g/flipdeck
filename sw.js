@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v134";   // v134 (App v5.25.9): Sicherheit - Rollen/Status ueber gesicherte RPCs (Privilege-Escalation-Fix)
+const VERSION    = "flipdeck-v135";   // v135 (App v5.26.0): Design - Sora-Schrift global + Aqua-Glass-Palette
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
