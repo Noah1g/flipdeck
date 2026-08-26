@@ -1653,7 +1653,7 @@ function restockToInventory(f){
   $("#iv-name").value = f.name || "";
   $("#iv-ean").value  = f.ean || "";
   $("#iv-qty").value  = "1";
-  $("#iv-vk").value   = (num(f.payout)||0).toFixed(2).replace(".",",");   // Startwert = letzte Auszahlung
+  $("#iv-vk").value   = "";   // VK = Brutto-Verkaufspreis (NICHT die Netto-Auszahlung) -> vom Nutzer neu festlegen
   $("#iv-ek").value   = (num(f.ek)||0).toFixed(2).replace(".",",");
   $("#iv-ship").value = (num(f.ship)||0).toFixed(2).replace(".",",");
   if(f.img) setPendingInvImg(f.img); else resetInvImage();
@@ -1698,7 +1698,7 @@ function openCustomerReturn(id){ const f=flips.find(x=>x.id===id); if(!f) return
     if(dest==="aware"){
       const it=f.invId && inventory.find(x=>x.id===f.invId);
       if(it){ it.qty=(it.qty||0)+(f.qty||1); it.touchedAt=new Date().toISOString(); if(invStatus(it)==="returned"){ it.status="stock"; delete it.supReturn; } }
-      else addInventoryItem({ name:f.name, ean:f.ean||"", qty:f.qty||1, vk:num(f.payout), ek:num(f.ek), ship:num(f.ship), catPct:12, adPct:0, regionPct:0, status:"stock", img:f.img||null, tags:["Retoure"] });
+      else addInventoryItem({ name:f.name, ean:f.ean||"", qty:f.qty||1, vk:0, ek:num(f.ek), ship:num(f.ship), catPct:12, adPct:0, regionPct:0, status:"stock", img:f.img||null, tags:["Retoure"] });
       DB.saveInventory(inventory);
     } else if(dest==="bware"){
       // Eigener B-Ware-Artikel, Preis offen (neu festzulegen), damit A-Bestand nicht mit Gebrauchtware vermischt wird

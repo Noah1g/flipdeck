@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v135";   // v135 (App v5.25.10): Sora-Schrift global (auf sauberer v5.25.9-Basis)
+const VERSION    = "flipdeck-v136";   // v136 (App v5.25.11): Retoure->Bestand VK-Bug gefixt + app.js Netz-zuerst (zuverlaessige Updates)
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;
@@ -85,6 +85,12 @@ self.addEventListener("fetch", e => {
           { status: 503, headers: { "Content-Type": "application/json" } }
         )))
     );
+    return;
+  }
+
+  // 3b) App-Code (app.js / tailwind.css) -> IMMER Netz zuerst, damit Updates sofort ankommen.
+  if (url.origin === self.location.origin && (url.pathname.endsWith("/app.js") || url.pathname.endsWith("/tailwind.css"))) {
+    e.respondWith(fetch(req).then(res => { if (res.ok) { const copy = res.clone(); caches.open(SHELL).then(c => c.put(req, copy)); } return res; }).catch(() => caches.match(req)));
     return;
   }
 
