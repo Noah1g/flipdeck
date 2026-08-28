@@ -843,7 +843,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     <div class="auth-brand">
       <img class="app-icon-img" src="./logos/appicon.png" alt="Flipdeck" style="margin-bottom:15px" />
       <span class="wordmark" style="font-size:40px">Flip<span class="g">deck</span></span>
-      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Hub fürs alternative Reselling</p><span class="auth-ver">v5.25.11</span></div>
+      <div class="auth-tag"><p class="c-sub text-sm" data-i18n="login.subtitle">Hub fürs alternative Reselling</p><span class="auth-ver">v5.25.12</span></div>
     </div>
     <div class="cell auth-card">
       <div class="seg mb-5" id="auth-switch" style="display:flex;width:100%">
@@ -896,7 +896,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
       <!-- LINKS · Logo -->
       <div class="nav-left">
         <span class="wordmark" style="font-size:21px">Flip<span class="g">deck</span></span>
-        <span class="nav-ver">v5.25.11</span>
+        <span class="nav-ver">v5.25.12</span>
       </div>
 
       <!-- MITTE · Tabs (perfekt zentriert) -->
@@ -1194,7 +1194,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
         <div class="grid grid-cols-2 gap-3 mb-4">
           <div>
             <label class="label" for="c-ek">Einkaufspreis €</label>
-            <input id="c-ek" class="field tnum" inputmode="decimal" value="200" />
+            <input id="c-ek" class="field tnum" inputmode="decimal" value="" />
             <div class="flex items-center gap-1.5 mt-2 calc-ust-row">
               <button type="button" class="ust" data-field="ek" data-rate="19" aria-selected="false">USt 19 %</button>
               <button type="button" class="ust" data-field="ek" data-rate="7" aria-selected="false">USt 7 %</button>
@@ -1208,7 +1208,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
           </div>
           <div>
             <label class="label" for="c-vk">Verkaufspreis €</label>
-            <input id="c-vk" class="field tnum" inputmode="decimal" value="270" />
+            <input id="c-vk" class="field tnum" inputmode="decimal" value="" />
             <div class="flex items-center gap-1.5 mt-2 calc-ust-row">
               <button type="button" class="ust" data-field="vk" data-rate="19" aria-selected="false">USt 19 %</button>
               <button type="button" class="ust" data-field="vk" data-rate="7" aria-selected="false">USt 7 %</button>
@@ -1299,6 +1299,18 @@ body.no-images .ms-head .thumb{ display:none !important; }
           <div class="absolute -right-10 -top-12 w-48 h-48 rounded-full" style="background:radial-gradient(circle,var(--glow),transparent 70%);"></div>
           <p class="label mb-2">Reingewinn</p>
           <p id="r-profit" class="tnum font-bold leading-none" style="font-size:clamp(34px,9vw,48px); letter-spacing:-.03em;">0,00 €</p>
+          <!-- A-C Tier + Kauf-Empfehlung -->
+          <div id="r-tier" class="mt-4 rounded-[16px] px-4 py-3" style="border:1px solid var(--line);display:flex;align-items:center;gap:12px">
+            <span id="r-tier-badge" style="flex:0 0 auto;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:var(--cell-2);color:var(--sub);font-weight:800;font-size:23px">–</span>
+            <div class="min-w-0 flex-1"><p id="r-tier-rec" class="text-[15px] font-bold leading-snug">—</p><p id="r-tier-sub" class="c-sub text-[11.5px] mt-0.5 leading-snug">EK &amp; VK eingeben für die Einstufung</p></div>
+            <div style="flex:0 0 auto;text-align:right"><p class="text-[10px] c-sub uppercase tracking-wider">ROI</p><p id="r-tier-roi" class="mono font-bold text-[15px]">–</p></div>
+          </div>
+          <div class="flex items-center justify-between mt-2 px-1">
+            <span class="c-sub text-[11.5px]">Kaufen ab Tier</span>
+            <div id="tier-threshold" class="seg" style="padding:3px">
+              <button data-tier="A">A</button><button data-tier="B" aria-selected="true">B</button><button data-tier="C">C</button>
+            </div>
+          </div>
           <!-- Zielmargen-Ampel -->
           <div id="r-goal" class="mt-4 rounded-[16px] px-4 py-3.5" style="border:1px solid var(--line)">
             <div class="flex items-center gap-2.5">
@@ -2071,7 +2083,7 @@ body.no-images .ms-head .thumb{ display:none !important; }
     </div>
   </section>
 
-  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.25.11 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
+  <footer class="shell px-4 pb-10 pt-2 text-center"><p class="c-sub text-xs">Flipdeck v5.25.12 · entwickelt von noah1g · Daten sicher in Supabase · © 2026</p></footer>
   </main>
 </div>
 
@@ -2093,5 +2105,5 @@ body.no-images .ms-head .thumb{ display:none !important; }
      Läuft nur, wenn sw.js neben der index.html liegt. Fehlt die Datei,
      funktioniert die App unverändert — nur eben ohne Offline-Modus. -->
 
-<script src="./app.js?v=5.25.11"></script>
+<script src="./app.js?v=5.25.12"></script>
 </html>

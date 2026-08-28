@@ -6,7 +6,7 @@
    - Schreibvorgänge werden NICHT abgefangen: ohne Netz schlagen sie fehl,
      statt so zu tun, als wäre gespeichert worden.
 */
-const VERSION    = "flipdeck-v136";   // v136 (App v5.25.11): Retoure->Bestand VK-Bug gefixt + app.js Netz-zuerst (zuverlaessige Updates)
+const VERSION    = "flipdeck-v137";   // v137 (App v5.25.12): Fee-Calc EK/VK leer + A-C-Tier-Einstufung mit Kauf-Empfehlung
 const SHELL      = `${VERSION}-shell`;
 const DATA       = `${VERSION}-data`;
 const IMAGES     = `${VERSION}-img`;

@@ -2205,7 +2205,7 @@ function calc(){ const vkRaw=num($("#c-vk").value),ekRaw=num($("#c-ek").value),s
   $("#b-int-l").textContent=`Auslandsgebühr (${regionPct.toLocaleString("de-DE")} %)`; $("#b-int").textContent="- "+eur(intl);
   $("#b-ship").textContent="- "+eur(ship); $("#b-total").textContent="- "+eur(fees);
   $("#b-ku-note").textContent = kuMode ? "" : (marginMode ? "§25a · USt nur auf Marge" : "netto");   // KU/Privat: keine USt-Notiz (kein Vorsteuer-Thema)
-  renderGoalStatus(vk,ek,ship,catP+adP+regionPct,margin,profit); }
+  renderGoalStatus(vk,ek,ship,catP+adP+regionPct,margin,profit); renderTier(vk,ek,ship,profit); }
 
 /* Zielmargen-Ampel: gedeckt / knapp / verfehlt + fehlender VK */
 function renderGoalStatus(vk,ek,ship,combined,margin,profit){
@@ -2251,6 +2251,23 @@ function renderGoalStatus(vk,ek,ship,combined,margin,profit){
   fill.style.background = col;
   mark.style.left = ((1/scale)*100).toFixed(1)+"%";
 }
+function renderTier(vk,ek,ship,profit){
+  var badge=$("#r-tier-badge"), rec=$("#r-tier-rec"), sub=$("#r-tier-sub"), roiEl=$("#r-tier-roi"), box=$("#r-tier");
+  if(!badge) return;
+  var cost=ek+ship;
+  if(!(vk>0)||!(cost>0)){ badge.textContent="–"; badge.style.background="var(--cell-2)"; badge.style.color="var(--sub)"; rec.textContent="—"; rec.style.color="var(--text)"; sub.textContent="EK & VK eingeben für die Einstufung"; roiEl.textContent="–"; box.style.borderColor="var(--line)"; box.style.background="transparent"; return; }
+  var roi=profit/cost*100; roiEl.textContent=pct(roi);
+  var tier; if(profit<=0) tier="D"; else if(roi>=50) tier="A"; else if(roi>=30) tier="B"; else if(roi>=15) tier="C"; else tier="D";
+  if(profit>0 && profit<3 && (tier==="A"||tier==="B")) tier="C";
+  var T={A:{c:"#34D399",t:"Top-Deal"},B:{c:"#60A5FA",t:"Solide"},C:{c:"#FBBF24",t:"Grenzwertig"},D:{c:"#FB7185",t:"Finger weg"}};
+  var info=T[tier]; badge.textContent=tier; badge.style.background="color-mix(in srgb,"+info.c+" 18%,transparent)"; badge.style.color=info.c;
+  var order={A:3,B:2,C:1,D:0}; var thr=Store.get("fg_buytier")||"B"; var buy=order[tier]>=order[thr];
+  rec.textContent=buy?"KAUFEN ✓":"LIEBER NICHT"; rec.style.color=buy?"var(--accent)":"var(--danger)";
+  sub.textContent=info.t+" · "+((tier==="C"&&profit<3)?"wenig Gewinn — nur bei Masse":("Gewinn "+eur(profit)));
+  box.style.borderColor=buy?"color-mix(in srgb,var(--accent) 45%,transparent)":"color-mix(in srgb,var(--danger) 40%,transparent)";
+  box.style.background=buy?"color-mix(in srgb,var(--accent) 8%,transparent)":"color-mix(in srgb,var(--danger) 8%,transparent)";
+}
+(function(){ var seg=$("#tier-threshold"); if(!seg) return; var saved=Store.get("fg_buytier")||"B"; seg.querySelectorAll("button").forEach(function(b){ b.setAttribute("aria-selected", b.dataset.tier===saved?"true":"false"); b.addEventListener("click",function(){ Store.set("fg_buytier",b.dataset.tier); seg.querySelectorAll("button").forEach(function(x){x.setAttribute("aria-selected","false");}); b.setAttribute("aria-selected","true"); try{calc();}catch(e){} }); }); })();
 ["c-vk","c-ek","c-ship","c-ad"].forEach(id=>$("#"+id).addEventListener("input",calc));
 $("#c-cat").addEventListener("change",calc);
 $("#c-pack").addEventListener("change",()=>{ packMode=$("#c-pack").checked; Store.set("fg_pack", packMode?"1":"0"); calc(); });
